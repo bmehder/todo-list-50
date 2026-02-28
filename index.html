@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Elm Todo (50)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <main>
+    <section>
+      <div class="outer">
+        <div class="inner">
+          <div id="todo-app"></div>
+          <script src="main.js"></script>
+          <script>
+            const node = document.getElementById("todo-app")
+            Elm.Main.init({ node })
+          </script>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+
+</html>
