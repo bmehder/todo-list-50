@@ -1,8 +1,8 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, button, div, form, h1, input, li, span, text, ul)
-import Html.Attributes exposing (class, placeholder, type_, value)
+import Html exposing (Html, button, div, form, h1, input, li, menu, span, text, ul)
+import Html.Attributes exposing (class, disabled, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit, stopPropagationOn)
 import Json.Decode as Decode
 
@@ -20,6 +20,12 @@ type Status
     | Completed
 
 
+type Filter
+    = All
+    | ActiveOnly
+    | CompletedOnly
+
+
 type alias Todo =
     { id : Id
     , item : String
@@ -31,6 +37,7 @@ type alias Model =
     { todos : List Todo
     , nextId : Id
     , draft : String
+    , filter : Filter
     }
 
 
@@ -43,6 +50,7 @@ init =
         ]
     , nextId = 3
     , draft = ""
+    , filter = All
     }
 
 
@@ -54,6 +62,7 @@ type Msg
     = ToggleTodo Id
     | DeleteTodo Id
     | UpdateDraft String
+    | SetFilter Filter
     | CreateTodo
 
 
@@ -73,16 +82,18 @@ update msg model =
         UpdateDraft newValue ->
             { model | draft = newValue }
 
+        SetFilter newFilter ->
+            { model | filter = newFilter }
+
         CreateTodo ->
             createIfValid model
-
 
 
 -- DOMAIN HELPERS
 
 
-toggle : Todo -> Todo
-toggle todo =
+toggleStatus : Todo -> Todo
+toggleStatus todo =
     { todo
         | status =
             case todo.status of
@@ -93,11 +104,15 @@ toggle todo =
                     Active
     }
 
+matchesId : Id -> Todo -> Bool
+matchesId id todo =
+    todo.id == id
+
 
 toggleIfMatch : Id -> Todo -> Todo
 toggleIfMatch id todo =
-    if todo.id == id then
-        toggle todo
+    if matchesId id todo then
+        toggleStatus todo
 
     else
         todo
@@ -106,11 +121,6 @@ toggleIfMatch id todo =
 toggleById : Id -> List Todo -> List Todo
 toggleById id =
     List.map (toggleIfMatch id)
-
-
-matchesId : Id -> Todo -> Bool
-matchesId id todo =
-    todo.id == id
 
 
 deleteById : Id -> List Todo -> List Todo
@@ -147,8 +157,78 @@ view model =
     div [ class "flow" ]
         [ h1 [] [ text "Todo List" ]
         , viewCreate model
-        , ul [ class "flow" ] (List.map viewTodo model.todos)
+        , ul [ class "flow" ]
+            (model.todos
+                |> filterTodos model.filter
+                |> List.map viewTodo
+            )
+        , viewFilters model.filter
+        , div [ class "text-align-center" ] [ viewFilteredCount model ]
         ]
+
+
+viewFilterButton : String -> Filter -> Filter -> Html Msg
+viewFilterButton label filterValue currentFilter =
+    let
+        isSelected =
+            filterValue == currentFilter
+
+        buttonClass =
+            if isSelected then
+                "filter-btn selected-btn"
+
+            else
+                "filter-btn"
+    in
+    li [ class "grid list-style-none"]
+        [ button
+            [ class buttonClass
+            , onClick (SetFilter filterValue)
+            ]
+            [ text label ]
+        ]
+
+
+viewFilters : Filter -> Html Msg
+viewFilters filter =
+    menu [ class "grid grid-template-columns-3 gap-1" ]
+        [ viewFilterButton "All" All filter
+        , viewFilterButton "Active" ActiveOnly filter
+        , viewFilterButton "Completed" CompletedOnly filter
+        ]
+
+
+
+viewFilteredCount : Model -> Html Msg
+viewFilteredCount model =
+    let
+        visibleTodos =
+            filterTodos model.filter model.todos
+
+        count =
+            List.length visibleTodos
+
+        label =
+            case model.filter of
+                All ->
+                    if count == 1 then
+                        " item"
+                    else
+                        " items"
+
+                ActiveOnly ->
+                    if count == 1 then
+                        " item remaining"
+                    else
+                        " items remaining"
+
+                CompletedOnly ->
+                    if count == 1 then
+                        " item completed"
+                    else
+                        " items completed"
+    in
+    text (String.fromInt count ++ label)
 
 
 viewCreate : Model -> Html Msg
@@ -164,7 +244,9 @@ viewCreate model =
             ]
             []
         , button
-            [ type_ "submit" ]
+            [ type_ "submit"
+            , disabled (String.trim model.draft == "")
+            ]
             [ text "Add" ]
         ]
 
@@ -187,7 +269,7 @@ viewItem todo =
 
         Completed ->
             span
-                [ class "line-through opacity-60 cursor-pointer" ]
+                [ class "cursor-pointer line-through opacity-60" ]
                 [ text todo.item ]
 
 
@@ -198,6 +280,19 @@ viewDeleteButton todo =
         , class "delete-btn cursor-pointer"
         ]
         [ text "✕" ]
+
+
+filterTodos : Filter -> List Todo -> List Todo
+filterTodos filterType todos =
+    case filterType of
+        All ->
+            todos
+
+        ActiveOnly ->
+            List.filter (.status >> (==) Active) todos
+
+        CompletedOnly ->
+            List.filter (.status >> (==) Completed) todos
 
 
 

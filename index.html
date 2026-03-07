@@ -16,8 +16,7 @@
           <div id="todo-app"></div>
           <script src="main.js"></script>
           <script>
-            const node = document.getElementById("todo-app")
-            Elm.Main.init({ node })
+            Elm.Main.init({ node: document.querySelector("#todo-app") })
           </script>
         </div>
       </div>

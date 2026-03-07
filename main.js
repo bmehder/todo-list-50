@@ -4459,9 +4459,11 @@ var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
 var $author$project$Main$Active = {$: 'Active'};
+var $author$project$Main$All = {$: 'All'};
 var $author$project$Main$Completed = {$: 'Completed'};
 var $author$project$Main$init = {
 	draft: '',
+	filter: $author$project$Main$All,
 	nextId: 3,
 	todos: _List_fromArray(
 		[
@@ -5246,7 +5248,7 @@ var $author$project$Main$deleteById = function (id) {
 			$elm$core$Basics$not,
 			$author$project$Main$matchesId(id)));
 };
-var $author$project$Main$toggle = function (todo) {
+var $author$project$Main$toggleStatus = function (todo) {
 	return _Utils_update(
 		todo,
 		{
@@ -5262,7 +5264,7 @@ var $author$project$Main$toggle = function (todo) {
 };
 var $author$project$Main$toggleIfMatch = F2(
 	function (id, todo) {
-		return _Utils_eq(todo.id, id) ? $author$project$Main$toggle(todo) : todo;
+		return A2($author$project$Main$matchesId, id, todo) ? $author$project$Main$toggleStatus(todo) : todo;
 	});
 var $author$project$Main$toggleById = function (id) {
 	return $elm$core$List$map(
@@ -5290,6 +5292,11 @@ var $author$project$Main$update = F2(
 				return _Utils_update(
 					model,
 					{draft: newValue});
+			case 'SetFilter':
+				var newFilter = msg.a;
+				return _Utils_update(
+					model,
+					{filter: newFilter});
 			default:
 				return $author$project$Main$createIfValid(model);
 		}
@@ -5304,6 +5311,38 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$html$Html$div = _VirtualDom_node('div');
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var $author$project$Main$filterTodos = F2(
+	function (filterType, todos) {
+		switch (filterType.$) {
+			case 'All':
+				return todos;
+			case 'ActiveOnly':
+				return A2(
+					$elm$core$List$filter,
+					A2(
+						$elm$core$Basics$composeR,
+						function ($) {
+							return $.status;
+						},
+						$elm$core$Basics$eq($author$project$Main$Active)),
+					todos);
+			default:
+				return A2(
+					$elm$core$List$filter,
+					A2(
+						$elm$core$Basics$composeR,
+						function ($) {
+							return $.status;
+						},
+						$elm$core$Basics$eq($author$project$Main$Completed)),
+					todos);
+		}
+	});
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
@@ -5313,6 +5352,15 @@ var $author$project$Main$UpdateDraft = function (a) {
 	return {$: 'UpdateDraft', a: a};
 };
 var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$html$Html$form = _VirtualDom_node('form');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$Events$alwaysStop = function (x) {
@@ -5397,7 +5445,9 @@ var $author$project$Main$viewCreate = function (model) {
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$type_('submit')
+						$elm$html$Html$Attributes$type_('submit'),
+						$elm$html$Html$Attributes$disabled(
+						$elm$core$String$trim(model.draft) === '')
 					]),
 				_List_fromArray(
 					[
@@ -5405,8 +5455,30 @@ var $author$project$Main$viewCreate = function (model) {
 					]))
 			]));
 };
-var $author$project$Main$ToggleTodo = function (a) {
-	return {$: 'ToggleTodo', a: a};
+var $author$project$Main$viewFilteredCount = function (model) {
+	var visibleTodos = A2($author$project$Main$filterTodos, model.filter, model.todos);
+	var count = $elm$core$List$length(visibleTodos);
+	var label = function () {
+		var _v0 = model.filter;
+		switch (_v0.$) {
+			case 'All':
+				return (count === 1) ? ' item' : ' items';
+			case 'ActiveOnly':
+				return (count === 1) ? ' item remaining' : ' items remaining';
+			default:
+				return (count === 1) ? ' item completed' : ' items completed';
+		}
+	}();
+	return $elm$html$Html$text(
+		_Utils_ap(
+			$elm$core$String$fromInt(count),
+			label));
+};
+var $author$project$Main$ActiveOnly = {$: 'ActiveOnly'};
+var $author$project$Main$CompletedOnly = {$: 'CompletedOnly'};
+var $elm$html$Html$menu = _VirtualDom_node('menu');
+var $author$project$Main$SetFilter = function (a) {
+	return {$: 'SetFilter', a: a};
 };
 var $elm$html$Html$li = _VirtualDom_node('li');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
@@ -5424,6 +5496,49 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		$elm$html$Html$Events$on,
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
+};
+var $author$project$Main$viewFilterButton = F3(
+	function (label, filterValue, currentFilter) {
+		var isSelected = _Utils_eq(filterValue, currentFilter);
+		var buttonClass = isSelected ? 'filter-btn selected-btn' : 'filter-btn';
+		return A2(
+			$elm$html$Html$li,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('grid list-style-none')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$button,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class(buttonClass),
+							$elm$html$Html$Events$onClick(
+							$author$project$Main$SetFilter(filterValue))
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(label)
+						]))
+				]));
+	});
+var $author$project$Main$viewFilters = function (filter) {
+	return A2(
+		$elm$html$Html$menu,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('grid grid-template-columns-3 gap-1')
+			]),
+		_List_fromArray(
+			[
+				A3($author$project$Main$viewFilterButton, 'All', $author$project$Main$All, filter),
+				A3($author$project$Main$viewFilterButton, 'Active', $author$project$Main$ActiveOnly, filter),
+				A3($author$project$Main$viewFilterButton, 'Completed', $author$project$Main$CompletedOnly, filter)
+			]));
+};
+var $author$project$Main$ToggleTodo = function (a) {
+	return {$: 'ToggleTodo', a: a};
 };
 var $author$project$Main$DeleteTodo = function (a) {
 	return {$: 'DeleteTodo', a: a};
@@ -5466,7 +5581,7 @@ var $author$project$Main$viewItem = function (todo) {
 			$elm$html$Html$span,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('line-through opacity-60 cursor-pointer')
+					$elm$html$Html$Attributes$class('cursor-pointer line-through opacity-60')
 				]),
 			_List_fromArray(
 				[
@@ -5512,7 +5627,21 @@ var $author$project$Main$view = function (model) {
 					[
 						$elm$html$Html$Attributes$class('flow')
 					]),
-				A2($elm$core$List$map, $author$project$Main$viewTodo, model.todos))
+				A2(
+					$elm$core$List$map,
+					$author$project$Main$viewTodo,
+					A2($author$project$Main$filterTodos, model.filter, model.todos))),
+				$author$project$Main$viewFilters(model.filter),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('text-align-center')
+					]),
+				_List_fromArray(
+					[
+						$author$project$Main$viewFilteredCount(model)
+					]))
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$sandbox(

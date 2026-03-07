@@ -46,26 +46,26 @@ input {
 	::placeholder {
 		opacity: 0.6;
 	}
-	
-  @media (prefers-color-scheme: dark) {
+
+	@media (prefers-color-scheme: dark) {
 		border: 1px solid var(--border-dark);
 	}
 }
 
 button {
 	padding: 0.5rem 0.9rem;
-  
+
 	background-color: var(--accent-500);
 	color: white;
-  
+
 	font: inherit;
 	font-weight: 600;
 	cursor: pointer;
-  
+
 	border: none;
 	border-radius: 0.5rem;
 
-  transition:
+	transition:
 		background-color 120ms ease,
 		transform 80ms ease;
 
@@ -76,27 +76,49 @@ button {
 	&:active {
 		transform: scale(0.97);
 	}
+
+	&:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+}
+
+.selected-btn {
+	background-color: transparent;
+	color: inherit;
+
+	border: 1px solid var(--border-light);
+
+	font-weight: 500;
+
+	padding: 0.25rem 0.75rem;
+
+	transform: none;
+
+	@media (prefers-color-scheme: dark) {
+		border-color: var(--border-dark);
+	}
 }
 
 .delete-btn {
 	inline-size: 1.5rem;
 	block-size: 1.5rem;
-  
+
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-  
+
 	background-color: var(--danger-500);
 	color: white;
-  
+
 	font-size: 0.85rem;
 	font-weight: 600;
 	line-height: 1;
-  
+
 	border: none;
 	border-radius: 50%;
-	
-  cursor: pointer;
+
+	cursor: pointer;
 
 	transition:
 		background-color 120ms ease,
@@ -136,6 +158,10 @@ button {
 	display: flex;
 }
 
+.block {
+	display: block;
+}
+
 .space-between {
 	justify-content: space-between;
 }
@@ -144,8 +170,20 @@ button {
 	align-items: center;
 }
 
+.grid-template-columns-3 {
+	grid-template-columns: 1fr 1fr 1fr;
+}
+
 .gap-1 {
 	gap: 1rem;
+}
+
+.text-align-center {
+	text-align: center;
+}
+
+.list-style-none {
+	list-style: none;
 }
 
 .line-through {
