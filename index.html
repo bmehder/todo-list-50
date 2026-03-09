@@ -2,26 +2,27 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Elm Todo (50)</title>
-  <link rel="stylesheet" href="style.css">
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Elm Todo (50)</title>
+	<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <main>
-    <section>
-      <div class="outer">
-        <div class="inner">
-          <div id="todo-app"></div>
-          <script src="main.js"></script>
-          <script>
-            Elm.Main.init({ node: document.querySelector("#todo-app") })
-          </script>
-        </div>
-      </div>
-    </section>
-  </main>
+	<main>
+		<section>
+			<div class="outer">
+				<div class="inner">
+					<h1>Todo List</h1>
+					<div id="todo-app"></div>
+					<script src="main.js"></script>
+					<script>
+						Elm.Main.init({ node: document.querySelector("#todo-app") })
+					</script>
+				</div>
+			</div>
+		</section>
+	</main>
 </body>
 
 </html>

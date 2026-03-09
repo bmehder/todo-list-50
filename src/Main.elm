@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, button, div, form, h1, input, li, menu, span, text, ul)
+import Html exposing (Html, button, div, form, input, li, menu, span, text, ul)
 import Html.Attributes exposing (class, disabled, placeholder, type_, value)
 import Html.Events exposing (on, onBlur, onClick, onDoubleClick, onInput, onSubmit, stopPropagationOn)
 import Json.Decode as Decode
@@ -15,7 +15,7 @@ type alias Id =
     Int
 
 
-type alias Draft =
+type alias Task =
     String
 
 
@@ -24,26 +24,34 @@ type Status
     | Completed
 
 
+type Editing
+    = NotEditing
+    | Editing Id Task
+
+
 type Filter
     = All
     | ActiveOnly
     | CompletedOnly
 
 
+allFilters : List Filter
+allFilters =
+    [ All, ActiveOnly, CompletedOnly ]
+
+
 type alias Todo =
     { id : Id
-    , task : String
+    , task : Task
     , status : Status
     }
 
 
 type alias Model =
     { todos : List Todo
-    , nextId : Id
-    , draft : Draft
+    , draft : Task
     , filter : Filter
-    , editId : Maybe Id
-    , editDraft : Draft
+    , editing : Editing
     }
 
 
@@ -54,11 +62,9 @@ init =
         , { id = 1, task = "Write the smallest Elm app", status = Completed }
         , { id = 2, task = "Profit", status = Active }
         ]
-    , nextId = 3
     , draft = ""
     , filter = All
-    , editId = Nothing
-    , editDraft = ""
+    , editing = NotEditing
     }
 
 
@@ -69,11 +75,11 @@ init =
 type Msg
     = ToggleTodo Id
     | DeleteTodo Id
-    | UpdateDraft Draft
+    | UpdateDraft Task
     | SetFilter Filter
     | CreateTodo
     | StartEditing Id
-    | UpdateEditDraft Draft
+    | UpdateEditDraft Task
     | SaveEdit
     | CancelEdit
     | NoOp
@@ -84,12 +90,12 @@ update msg model =
     case msg of
         ToggleTodo id ->
             { model
-                | todos = toggleTodoById id model.todos
+                | todos = toggleTodoById id <| model.todos
             }
 
         DeleteTodo id ->
             { model
-                | todos = deleteTodoById id model.todos
+                | todos = deleteTodoById id <| model.todos
             }
 
         UpdateDraft newValue ->
@@ -102,47 +108,69 @@ update msg model =
             createIfValid model
 
         StartEditing id ->
-            case findTodoById id model.todos of
+            case findTodoById id <| model.todos of
                 Just todo ->
                     { model
-                        | editId = Just id
-                        , editDraft = todo.task
+                        | editing = Editing id todo.task
                     }
 
                 Nothing ->
                     model
 
         UpdateEditDraft newValue ->
-            { model | editDraft = newValue }
+            case model.editing of
+                Editing id _ ->
+                    { model | editing = Editing id newValue }
+
+                NotEditing ->
+                    model
 
         SaveEdit ->
-            let
-                updatedTodos =
-                    List.map
-                        (\todo ->
-                            if Just todo.id == model.editId then
-                                { todo | task = model.editDraft }
+            case model.editing of
+                Editing id draft ->
+                    { model
+                        | todos = updateTaskById id draft model.todos
+                        , editing = NotEditing
+                    }
 
-                            else
-                                todo
-                        )
-                        model.todos
-            in
-            { model
-                | todos = updatedTodos
-                , editId = Nothing
-                , editDraft = ""
-            }
+                NotEditing ->
+                    model
 
         CancelEdit ->
-            { model | editId = Nothing, editDraft = "" }
+            { model | editing = NotEditing }
 
         NoOp ->
             model
 
 
 
+-- UTILITY FUNCTIONS
+
+
+applyIf : (a -> Bool) -> (a -> a) -> a -> a
+applyIf predicate transform value =
+    if predicate value then
+        transform value
+
+    else
+        value
+
+
+
 -- DOMAIN HELPERS
+
+
+nextId : List Todo -> Id
+nextId =
+    List.map .id
+        >> List.maximum
+        >> Maybe.map ((+) 1)
+        >> Maybe.withDefault 0
+
+
+matchesTodoId : Id -> Todo -> Bool
+matchesTodoId id todo =
+    id == todo.id
 
 
 toggleStatus : Todo -> Todo
@@ -158,20 +186,19 @@ toggleStatus todo =
     }
 
 
-matchesTodoId : Id -> Todo -> Bool
-matchesTodoId id todo =
-    id == todo.id
-
-
-findTodoById : Id -> List Todo -> Maybe Todo
-findTodoById id todos =
-    List.filter (matchesTodoId id) todos
-        |> List.head
+updateTask : Task -> Todo -> Todo
+updateTask newTask todo =
+    { todo | task = newTask }
 
 
 toggleTodoById : Id -> List Todo -> List Todo
 toggleTodoById id =
-    List.map (toggleIfMatch id)
+    List.map (applyIf (matchesTodoId id) toggleStatus)
+
+
+updateTaskById : Id -> Task -> List Todo -> List Todo
+updateTaskById id newTask =
+    List.map (applyIf (matchesTodoId id) (updateTask newTask))
 
 
 deleteTodoById : Id -> List Todo -> List Todo
@@ -179,31 +206,45 @@ deleteTodoById id =
     List.filter (not << matchesTodoId id)
 
 
-toggleIfMatch : Id -> Todo -> Todo
-toggleIfMatch id todo =
-    if matchesTodoId id todo then
-        toggleStatus todo
+findTodoById : Id -> List Todo -> Maybe Todo
+findTodoById id =
+    List.filter (matchesTodoId id)
+        >> List.head
 
-    else
-        todo
+
+filterTodos : Filter -> List Todo -> List Todo
+filterTodos filter =
+    case filter of
+        All ->
+            identity
+
+        ActiveOnly ->
+            List.filter (.status >> (==) Active)
+
+        CompletedOnly ->
+            List.filter (.status >> (==) Completed)
 
 
 createIfValid : Model -> Model
 createIfValid model =
-    if String.trim model.draft == "" then
+    if
+        model.draft
+            |> String.trim
+            |> String.isEmpty
+    then
         model
 
     else
         let
             newTodo =
-                { id = model.nextId
-                , task = model.draft
-                , status = Active
-                }
+                [ { id = nextId model.todos
+                  , task = model.draft
+                  , status = Active
+                  }
+                ]
         in
         { model
-            | todos = model.todos ++ [ newTodo ]
-            , nextId = model.nextId + 1
+            | todos = model.todos ++ newTodo
             , draft = ""
         }
 
@@ -215,20 +256,19 @@ createIfValid model =
 view : Model -> Html Msg
 view model =
     div [ class "flow", onClick CancelEdit ]
-        [ h1 [] [ text "Todo List" ]
-        , viewNewTodo model
-        , viewFilters model.filter
-        , ul [ class "flow" ]
-            (model.todos
-                |> filterTodos model.filter
-                |> List.map (viewTodo model)
-            )
-        , div [ class "text-align-center" ] [ viewFilteredCount model ]
+        [ viewNewTodoForm model
+        , viewFilterButtons model
+        , viewTodos model
+        , viewTodosCount model
         ]
 
 
-viewNewTodo : Model -> Html Msg
-viewNewTodo model =
+
+-- VIEW HELPERS
+
+
+viewNewTodoForm : Model -> Html Msg
+viewNewTodoForm model =
     form
         [ class "grid gap-1"
         , onSubmit CreateTodo
@@ -241,26 +281,35 @@ viewNewTodo model =
             []
         , button
             [ type_ "submit"
-            , disabled (String.trim model.draft == "")
+            , disabled (model.draft |> String.trim |> String.isEmpty)
             ]
             [ text "Add" ]
         ]
 
 
-viewFilters : Filter -> Html Msg
-viewFilters filter =
-    menu [ class "grid grid-template-columns-3 gap-1" ]
-        [ viewFilterButton "All" All filter
-        , viewFilterButton "Active" ActiveOnly filter
-        , viewFilterButton "Completed" CompletedOnly filter
-        ]
+viewFilterButtons : Model -> Html Msg
+viewFilterButtons model =
+    allFilters
+        |> List.map (viewFilterButton model.filter)
+        |> menu [ class "grid grid-template-columns-3 gap-1" ]
 
 
-viewFilterButton : String -> Filter -> Filter -> Html Msg
-viewFilterButton label filterValue currentFilter =
+viewFilterButton : Filter -> Filter -> Html Msg
+viewFilterButton current value =
     let
+        label =
+            case value of
+                All ->
+                    "All"
+
+                ActiveOnly ->
+                    "Active"
+
+                CompletedOnly ->
+                    "Completed"
+
         isSelected =
-            filterValue == currentFilter
+            value == current
 
         buttonClass =
             if isSelected then
@@ -272,7 +321,7 @@ viewFilterButton label filterValue currentFilter =
     li [ class "grid list-style-none" ]
         [ button
             [ class buttonClass
-            , onClick (SetFilter filterValue)
+            , onClick (SetFilter value)
             ]
             [ text label ]
         ]
@@ -281,47 +330,66 @@ viewFilterButton label filterValue currentFilter =
 viewTodo : Model -> Todo -> Html Msg
 viewTodo model todo =
     li [ class "flex space-between align-items-center gap-1", onDoubleClick (StartEditing todo.id) ]
-        [ viewItem model todo
+        [ viewTask model todo
         , viewDeleteButton todo
         ]
 
 
-viewItem : Model -> Todo -> Html Msg
-viewItem model todo =
-    if model.editId == Just todo.id then
-        input
-            [ stopPropagationOn "click" (Decode.succeed ( NoOp, True ))
-            , value model.editDraft
-            , onInput UpdateEditDraft
-            , onBlur SaveEdit
-            , on "keydown"
-                (Decode.field "key" Decode.string
-                    |> Decode.andThen
-                        (\key ->
-                            if key == "Enter" then
-                                Decode.succeed SaveEdit
+viewTask : Model -> Todo -> Html Msg
+viewTask model todo =
+    case model.editing of
+        Editing id draft ->
+            if matchesTodoId id todo then
+                viewEditing draft
 
-                            else if key == "Escape" then
-                                Decode.succeed CancelEdit
+            else
+                viewTaskStatus todo
 
-                            else
-                                Decode.fail "ignore"
-                        )
-                )
-            ]
-            []
+        NotEditing ->
+            viewTaskStatus todo
 
-    else
-        case todo.status of
-            Active ->
-                span
-                    [ class "cursor-pointer", onClick (ToggleTodo todo.id) ]
-                    [ text todo.task ]
 
-            Completed ->
-                span
-                    [ class "cursor-pointer line-through opacity-60", onClick (ToggleTodo todo.id) ]
-                    [ text todo.task ]
+viewEditing : Task -> Html Msg
+viewEditing draft =
+    input
+        [ stopPropagationOn "click" (Decode.succeed ( NoOp, True ))
+        , value draft
+        , onInput UpdateEditDraft
+        , onBlur SaveEdit
+        , on "keydown"
+            (Decode.field "key" Decode.string
+                |> Decode.andThen
+                    (\key ->
+                        if key == "Enter" then
+                            Decode.succeed SaveEdit
+
+                        else if key == "Escape" then
+                            Decode.succeed CancelEdit
+
+                        else
+                            Decode.fail "ignore"
+                    )
+            )
+        ]
+        []
+
+
+viewTaskStatus : Todo -> Html Msg
+viewTaskStatus todo =
+    let
+        statusClass =
+            case todo.status of
+                Active ->
+                    "cursor-pointer"
+
+                Completed ->
+                    "cursor-pointer line-through opacity-60"
+    in
+    span
+        [ class statusClass
+        , onClick (ToggleTodo todo.id)
+        ]
+        [ text todo.task ]
 
 
 viewDeleteButton : Todo -> Html Msg
@@ -336,49 +404,65 @@ viewDeleteButton todo =
 viewFilteredCount : Model -> Html Msg
 viewFilteredCount model =
     let
-        visibleTodos =
-            filterTodos model.filter model.todos
-
         count =
-            List.length visibleTodos
+            model.todos
+                |> filterTodos model.filter
+                |> List.length
 
-        label =
+        labelForFilter =
             case model.filter of
                 All ->
-                    if count == 1 then
-                        " item"
-
-                    else
-                        " items"
+                    itemsLabel
 
                 ActiveOnly ->
-                    if count == 1 then
-                        " item remaining"
-
-                    else
-                        " items remaining"
+                    remainingLabel
 
                 CompletedOnly ->
-                    if count == 1 then
-                        " item completed"
-
-                    else
-                        " items completed"
+                    completedLabel
     in
-    text (String.fromInt count ++ label)
+    text (String.fromInt count ++ labelForFilter count)
 
 
-filterTodos : Filter -> List Todo -> List Todo
-filterTodos filterType todos =
-    case filterType of
-        All ->
-            todos
+viewTodos : Model -> Html Msg
+viewTodos model =
+    ul [ class "flow" ]
+        (model.todos
+            |> filterTodos model.filter
+            |> List.map (viewTodo model)
+        )
 
-        ActiveOnly ->
-            List.filter (.status >> (==) Active) todos
 
-        CompletedOnly ->
-            List.filter (.status >> (==) Completed) todos
+viewTodosCount : Model -> Html Msg
+viewTodosCount model =
+    div [ class "text-align-center" ] [ viewFilteredCount model ]
+
+
+
+-- VIEW UTILITIES
+
+
+itemsLabel : Int -> String
+itemsLabel =
+    pluralize " item" " items"
+
+
+remainingLabel : Int -> String
+remainingLabel =
+    pluralize " item remaining" " items remaining"
+
+
+completedLabel : Int -> String
+completedLabel =
+    pluralize " item completed" " items completed"
+
+
+pluralize : String -> String -> Int -> String
+pluralize singular plural count =
+    if count == 1 then
+        singular
+
+    else
+        plural
 
 
 
