@@ -793,66 +793,6 @@ var _List_sortWith = F2(function(f, xs)
 
 
 
-// MATH
-
-var _Basics_add = F2(function(a, b) { return a + b; });
-var _Basics_sub = F2(function(a, b) { return a - b; });
-var _Basics_mul = F2(function(a, b) { return a * b; });
-var _Basics_fdiv = F2(function(a, b) { return a / b; });
-var _Basics_idiv = F2(function(a, b) { return (a / b) | 0; });
-var _Basics_pow = F2(Math.pow);
-
-var _Basics_remainderBy = F2(function(b, a) { return a % b; });
-
-// https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/divmodnote-letter.pdf
-var _Basics_modBy = F2(function(modulus, x)
-{
-	var answer = x % modulus;
-	return modulus === 0
-		? _Debug_crash(11)
-		:
-	((answer > 0 && modulus < 0) || (answer < 0 && modulus > 0))
-		? answer + modulus
-		: answer;
-});
-
-
-// TRIGONOMETRY
-
-var _Basics_pi = Math.PI;
-var _Basics_e = Math.E;
-var _Basics_cos = Math.cos;
-var _Basics_sin = Math.sin;
-var _Basics_tan = Math.tan;
-var _Basics_acos = Math.acos;
-var _Basics_asin = Math.asin;
-var _Basics_atan = Math.atan;
-var _Basics_atan2 = F2(Math.atan2);
-
-
-// MORE MATH
-
-function _Basics_toFloat(x) { return x; }
-function _Basics_truncate(n) { return n | 0; }
-function _Basics_isInfinite(n) { return n === Infinity || n === -Infinity; }
-
-var _Basics_ceiling = Math.ceil;
-var _Basics_floor = Math.floor;
-var _Basics_round = Math.round;
-var _Basics_sqrt = Math.sqrt;
-var _Basics_log = Math.log;
-var _Basics_isNaN = isNaN;
-
-
-// BOOLEANS
-
-function _Basics_not(bool) { return !bool; }
-var _Basics_and = F2(function(a, b) { return a && b; });
-var _Basics_or  = F2(function(a, b) { return a || b; });
-var _Basics_xor = F2(function(a, b) { return a !== b; });
-
-
-
 var _String_cons = F2(function(chr, str)
 {
 	return chr + str;
@@ -1162,6 +1102,66 @@ function _String_fromList(chars)
 	return _List_toArray(chars).join('');
 }
 
+
+
+
+// MATH
+
+var _Basics_add = F2(function(a, b) { return a + b; });
+var _Basics_sub = F2(function(a, b) { return a - b; });
+var _Basics_mul = F2(function(a, b) { return a * b; });
+var _Basics_fdiv = F2(function(a, b) { return a / b; });
+var _Basics_idiv = F2(function(a, b) { return (a / b) | 0; });
+var _Basics_pow = F2(Math.pow);
+
+var _Basics_remainderBy = F2(function(b, a) { return a % b; });
+
+// https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/divmodnote-letter.pdf
+var _Basics_modBy = F2(function(modulus, x)
+{
+	var answer = x % modulus;
+	return modulus === 0
+		? _Debug_crash(11)
+		:
+	((answer > 0 && modulus < 0) || (answer < 0 && modulus > 0))
+		? answer + modulus
+		: answer;
+});
+
+
+// TRIGONOMETRY
+
+var _Basics_pi = Math.PI;
+var _Basics_e = Math.E;
+var _Basics_cos = Math.cos;
+var _Basics_sin = Math.sin;
+var _Basics_tan = Math.tan;
+var _Basics_acos = Math.acos;
+var _Basics_asin = Math.asin;
+var _Basics_atan = Math.atan;
+var _Basics_atan2 = F2(Math.atan2);
+
+
+// MORE MATH
+
+function _Basics_toFloat(x) { return x; }
+function _Basics_truncate(n) { return n | 0; }
+function _Basics_isInfinite(n) { return n === Infinity || n === -Infinity; }
+
+var _Basics_ceiling = Math.ceil;
+var _Basics_floor = Math.floor;
+var _Basics_round = Math.round;
+var _Basics_sqrt = Math.sqrt;
+var _Basics_log = Math.log;
+var _Basics_isNaN = isNaN;
+
+
+// BOOLEANS
+
+function _Basics_not(bool) { return !bool; }
+var _Basics_and = F2(function(a, b) { return a && b; });
+var _Basics_or  = F2(function(a, b) { return a || b; });
+var _Basics_xor = F2(function(a, b) { return a !== b; });
 
 
 
@@ -4462,15 +4462,88 @@ var $author$project$Main$Active = {$: 'Active'};
 var $author$project$Main$All = {$: 'All'};
 var $author$project$Main$Completed = {$: 'Completed'};
 var $author$project$Main$NotEditing = {$: 'NotEditing'};
+var $elm$core$Maybe$Just = function (a) {
+	return {$: 'Just', a: a};
+};
+var $elm$core$Basics$identity = function (x) {
+	return x;
+};
+var $author$project$NonNegative$NonNegative = function (a) {
+	return {$: 'NonNegative', a: a};
+};
+var $elm$core$Maybe$Nothing = {$: 'Nothing'};
+var $elm$core$Basics$ge = _Utils_ge;
+var $author$project$NonNegative$fromInt = function (n) {
+	return (n >= 0) ? $elm$core$Maybe$Just(
+		$author$project$NonNegative$NonNegative(n)) : $elm$core$Maybe$Nothing;
+};
+var $elm$core$Debug$todo = _Debug_todo;
+var $author$project$Main$unsafeId = function (n) {
+	var _v0 = $author$project$NonNegative$fromInt(n);
+	if (_v0.$ === 'Just') {
+		var id = _v0.a;
+		return id;
+	} else {
+		return _Debug_todo(
+			'Main',
+			{
+				start: {line: 198, column: 13},
+				end: {line: 198, column: 23}
+			})('Invalid Id literal');
+	}
+};
+var $author$project$NonEmptyString$NonEmptyString = function (a) {
+	return {$: 'NonEmptyString', a: a};
+};
+var $elm$core$Basics$apR = F2(
+	function (x, f) {
+		return f(x);
+	});
+var $elm$core$Basics$eq = _Utils_equal;
+var $elm$core$String$isEmpty = function (string) {
+	return string === '';
+};
+var $elm$core$String$trim = _String_trim;
+var $author$project$NonEmptyString$fromString = function (str) {
+	return $elm$core$String$isEmpty(
+		$elm$core$String$trim(str)) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
+		$author$project$NonEmptyString$NonEmptyString(str));
+};
+var $author$project$Main$unsafeTask = function (str) {
+	var _v0 = $author$project$NonEmptyString$fromString(str);
+	if (_v0.$ === 'Just') {
+		var task = _v0.a;
+		return task;
+	} else {
+		return _Debug_todo(
+			'Main',
+			{
+				start: {line: 177, column: 13},
+				end: {line: 177, column: 23}
+			})('Invalid task literal');
+	}
+};
 var $author$project$Main$init = {
 	draft: '',
 	editing: $author$project$Main$NotEditing,
 	filter: $author$project$Main$All,
 	todos: _List_fromArray(
 		[
-			{id: 0, status: $author$project$Main$Active, task: 'Buy coffee'},
-			{id: 1, status: $author$project$Main$Completed, task: 'Write the smallest Elm app'},
-			{id: 2, status: $author$project$Main$Active, task: 'Profit'}
+			{
+			id: $author$project$Main$unsafeId(0),
+			status: $author$project$Main$Active,
+			task: $author$project$Main$unsafeTask('Buy coffee')
+		},
+			{
+			id: $author$project$Main$unsafeId(1),
+			status: $author$project$Main$Completed,
+			task: $author$project$Main$unsafeTask('Write the smallest Elm app')
+		},
+			{
+			id: $author$project$Main$unsafeId(2),
+			status: $author$project$Main$Active,
+			task: $author$project$Main$unsafeTask('Profit')
+		}
 		])
 };
 var $elm$core$Result$Err = function (a) {
@@ -4496,10 +4569,6 @@ var $elm$json$Json$Decode$OneOf = function (a) {
 };
 var $elm$core$Basics$False = {$: 'False'};
 var $elm$core$Basics$add = _Basics_add;
-var $elm$core$Maybe$Just = function (a) {
-	return {$: 'Just', a: a};
-};
-var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $elm$core$String$all = _String_all;
 var $elm$core$Basics$and = _Basics_and;
 var $elm$core$Basics$append = _Utils_append;
@@ -4738,11 +4807,6 @@ var $elm$core$Basics$apL = F2(
 	function (f, x) {
 		return f(x);
 	});
-var $elm$core$Basics$apR = F2(
-	function (x, f) {
-		return f(x);
-	});
-var $elm$core$Basics$eq = _Utils_equal;
 var $elm$core$Basics$floor = _Basics_floor;
 var $elm$core$Elm$JsArray$length = _JsArray_length;
 var $elm$core$Basics$gt = _Utils_gt;
@@ -4889,9 +4953,6 @@ var $elm$browser$Browser$External = function (a) {
 var $elm$browser$Browser$Internal = function (a) {
 	return {$: 'Internal', a: a};
 };
-var $elm$core$Basics$identity = function (x) {
-	return x;
-};
 var $elm$browser$Browser$Dom$NotFound = function (a) {
 	return {$: 'NotFound', a: a};
 };
@@ -4913,9 +4974,6 @@ var $elm$core$String$dropLeft = F2(
 			string);
 	});
 var $elm$core$String$indexes = _String_indexes;
-var $elm$core$String$isEmpty = function (string) {
-	return string === '';
-};
 var $elm$core$String$left = F2(
 	function (n, string) {
 		return (n < 1) ? '' : A3($elm$core$String$slice, 0, n, string);
@@ -5212,16 +5270,6 @@ var $elm$core$Basics$composeR = F3(
 		return g(
 			f(x));
 	});
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
 var $elm$core$List$maximum = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -5232,6 +5280,13 @@ var $elm$core$List$maximum = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $author$project$NonNegative$toInt = function (_v0) {
+	var n = _v0.a;
+	return n;
+};
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
 		if (maybe.$ === 'Just') {
@@ -5241,40 +5296,42 @@ var $elm$core$Maybe$withDefault = F2(
 			return _default;
 		}
 	});
-var $author$project$Main$nextId = A2(
-	$elm$core$Basics$composeR,
-	$elm$core$List$map(
-		function ($) {
-			return $.id;
-		}),
-	A2(
-		$elm$core$Basics$composeR,
-		$elm$core$List$maximum,
-		A2(
-			$elm$core$Basics$composeR,
-			$elm$core$Maybe$map(
-				$elm$core$Basics$add(1)),
-			$elm$core$Maybe$withDefault(0))));
-var $elm$core$String$trim = _String_trim;
-var $author$project$Main$createIfValid = function (model) {
-	if ($elm$core$String$isEmpty(
-		$elm$core$String$trim(model.draft))) {
-		return model;
-	} else {
-		var newTodo = _List_fromArray(
-			[
-				{
-				id: $author$project$Main$nextId(model.todos),
-				status: $author$project$Main$Active,
-				task: model.draft
-			}
-			]);
+var $author$project$Main$nextId = function (todos) {
+	return $author$project$Main$unsafeId(
+		1 + A2(
+			$elm$core$Maybe$withDefault,
+			-1,
+			$elm$core$List$maximum(
+				A2(
+					$elm$core$List$map,
+					A2(
+						$elm$core$Basics$composeR,
+						function ($) {
+							return $.id;
+						},
+						$author$project$NonNegative$toInt),
+					todos))));
+};
+var $author$project$Main$addTodoFromDraft = function (model) {
+	var _v0 = $author$project$NonEmptyString$fromString(model.draft);
+	if (_v0.$ === 'Just') {
+		var task = _v0.a;
+		var newTodo = {
+			id: $author$project$Main$nextId(model.todos),
+			status: $author$project$Main$Active,
+			task: task
+		};
 		return _Utils_update(
 			model,
 			{
 				draft: '',
-				todos: _Utils_ap(model.todos, newTodo)
+				todos: _Utils_ap(
+					model.todos,
+					_List_fromArray(
+						[newTodo]))
 			});
+	} else {
+		return model;
 	}
 };
 var $elm$core$Basics$composeL = F3(
@@ -5321,6 +5378,10 @@ var $author$project$Main$findTodoById = function (id) {
 			$author$project$Main$matchesTodoId(id)),
 		$elm$core$List$head);
 };
+var $author$project$NonEmptyString$toString = function (_v0) {
+	var str = _v0.a;
+	return str;
+};
 var $author$project$Main$applyIf = F3(
 	function (predicate, transform, value) {
 		return predicate(value) ? transform(value) : value;
@@ -5363,7 +5424,7 @@ var $author$project$Main$updateTaskById = F2(
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
-			case 'ToggleTodo':
+			case 'ToggleTodoStatus':
 				var id = msg.a;
 				return _Utils_update(
 					model,
@@ -5388,7 +5449,7 @@ var $author$project$Main$update = F2(
 					model,
 					{filter: newFilter});
 			case 'CreateTodo':
-				return $author$project$Main$createIfValid(model);
+				return $author$project$Main$addTodoFromDraft(model);
 			case 'StartEditing':
 				var id = msg.a;
 				var _v1 = A2($author$project$Main$findTodoById, id, model.todos);
@@ -5397,7 +5458,10 @@ var $author$project$Main$update = F2(
 					return _Utils_update(
 						model,
 						{
-							editing: A2($author$project$Main$Editing, id, todo.task)
+							editing: A2(
+								$author$project$Main$Editing,
+								id,
+								$author$project$NonEmptyString$toString(todo.task))
 						});
 				} else {
 					return model;
@@ -5420,12 +5484,20 @@ var $author$project$Main$update = F2(
 				if (_v3.$ === 'Editing') {
 					var id = _v3.a;
 					var draft = _v3.b;
-					return _Utils_update(
-						model,
-						{
-							editing: $author$project$Main$NotEditing,
-							todos: A3($author$project$Main$updateTaskById, id, draft, model.todos)
-						});
+					var _v4 = $author$project$NonEmptyString$fromString(draft);
+					if (_v4.$ === 'Just') {
+						var task = _v4.a;
+						return _Utils_update(
+							model,
+							{
+								editing: $author$project$Main$NotEditing,
+								todos: A3($author$project$Main$updateTaskById, id, task, model.todos)
+							});
+					} else {
+						return _Utils_update(
+							model,
+							{editing: $author$project$Main$NotEditing});
+					}
 				} else {
 					return model;
 				}
@@ -5540,6 +5612,14 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$html$Html$form = _VirtualDom_node('form');
 var $elm$html$Html$input = _VirtualDom_node('input');
+var $author$project$NonEmptyString$isValid = function (str) {
+	var _v0 = $author$project$NonEmptyString$fromString(str);
+	if (_v0.$ === 'Just') {
+		return true;
+	} else {
+		return false;
+	}
+};
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
 };
@@ -5623,8 +5703,7 @@ var $author$project$Main$viewNewTodoForm = function (model) {
 					[
 						$elm$html$Html$Attributes$type_('submit'),
 						$elm$html$Html$Attributes$disabled(
-						$elm$core$String$isEmpty(
-							$elm$core$String$trim(model.draft)))
+						!$author$project$NonEmptyString$isValid(model.draft))
 					]),
 				_List_fromArray(
 					[
@@ -5724,8 +5803,8 @@ var $author$project$Main$viewEditing = function (draft) {
 			]),
 		_List_Nil);
 };
-var $author$project$Main$ToggleTodo = function (a) {
-	return {$: 'ToggleTodo', a: a};
+var $author$project$Main$ToggleTodoStatus = function (a) {
+	return {$: 'ToggleTodoStatus', a: a};
 };
 var $elm$html$Html$span = _VirtualDom_node('span');
 var $author$project$Main$viewTaskStatus = function (todo) {
@@ -5743,11 +5822,12 @@ var $author$project$Main$viewTaskStatus = function (todo) {
 			[
 				$elm$html$Html$Attributes$class(statusClass),
 				$elm$html$Html$Events$onClick(
-				$author$project$Main$ToggleTodo(todo.id))
+				$author$project$Main$ToggleTodoStatus(todo.id))
 			]),
 		_List_fromArray(
 			[
-				$elm$html$Html$text(todo.task)
+				$elm$html$Html$text(
+				$author$project$NonEmptyString$toString(todo.task))
 			]));
 };
 var $author$project$Main$viewTask = F2(

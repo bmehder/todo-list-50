@@ -5,6 +5,8 @@ import Html exposing (Html, button, div, form, input, li, menu, span, text, ul)
 import Html.Attributes exposing (class, disabled, placeholder, type_, value)
 import Html.Events exposing (on, onBlur, onClick, onDoubleClick, onInput, onSubmit, stopPropagationOn)
 import Json.Decode as Decode
+import NonEmptyString exposing (NonEmptyString)
+import NonNegative exposing (NonNegative)
 
 
 
@@ -12,11 +14,11 @@ import Json.Decode as Decode
 
 
 type alias Id =
-    Int
+    NonNegative
 
 
 type alias Task =
-    String
+    NonEmptyString
 
 
 type Status
@@ -26,7 +28,7 @@ type Status
 
 type Editing
     = NotEditing
-    | Editing Id Task
+    | Editing Id String
 
 
 type Filter
@@ -49,7 +51,7 @@ type alias Todo =
 
 type alias Model =
     { todos : List Todo
-    , draft : Task
+    , draft : String
     , filter : Filter
     , editing : Editing
     }
@@ -58,9 +60,9 @@ type alias Model =
 init : Model
 init =
     { todos =
-        [ { id = 0, task = "Buy coffee", status = Active }
-        , { id = 1, task = "Write the smallest Elm app", status = Completed }
-        , { id = 2, task = "Profit", status = Active }
+        [ { id = unsafeId 0, task = unsafeTask "Buy coffee", status = Active }
+        , { id = unsafeId 1, task = unsafeTask "Write the smallest Elm app", status = Completed }
+        , { id = unsafeId 2, task = unsafeTask "Profit", status = Active }
         ]
     , draft = ""
     , filter = All
@@ -73,13 +75,13 @@ init =
 
 
 type Msg
-    = ToggleTodo Id
+    = ToggleTodoStatus Id
     | DeleteTodo Id
-    | UpdateDraft Task
+    | UpdateDraft String
     | SetFilter Filter
     | CreateTodo
     | StartEditing Id
-    | UpdateEditDraft Task
+    | UpdateEditDraft String
     | SaveEdit
     | CancelEdit
     | NoOp
@@ -88,7 +90,7 @@ type Msg
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        ToggleTodo id ->
+        ToggleTodoStatus id ->
             { model
                 | todos = toggleTodoById id <| model.todos
             }
@@ -105,13 +107,13 @@ update msg model =
             { model | filter = newFilter }
 
         CreateTodo ->
-            createIfValid model
+            addTodoFromDraft model
 
         StartEditing id ->
             case findTodoById id <| model.todos of
                 Just todo ->
                     { model
-                        | editing = Editing id todo.task
+                        | editing = Editing id (NonEmptyString.toString todo.task)
                     }
 
                 Nothing ->
@@ -128,10 +130,15 @@ update msg model =
         SaveEdit ->
             case model.editing of
                 Editing id draft ->
-                    { model
-                        | todos = updateTaskById id draft model.todos
-                        , editing = NotEditing
-                    }
+                    case NonEmptyString.fromString draft of
+                        Just task ->
+                            { model
+                                | todos = updateTaskById id task model.todos
+                                , editing = NotEditing
+                            }
+
+                        Nothing ->
+                            { model | editing = NotEditing }
 
                 NotEditing ->
                     model
@@ -160,12 +167,45 @@ applyIf predicate transform value =
 -- DOMAIN HELPERS
 
 
+unsafeTask : String -> Task
+unsafeTask str =
+    case NonEmptyString.fromString str of
+        Just task ->
+            task
+
+        Nothing ->
+            Debug.todo "Invalid task literal"
+
+
+
+-- idFromInt : Int -> Id
+-- idFromInt n =
+--     case NonNegative.fromInt n of
+--         Just id ->
+--             id
+--         Nothing ->
+--             Debug.todo "Invalid negative Id"
+
+
+
+unsafeId : Int -> Id
+unsafeId n =
+    case NonNegative.fromInt n of
+        Just id ->
+            id
+
+        Nothing ->
+            Debug.todo "Invalid Id literal"
+
+
 nextId : List Todo -> Id
-nextId =
-    List.map .id
-        >> List.maximum
-        >> Maybe.map ((+) 1)
-        >> Maybe.withDefault 0
+nextId todos =
+    todos
+        |> List.map (.id >> NonNegative.toInt)
+        |> List.maximum
+        |> Maybe.withDefault -1
+        |> (+) 1
+        |> unsafeId
 
 
 matchesTodoId : Id -> Todo -> Bool
@@ -225,32 +265,40 @@ filterTodos filter =
             List.filter (.status >> (==) Completed)
 
 
-createIfValid : Model -> Model
-createIfValid model =
-    if
-        model.draft
-            |> String.trim
-            |> String.isEmpty
-    then
-        model
+addTodoFromDraft : Model -> Model
+addTodoFromDraft model =
+    case NonEmptyString.fromString model.draft of
+        Just task ->
+            let
+                newTodo =
+                    { id = nextId model.todos
+                    , task = task
+                    , status = Active
+                    }
+            in
+            { model
+                | todos = model.todos ++ [ newTodo ]
+                , draft = ""
+            }
 
-    else
-        let
-            newTodo =
-                [ { id = nextId model.todos
-                  , task = model.draft
-                  , status = Active
-                  }
-                ]
-        in
-        { model
-            | todos = model.todos ++ newTodo
-            , draft = ""
-        }
+        Nothing ->
+            model
 
 
 
 -- VIEW
+-- view
+--  ─ viewNewTodoForm
+--  ─ viewFilterButtons
+--     ─ viewFilterButton
+--  ─ viewTodos
+--     ─ viewTodo
+--         ─ viewTask
+--            ─ viewEditing
+--            ─ viewTaskStatus
+--         ─ viewDeleteButton
+--  ─ viewTodosCount
+--      ─ viewFilteredCount
 
 
 view : Model -> Html Msg
@@ -281,7 +329,7 @@ viewNewTodoForm model =
             []
         , button
             [ type_ "submit"
-            , disabled (model.draft |> String.trim |> String.isEmpty)
+            , disabled (not <| NonEmptyString.isValid model.draft)
             ]
             [ text "Add" ]
         ]
@@ -327,6 +375,15 @@ viewFilterButton current value =
         ]
 
 
+viewTodos : Model -> Html Msg
+viewTodos model =
+    ul [ class "flow" ]
+        (model.todos
+            |> filterTodos model.filter
+            |> List.map (viewTodo model)
+        )
+
+
 viewTodo : Model -> Todo -> Html Msg
 viewTodo model todo =
     li [ class "flex space-between align-items-center gap-1", onDoubleClick (StartEditing todo.id) ]
@@ -349,7 +406,7 @@ viewTask model todo =
             viewTaskStatus todo
 
 
-viewEditing : Task -> Html Msg
+viewEditing : String -> Html Msg
 viewEditing draft =
     input
         [ stopPropagationOn "click" (Decode.succeed ( NoOp, True ))
@@ -387,9 +444,9 @@ viewTaskStatus todo =
     in
     span
         [ class statusClass
-        , onClick (ToggleTodo todo.id)
+        , onClick (ToggleTodoStatus todo.id)
         ]
-        [ text todo.task ]
+        [ text (NonEmptyString.toString todo.task) ]
 
 
 viewDeleteButton : Todo -> Html Msg
@@ -399,6 +456,11 @@ viewDeleteButton todo =
         , class "delete-btn cursor-pointer"
         ]
         [ text "✕" ]
+
+
+viewTodosCount : Model -> Html Msg
+viewTodosCount model =
+    div [ class "text-align-center" ] [ viewFilteredCount model ]
 
 
 viewFilteredCount : Model -> Html Msg
@@ -421,20 +483,6 @@ viewFilteredCount model =
                     completedLabel
     in
     text (String.fromInt count ++ labelForFilter count)
-
-
-viewTodos : Model -> Html Msg
-viewTodos model =
-    ul [ class "flow" ]
-        (model.todos
-            |> filterTodos model.filter
-            |> List.map (viewTodo model)
-        )
-
-
-viewTodosCount : Model -> Html Msg
-viewTodosCount model =
-    div [ class "text-align-center" ] [ viewFilteredCount model ]
 
 
 
