@@ -4462,6 +4462,7 @@ var $author$project$Main$Active = {$: 'Active'};
 var $author$project$Main$All = {$: 'All'};
 var $author$project$Main$Completed = {$: 'Completed'};
 var $author$project$Main$NotEditing = {$: 'NotEditing'};
+var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $elm$core$Maybe$Just = function (a) {
 	return {$: 'Just', a: a};
 };
@@ -4471,7 +4472,6 @@ var $elm$core$Basics$identity = function (x) {
 var $author$project$NonNegative$NonNegative = function (a) {
 	return {$: 'NonNegative', a: a};
 };
-var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $elm$core$Basics$ge = _Utils_ge;
 var $author$project$NonNegative$fromInt = function (n) {
 	return (n >= 0) ? $elm$core$Maybe$Just(
@@ -4487,8 +4487,8 @@ var $author$project$Main$unsafeId = function (n) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 198, column: 13},
-				end: {line: 198, column: 23}
+				start: {line: 191, column: 13},
+				end: {line: 191, column: 23}
 			})('Invalid Id literal');
 	}
 };
@@ -4518,8 +4518,8 @@ var $author$project$Main$unsafeTask = function (str) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 177, column: 13},
-				end: {line: 177, column: 23}
+				start: {line: 181, column: 13},
+				end: {line: 181, column: 23}
 			})('Invalid task literal');
 	}
 };
@@ -4527,6 +4527,7 @@ var $author$project$Main$init = {
 	draft: '',
 	editing: $author$project$Main$NotEditing,
 	filter: $author$project$Main$All,
+	pendingDelete: $elm$core$Maybe$Nothing,
 	todos: _List_fromArray(
 		[
 			{
@@ -5280,37 +5281,27 @@ var $elm$core$List$maximum = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
 var $author$project$NonNegative$toInt = function (_v0) {
 	var n = _v0.a;
 	return n;
 };
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $author$project$Main$nextId = function (todos) {
-	return $author$project$Main$unsafeId(
-		1 + A2(
-			$elm$core$Maybe$withDefault,
-			-1,
-			$elm$core$List$maximum(
-				A2(
-					$elm$core$List$map,
-					A2(
-						$elm$core$Basics$composeR,
-						function ($) {
-							return $.id;
-						},
-						$author$project$NonNegative$toInt),
-					todos))));
+	var maybeMaxId = $elm$core$List$maximum(
+		A2(
+			$elm$core$List$map,
+			A2(
+				$elm$core$Basics$composeR,
+				function ($) {
+					return $.id;
+				},
+				$author$project$NonNegative$toInt),
+			todos));
+	if (maybeMaxId.$ === 'Just') {
+		var maxId = maybeMaxId.a;
+		return $author$project$Main$unsafeId(maxId + 1);
+	} else {
+		return $author$project$Main$unsafeId(0);
+	}
 };
 var $author$project$Main$addTodoFromDraft = function (model) {
 	var _v0 = $author$project$NonEmptyString$fromString(model.draft);
@@ -5362,26 +5353,6 @@ var $author$project$Main$deleteTodoById = function (id) {
 			$elm$core$Basics$not,
 			$author$project$Main$matchesTodoId(id)));
 };
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $author$project$Main$findTodoById = function (id) {
-	return A2(
-		$elm$core$Basics$composeR,
-		$elm$core$List$filter(
-			$author$project$Main$matchesTodoId(id)),
-		$elm$core$List$head);
-};
-var $author$project$NonEmptyString$toString = function (_v0) {
-	var str = _v0.a;
-	return str;
-};
 var $author$project$Main$applyIf = F3(
 	function (predicate, transform, value) {
 		return predicate(value) ? transform(value) : value;
@@ -5431,13 +5402,25 @@ var $author$project$Main$update = F2(
 					{
 						todos: A2($author$project$Main$toggleTodoById, id, model.todos)
 					});
-			case 'DeleteTodo':
+			case 'AskToDelete':
 				var id = msg.a;
 				return _Utils_update(
 					model,
 					{
+						pendingDelete: $elm$core$Maybe$Just(id)
+					});
+			case 'ConfirmDelete':
+				var id = msg.a;
+				return _Utils_update(
+					model,
+					{
+						pendingDelete: $elm$core$Maybe$Nothing,
 						todos: A2($author$project$Main$deleteTodoById, id, model.todos)
 					});
+			case 'CancelDelete':
+				return _Utils_update(
+					model,
+					{pendingDelete: $elm$core$Maybe$Nothing});
 			case 'UpdateDraft':
 				var newValue = msg.a;
 				return _Utils_update(
@@ -5452,25 +5435,17 @@ var $author$project$Main$update = F2(
 				return $author$project$Main$addTodoFromDraft(model);
 			case 'StartEditing':
 				var id = msg.a;
-				var _v1 = A2($author$project$Main$findTodoById, id, model.todos);
-				if (_v1.$ === 'Just') {
-					var todo = _v1.a;
-					return _Utils_update(
-						model,
-						{
-							editing: A2(
-								$author$project$Main$Editing,
-								id,
-								$author$project$NonEmptyString$toString(todo.task))
-						});
-				} else {
-					return model;
-				}
+				var task = msg.b;
+				return _Utils_update(
+					model,
+					{
+						editing: A2($author$project$Main$Editing, id, task)
+					});
 			case 'UpdateEditDraft':
 				var newValue = msg.a;
-				var _v2 = model.editing;
-				if (_v2.$ === 'Editing') {
-					var id = _v2.a;
+				var _v1 = model.editing;
+				if (_v1.$ === 'Editing') {
+					var id = _v1.a;
 					return _Utils_update(
 						model,
 						{
@@ -5480,13 +5455,13 @@ var $author$project$Main$update = F2(
 					return model;
 				}
 			case 'SaveEdit':
-				var _v3 = model.editing;
-				if (_v3.$ === 'Editing') {
-					var id = _v3.a;
-					var draft = _v3.b;
-					var _v4 = $author$project$NonEmptyString$fromString(draft);
-					if (_v4.$ === 'Just') {
-						var task = _v4.a;
+				var _v2 = model.editing;
+				if (_v2.$ === 'Editing') {
+					var id = _v2.a;
+					var draft = _v2.b;
+					var _v3 = $author$project$NonEmptyString$fromString(draft);
+					if (_v3.$ === 'Just') {
+						var task = _v3.a;
 						return _Utils_update(
 							model,
 							{
@@ -5537,6 +5512,73 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
+var $author$project$Main$CancelDelete = {$: 'CancelDelete'};
+var $author$project$Main$ConfirmDelete = function (a) {
+	return {$: 'ConfirmDelete', a: a};
+};
+var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Main$viewConfirmDialog = function (model) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		$elm$html$Html$text(''),
+		A2(
+			$elm$core$Maybe$map,
+			function (id) {
+				return A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('confirm-dialog flex gap-1 align-items-center')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Delete this todo?'),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Events$onClick(
+									$author$project$Main$ConfirmDelete(id))
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Yes')
+								])),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Events$onClick($author$project$Main$CancelDelete)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Cancel')
+								]))
+						]));
+			},
+			model.pendingDelete));
+};
 var $author$project$Main$ActiveOnly = {$: 'ActiveOnly'};
 var $author$project$Main$CompletedOnly = {$: 'CompletedOnly'};
 var $author$project$Main$allFilters = _List_fromArray(
@@ -5545,10 +5587,7 @@ var $elm$html$Html$menu = _VirtualDom_node('menu');
 var $author$project$Main$SetFilter = function (a) {
 	return {$: 'SetFilter', a: a};
 };
-var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$li = _VirtualDom_node('li');
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$Main$viewFilterButton = F2(
 	function (current, value) {
 		var label = function () {
@@ -5711,8 +5750,8 @@ var $author$project$Main$viewNewTodoForm = function (model) {
 					]))
 			]));
 };
-var $author$project$Main$filterTodos = function (filter) {
-	switch (filter.$) {
+var $author$project$Main$filterTodos = function (filterMode) {
+	switch (filterMode.$) {
 		case 'All':
 			return $elm$core$Basics$identity;
 		case 'ActiveOnly':
@@ -5734,17 +5773,22 @@ var $author$project$Main$filterTodos = function (filter) {
 	}
 };
 var $elm$html$Html$ul = _VirtualDom_node('ul');
-var $author$project$Main$StartEditing = function (a) {
-	return {$: 'StartEditing', a: a};
-};
+var $author$project$Main$StartEditing = F2(
+	function (a, b) {
+		return {$: 'StartEditing', a: a, b: b};
+	});
 var $elm$html$Html$Events$onDoubleClick = function (msg) {
 	return A2(
 		$elm$html$Html$Events$on,
 		'dblclick',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $author$project$Main$DeleteTodo = function (a) {
-	return {$: 'DeleteTodo', a: a};
+var $author$project$NonEmptyString$toString = function (_v0) {
+	var str = _v0.a;
+	return str;
+};
+var $author$project$Main$AskToDelete = function (a) {
+	return {$: 'AskToDelete', a: a};
 };
 var $author$project$Main$viewDeleteButton = function (todo) {
 	return A2(
@@ -5756,7 +5800,7 @@ var $author$project$Main$viewDeleteButton = function (todo) {
 				'click',
 				$elm$json$Json$Decode$succeed(
 					_Utils_Tuple2(
-						$author$project$Main$DeleteTodo(todo.id),
+						$author$project$Main$AskToDelete(todo.id),
 						true))),
 				$elm$html$Html$Attributes$class('delete-btn cursor-pointer')
 			]),
@@ -5849,7 +5893,10 @@ var $author$project$Main$viewTodo = F2(
 				[
 					$elm$html$Html$Attributes$class('flex space-between align-items-center gap-1'),
 					$elm$html$Html$Events$onDoubleClick(
-					$author$project$Main$StartEditing(todo.id))
+					A2(
+						$author$project$Main$StartEditing,
+						todo.id,
+						$author$project$NonEmptyString$toString(todo.task)))
 				]),
 			_List_fromArray(
 				[
@@ -5871,30 +5918,15 @@ var $author$project$Main$viewTodos = function (model) {
 };
 var $author$project$Main$pluralize = F3(
 	function (singular, plural, count) {
-		return (count === 1) ? singular : plural;
+		if (count === 1) {
+			return singular;
+		} else {
+			return plural;
+		}
 	});
 var $author$project$Main$completedLabel = A2($author$project$Main$pluralize, ' item completed', ' items completed');
 var $author$project$Main$itemsLabel = A2($author$project$Main$pluralize, ' item', ' items');
 var $author$project$Main$remainingLabel = A2($author$project$Main$pluralize, ' item remaining', ' items remaining');
-var $author$project$Main$viewFilteredCount = function (model) {
-	var labelForFilter = function () {
-		var _v0 = model.filter;
-		switch (_v0.$) {
-			case 'All':
-				return $author$project$Main$itemsLabel;
-			case 'ActiveOnly':
-				return $author$project$Main$remainingLabel;
-			default:
-				return $author$project$Main$completedLabel;
-		}
-	}();
-	var count = $elm$core$List$length(
-		A2($author$project$Main$filterTodos, model.filter, model.todos));
-	return $elm$html$Html$text(
-		_Utils_ap(
-			$elm$core$String$fromInt(count),
-			labelForFilter(count)));
-};
 var $author$project$Main$viewTodosCount = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -5904,7 +5936,25 @@ var $author$project$Main$viewTodosCount = function (model) {
 			]),
 		_List_fromArray(
 			[
-				$author$project$Main$viewFilteredCount(model)
+				function () {
+				var labelForFilter = function () {
+					var _v0 = model.filter;
+					switch (_v0.$) {
+						case 'All':
+							return $author$project$Main$itemsLabel;
+						case 'ActiveOnly':
+							return $author$project$Main$remainingLabel;
+						default:
+							return $author$project$Main$completedLabel;
+					}
+				}();
+				var count = $elm$core$List$length(
+					A2($author$project$Main$filterTodos, model.filter, model.todos));
+				return $elm$html$Html$text(
+					_Utils_ap(
+						$elm$core$String$fromInt(count),
+						labelForFilter(count)));
+			}()
 			]));
 };
 var $author$project$Main$view = function (model) {
@@ -5920,7 +5970,8 @@ var $author$project$Main$view = function (model) {
 				$author$project$Main$viewNewTodoForm(model),
 				$author$project$Main$viewFilterButtons(model),
 				$author$project$Main$viewTodos(model),
-				$author$project$Main$viewTodosCount(model)
+				$author$project$Main$viewTodosCount(model),
+				$author$project$Main$viewConfirmDialog(model)
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$sandbox(

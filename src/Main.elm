@@ -54,6 +54,7 @@ type alias Model =
     , draft : String
     , filter : Filter
     , editing : Editing
+    , pendingDelete : Maybe Id
     }
 
 
@@ -67,6 +68,7 @@ init =
     , draft = ""
     , filter = All
     , editing = NotEditing
+    , pendingDelete = Nothing
     }
 
 
@@ -76,11 +78,13 @@ init =
 
 type Msg
     = ToggleTodoStatus Id
-    | DeleteTodo Id
+    | AskToDelete Id
+    | ConfirmDelete Id
+    | CancelDelete
     | UpdateDraft String
     | SetFilter Filter
     | CreateTodo
-    | StartEditing Id
+    | StartEditing Id String
     | UpdateEditDraft String
     | SaveEdit
     | CancelEdit
@@ -92,13 +96,20 @@ update msg model =
     case msg of
         ToggleTodoStatus id ->
             { model
-                | todos = toggleTodoById id <| model.todos
+                | todos = toggleTodoById id model.todos
             }
 
-        DeleteTodo id ->
+        AskToDelete id ->
+            { model | pendingDelete = Just id }
+
+        ConfirmDelete id ->
             { model
-                | todos = deleteTodoById id <| model.todos
+                | todos = deleteTodoById id model.todos
+                , pendingDelete = Nothing
             }
+
+        CancelDelete ->
+            { model | pendingDelete = Nothing }
 
         UpdateDraft newValue ->
             { model | draft = newValue }
@@ -109,15 +120,8 @@ update msg model =
         CreateTodo ->
             addTodoFromDraft model
 
-        StartEditing id ->
-            case findTodoById id <| model.todos of
-                Just todo ->
-                    { model
-                        | editing = Editing id (NonEmptyString.toString todo.task)
-                    }
-
-                Nothing ->
-                    model
+        StartEditing id task ->
+            { model | editing = Editing id task }
 
         UpdateEditDraft newValue ->
             case model.editing of
@@ -177,17 +181,6 @@ unsafeTask str =
             Debug.todo "Invalid task literal"
 
 
-
--- idFromInt : Int -> Id
--- idFromInt n =
---     case NonNegative.fromInt n of
---         Just id ->
---             id
---         Nothing ->
---             Debug.todo "Invalid negative Id"
-
-
-
 unsafeId : Int -> Id
 unsafeId n =
     case NonNegative.fromInt n of
@@ -200,12 +193,18 @@ unsafeId n =
 
 nextId : List Todo -> Id
 nextId todos =
-    todos
-        |> List.map (.id >> NonNegative.toInt)
-        |> List.maximum
-        |> Maybe.withDefault -1
-        |> (+) 1
-        |> unsafeId
+    let
+        maybeMaxId =
+            todos
+                |> List.map (.id >> NonNegative.toInt)
+                |> List.maximum
+    in
+    case maybeMaxId of
+        Just maxId ->
+            unsafeId <| maxId + 1
+
+        Nothing ->
+            unsafeId 0
 
 
 matchesTodoId : Id -> Todo -> Bool
@@ -246,15 +245,9 @@ deleteTodoById id =
     List.filter (not << matchesTodoId id)
 
 
-findTodoById : Id -> List Todo -> Maybe Todo
-findTodoById id =
-    List.filter (matchesTodoId id)
-        >> List.head
-
-
 filterTodos : Filter -> List Todo -> List Todo
-filterTodos filter =
-    case filter of
+filterTodos filterMode =
+    case filterMode of
         All ->
             identity
 
@@ -298,7 +291,7 @@ addTodoFromDraft model =
 --            ─ viewTaskStatus
 --         ─ viewDeleteButton
 --  ─ viewTodosCount
---      ─ viewFilteredCount
+--  - viewConfirmDialog
 
 
 view : Model -> Html Msg
@@ -308,6 +301,7 @@ view model =
         , viewFilterButtons model
         , viewTodos model
         , viewTodosCount model
+        , viewConfirmDialog model
         ]
 
 
@@ -337,9 +331,8 @@ viewNewTodoForm model =
 
 viewFilterButtons : Model -> Html Msg
 viewFilterButtons model =
-    allFilters
-        |> List.map (viewFilterButton model.filter)
-        |> menu [ class "grid grid-template-columns-3 gap-1" ]
+    menu [ class "grid grid-template-columns-3 gap-1" ] <|
+        List.map (viewFilterButton model.filter) allFilters
 
 
 viewFilterButton : Filter -> Filter -> Html Msg
@@ -386,7 +379,7 @@ viewTodos model =
 
 viewTodo : Model -> Todo -> Html Msg
 viewTodo model todo =
-    li [ class "flex space-between align-items-center gap-1", onDoubleClick (StartEditing todo.id) ]
+    li [ class "flex space-between align-items-center gap-1", onDoubleClick (StartEditing todo.id (NonEmptyString.toString todo.task)) ]
         [ viewTask model todo
         , viewDeleteButton todo
         ]
@@ -452,7 +445,7 @@ viewTaskStatus todo =
 viewDeleteButton : Todo -> Html Msg
 viewDeleteButton todo =
     button
-        [ stopPropagationOn "click" (Decode.succeed ( DeleteTodo todo.id, True ))
+        [ stopPropagationOn "click" (Decode.succeed ( AskToDelete todo.id, True ))
         , class "delete-btn cursor-pointer"
         ]
         [ text "✕" ]
@@ -460,29 +453,40 @@ viewDeleteButton todo =
 
 viewTodosCount : Model -> Html Msg
 viewTodosCount model =
-    div [ class "text-align-center" ] [ viewFilteredCount model ]
+    div [ class "text-align-center" ]
+        [ let
+            count =
+                model.todos
+                    |> filterTodos model.filter
+                    |> List.length
+
+            labelForFilter =
+                case model.filter of
+                    All ->
+                        itemsLabel
+
+                    ActiveOnly ->
+                        remainingLabel
+
+                    CompletedOnly ->
+                        completedLabel
+          in
+          text (String.fromInt count ++ labelForFilter count)
+        ]
 
 
-viewFilteredCount : Model -> Html Msg
-viewFilteredCount model =
-    let
-        count =
-            model.todos
-                |> filterTodos model.filter
-                |> List.length
-
-        labelForFilter =
-            case model.filter of
-                All ->
-                    itemsLabel
-
-                ActiveOnly ->
-                    remainingLabel
-
-                CompletedOnly ->
-                    completedLabel
-    in
-    text (String.fromInt count ++ labelForFilter count)
+viewConfirmDialog : Model -> Html Msg
+viewConfirmDialog model =
+    model.pendingDelete
+        |> Maybe.map
+            (\id ->
+                div [ class "confirm-dialog flex gap-1 align-items-center" ]
+                    [ text "Delete this todo?"
+                    , button [ onClick (ConfirmDelete id) ] [ text "Yes" ]
+                    , button [ onClick CancelDelete ] [ text "Cancel" ]
+                    ]
+            )
+        |> Maybe.withDefault (text "")
 
 
 
@@ -506,11 +510,12 @@ completedLabel =
 
 pluralize : String -> String -> Int -> String
 pluralize singular plural count =
-    if count == 1 then
-        singular
+    case count of
+        1 ->
+            singular
 
-    else
-        plural
+        _ ->
+            plural
 
 
 

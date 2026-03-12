@@ -18,7 +18,6 @@ fromString str =
     else
         Just (NonEmptyString str)
 
-
 toString : NonEmptyString -> String
 toString (NonEmptyString str) =
     str
