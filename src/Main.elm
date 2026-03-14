@@ -1,9 +1,9 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, button, div, form, input, li, menu, span, text, ul)
-import Html.Attributes exposing (class, disabled, placeholder, type_, value)
-import Html.Events exposing (on, onBlur, onClick, onInput, onSubmit, stopPropagationOn)
+import Html exposing (Html, button, details, div, form, h2, input, label, li, menu, section, span, summary, text, ul)
+import Html.Attributes exposing (attribute, class, disabled, placeholder, type_, value)
+import Html.Events exposing (on, onBlur, onCheck, onClick, onInput, onSubmit, stopPropagationOn)
 import Json.Decode as Decode
 import NonEmptyString exposing (NonEmptyString)
 import NonNegative exposing (NonNegative)
@@ -11,6 +11,7 @@ import NonNegative exposing (NonNegative)
 
 
 -- MODEL
+-------------------------------------------------------------------------------
 
 
 type alias Id =
@@ -60,8 +61,28 @@ type alias Model =
     }
 
 
-init : Model
-init =
+type alias Step =
+    { msg : Msg
+    , prev : Model
+    , next : Model
+    }
+
+
+type alias Timeline =
+    { past : List Step
+    , present : Model
+    , future : List Step
+    }
+
+
+type alias AppModel =
+    { timeline : Timeline
+    , showTimeline : Bool
+    }
+
+
+initModel : Model
+initModel =
     { todos =
         [ { id = unsafeId 0, task = unsafeTask "Buy coffee", status = Active }
         , { id = unsafeId 1, task = unsafeTask "Write the smallest Elm app", status = Completed }
@@ -75,8 +96,20 @@ init =
     }
 
 
+init : AppModel
+init =
+    { timeline =
+        { past = []
+        , present = initModel
+        , future = []
+        }
+    , showTimeline = False
+    }
+
+
 
 -- UPDATE
+-------------------------------------------------------------------------------
 
 
 type Msg
@@ -92,10 +125,14 @@ type Msg
     | SaveEdit
     | CancelEdit
     | NoOp
+    | ToggleTimeline
+    | AppMsg Msg
+    | Prev
+    | Next
 
 
-update : Msg -> Model -> Model
-update msg model =
+updateTodo : Msg -> Model -> Model
+updateTodo msg model =
     case msg of
         ToggleTodoStatus id ->
             { model
@@ -156,9 +193,90 @@ update msg model =
         NoOp ->
             model
 
+        ToggleTimeline ->
+            model
+
+        AppMsg _ ->
+            model
+
+        Prev ->
+            model
+
+        Next ->
+            model
+
+
+update : Msg -> AppModel -> AppModel
+update msg app =
+    case msg of
+        AppMsg innerMsg ->
+            let
+                timeline =
+                    app.timeline
+
+                newModel =
+                    updateTodo innerMsg timeline.present
+
+                step =
+                    { msg = innerMsg
+                    , prev = timeline.present
+                    , next = newModel
+                    }
+
+                newTimeline =
+                    { past = step :: timeline.past
+                    , present = newModel
+                    , future = []
+                    }
+            in
+            { app | timeline = newTimeline }
+
+        Prev ->
+            let
+                timeline =
+                    app.timeline
+            in
+            case timeline.past of
+                step :: rest ->
+                    { app
+                        | timeline =
+                            { past = rest
+                            , present = step.prev
+                            , future = step :: timeline.future
+                            }
+                    }
+
+                [] ->
+                    app
+
+        Next ->
+            let
+                timeline =
+                    app.timeline
+            in
+            case timeline.future of
+                step :: rest ->
+                    { app
+                        | timeline =
+                            { past = step :: timeline.past
+                            , present = step.next
+                            , future = rest
+                            }
+                    }
+
+                [] ->
+                    app
+
+        ToggleTimeline ->
+            { app | showTimeline = not app.showTimeline }
+
+        _ ->
+            update (AppMsg msg) app
+
 
 
 -- UTILITY FUNCTIONS
+-------------------------------------------------------------------------------
 
 
 applyIf : (a -> Bool) -> (a -> a) -> a -> a
@@ -172,6 +290,7 @@ applyIf predicate transform value =
 
 
 -- DOMAIN HELPERS
+-------------------------------------------------------------------------------
 
 
 unsafeTask : String -> Task
@@ -262,7 +381,7 @@ filterTodos filterMode =
 
         CompletedOnly ->
             List.filter (.status >> (==) Completed)
-        
+
         ImportantOnly ->
             List.filter (.status >> (==) Important)
 
@@ -289,33 +408,39 @@ addTodoFromDraft model =
 
 
 -- VIEW
--- view
---  ─ viewNewTodoForm
---  ─ viewFilterButtons
---     ─ viewFilterButton
---  ─ viewTodos
---     ─ viewTodo
---         ─ viewTask
---            ─ viewEditing
---            ─ viewTaskStatus
---         ─ viewDeleteButton
---  ─ viewTodosCount
---  - viewConfirmDialog
+-------------------------------------------------------------------------------
 
 
-view : Model -> Html Msg
-view model =
-    div [ class "flow", onClick CancelEdit ]
+view : AppModel -> Html Msg
+view app =
+    let
+        timeline =
+            app.timeline
+
+        model =
+            timeline.present
+    in
+    div [ class "flow" ]
         [ viewNewTodoForm model
         , viewFilterButtons model
         , viewTodos model
         , viewTodosCount model
         , viewConfirmDialog model
+        , viewTimelineToggle app
+        , if app.showTimeline then
+            div [ class "timeline-wrapper flow" ]
+                [ viewTimeline timeline
+                , viewHistory timeline
+                ]
+
+          else
+            text ""
         ]
 
 
 
 -- VIEW HELPERS
+-------------------------------------------------------------------------------
 
 
 viewNewTodoForm : Model -> Html Msg
@@ -340,7 +465,7 @@ viewNewTodoForm model =
 
 viewFilterButtons : Model -> Html Msg
 viewFilterButtons model =
-    menu [ class "grid grid-template-columns-3 gap-1" ] <|
+    menu [ class "grid grid-template-columns-4 gap-1 padding-0" ] <|
         List.map (viewFilterButton model.filter) allFilters
 
 
@@ -382,7 +507,7 @@ viewFilterButton current value =
 
 viewTodos : Model -> Html Msg
 viewTodos model =
-    ul [ class "flow" ]
+    ul [ class "flow padding-0" ]
         (model.todos
             |> filterTodos model.filter
             |> List.map (viewTodo model)
@@ -458,6 +583,7 @@ viewTaskStatus todo =
                     (\isShift ->
                         if isShift then
                             Decode.succeed ( StartEditing todo.id (NonEmptyString.toString todo.task), True )
+
                         else
                             Decode.succeed ( ToggleTodoStatus todo.id, True )
                     )
@@ -518,6 +644,7 @@ viewConfirmDialog model =
 
 
 -- VIEW UTILITIES
+-------------------------------------------------------------------------------
 
 
 itemsLabel : Int -> String
@@ -533,9 +660,11 @@ remainingLabel =
 completedLabel : Int -> String
 completedLabel =
     pluralize " item completed" " items completed"
+
+
 importantLabel : Int -> String
 importantLabel =
-    pluralize " item completed" " items completed"
+    pluralize " important item" " important items"
 
 
 pluralize : String -> String -> Int -> String
@@ -549,10 +678,232 @@ pluralize singular plural count =
 
 
 
+-- TIME TRAVEL DEBUGGER
+-------------------------------------------------------------------------------
+
+
+viewModel : Model -> Html Msg
+viewModel model =
+    ul []
+        [ li [] [ text ("draft: \"" ++ model.draft ++ "\"") ]
+        , li [] [ text ("filter: " ++ filterToString model.filter) ]
+        , li [] [ text ("editing: " ++ editingToString model.editing) ]
+        , li [] [ text ("pendingDelete: " ++ pendingDeleteToString model.pendingDelete) ]
+        , li []
+            [ text "todos:"
+            , ul [] (List.map viewTodoDebug model.todos)
+            ]
+        ]
+
+
+viewTimelineToggle : AppModel -> Html Msg
+viewTimelineToggle app =
+    div [ class "flex gap-1 align-items-center" ]
+        [ input
+            [ type_ "checkbox"
+            , Html.Attributes.checked app.showTimeline
+            , onCheck (always ToggleTimeline)
+            , attribute "id" "toggle-timeline"
+            ]
+            []
+        , label
+            [ attribute "for" "toggle-timeline" ]
+            [ text "Show Time Travel Debugger" ]
+        ]
+
+
+viewTimeline : Timeline -> Html Msg
+viewTimeline timeline =
+    section [ class "timeline" ]
+        [ h2 [ class "margin-bottom-1" ]
+            [ text "Time Travel Debugger" ]
+        , div [ class "flex gap-1 align-items-center" ]
+            [ button
+                [ onClick Prev
+                , disabled (List.isEmpty timeline.past)
+                ]
+                [ text "Prev" ]
+            , button
+                [ onClick Next
+                , disabled (List.isEmpty timeline.future)
+                ]
+                [ text "Next" ]
+            , div []
+                [ text ("Transitions: " ++ String.fromInt (List.length timeline.past)) ]
+            ]
+        ]
+
+
+viewHistory : Timeline -> Html Msg
+viewHistory timeline =
+    ul [ class "flow padding-0 list-style-none" ]
+        ((timeline.past
+            |> List.map viewStep
+         )
+            ++ [ viewInitialStep timeline.present ]
+        )
+
+
+viewInitialStep : Model -> Html Msg
+viewInitialStep model =
+    li []
+        [ details [ attribute "name" "timeline-step" ]
+            [ summary []
+                [ text "Msg: None (initial state)" ]
+            , viewModel model
+            ]
+        ]
+
+
+viewStep : Step -> Html Msg
+viewStep step =
+    li []
+        [ details [ attribute "name" "timeline-step" ]
+            [ summary []
+                [ text ("Msg: " ++ msgToString step.msg) ]
+            , div [ class "padding-inline-start-1-5" ]
+                [ div [] [ text "Next Model:" ]
+                , viewModel step.next
+                ]
+            ]
+        ]
+
+
+msgToString : Msg -> String
+msgToString msg =
+    case msg of
+        ToggleTodoStatus id ->
+            "ToggleTodoStatus " ++ String.fromInt (NonNegative.toInt id)
+
+        AskToDelete id ->
+            "AskToDelete " ++ String.fromInt (NonNegative.toInt id)
+
+        ConfirmDelete id ->
+            "ConfirmDelete " ++ String.fromInt (NonNegative.toInt id)
+
+        CancelDelete ->
+            "CancelDelete"
+
+        UpdateDraft str ->
+            "UpdateDraft \"" ++ str ++ "\""
+
+        SetFilter filter ->
+            case filter of
+                All ->
+                    "SetFilter All"
+
+                ActiveOnly ->
+                    "SetFilter ActiveOnly"
+
+                CompletedOnly ->
+                    "SetFilter CompletedOnly"
+
+                ImportantOnly ->
+                    "SetFilter ImportantOnly"
+
+        CreateTodo ->
+            "CreateTodo"
+
+        StartEditing id task ->
+            "StartEditing "
+                ++ String.fromInt (NonNegative.toInt id)
+                ++ " \""
+                ++ task
+                ++ "\""
+
+        UpdateEditDraft str ->
+            "UpdateEditDraft \"" ++ str ++ "\""
+
+        SaveEdit ->
+            "SaveEdit"
+
+        CancelEdit ->
+            "CancelEdit"
+
+        NoOp ->
+            "NoOp"
+
+        ToggleTimeline ->
+            "ToggleTimeline"
+
+        AppMsg inner ->
+            "AppMsg (" ++ msgToString inner ++ ")"
+
+        Prev ->
+            "Prev"
+
+        Next ->
+            "Next"
+
+
+filterToString : Filter -> String
+filterToString filter =
+    case filter of
+        All ->
+            "All"
+
+        ActiveOnly ->
+            "ActiveOnly"
+
+        CompletedOnly ->
+            "CompletedOnly"
+
+        ImportantOnly ->
+            "ImportantOnly"
+
+
+editingToString : Editing -> String
+editingToString editing =
+    case editing of
+        NotEditing ->
+            "NotEditing"
+
+        Editing id draft ->
+            "Editing " ++ String.fromInt (NonNegative.toInt id) ++ " \"" ++ draft ++ "\""
+
+
+pendingDeleteToString : Maybe Id -> String
+pendingDeleteToString maybeId =
+    case maybeId of
+        Nothing ->
+            "Nothing"
+
+        Just id ->
+            "Just " ++ String.fromInt (NonNegative.toInt id)
+
+
+viewTodoDebug : Todo -> Html Msg
+viewTodoDebug todo =
+    li []
+        [ text "{"
+        , ul []
+            [ li [] [ text ("id: " ++ String.fromInt (NonNegative.toInt todo.id)) ]
+            , li [] [ text ("status: " ++ statusToString todo.status) ]
+            , li [] [ text ("task: \"" ++ NonEmptyString.toString todo.task ++ "\"") ]
+            ]
+        , text "}"
+        ]
+
+
+statusToString : Status -> String
+statusToString status =
+    case status of
+        Active ->
+            "Active"
+
+        Completed ->
+            "Completed"
+
+        Important ->
+            "Important"
+
+
+
 -- PROGRAM
+-------------------------------------------------------------------------------
 
 
-main : Program () Model Msg
+main : Program () AppModel Msg
 main =
     Browser.sandbox
         { init = init

@@ -4458,6 +4458,7 @@ var $elm$core$Set$toList = function (_v0) {
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
+var $elm$core$Basics$False = {$: 'False'};
 var $author$project$Main$Active = {$: 'Active'};
 var $author$project$Main$All = {$: 'All'};
 var $author$project$Main$Completed = {$: 'Completed'};
@@ -4488,8 +4489,8 @@ var $author$project$Main$unsafeId = function (n) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 194, column: 13},
-				end: {line: 194, column: 23}
+				start: {line: 313, column: 13},
+				end: {line: 313, column: 23}
 			})('Invalid Id literal');
 	}
 };
@@ -4519,12 +4520,12 @@ var $author$project$Main$unsafeTask = function (str) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 184, column: 13},
-				end: {line: 184, column: 23}
+				start: {line: 303, column: 13},
+				end: {line: 303, column: 23}
 			})('Invalid task literal');
 	}
 };
-var $author$project$Main$init = {
+var $author$project$Main$initModel = {
 	draft: '',
 	editing: $author$project$Main$NotEditing,
 	filter: $author$project$Main$All,
@@ -4553,6 +4554,10 @@ var $author$project$Main$init = {
 		}
 		])
 };
+var $author$project$Main$init = {
+	showTimeline: false,
+	timeline: {future: _List_Nil, past: _List_Nil, present: $author$project$Main$initModel}
+};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
 };
@@ -4574,7 +4579,6 @@ var $elm$core$Result$Ok = function (a) {
 var $elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 'OneOf', a: a};
 };
-var $elm$core$Basics$False = {$: 'False'};
 var $elm$core$Basics$add = _Basics_add;
 var $elm$core$String$all = _String_all;
 var $elm$core$Basics$and = _Basics_and;
@@ -5268,6 +5272,10 @@ var $elm$browser$Browser$sandbox = function (impl) {
 			view: impl.view
 		});
 };
+var $author$project$Main$AppMsg = function (a) {
+	return {$: 'AppMsg', a: a};
+};
+var $elm$core$Basics$not = _Basics_not;
 var $author$project$Main$Editing = F2(
 	function (a, b) {
 		return {$: 'Editing', a: a, b: b};
@@ -5351,7 +5359,6 @@ var $author$project$Main$matchesTodoId = F2(
 	function (id, todo) {
 		return _Utils_eq(id, todo.id);
 	});
-var $elm$core$Basics$not = _Basics_not;
 var $author$project$Main$deleteTodoById = function (id) {
 	return $elm$core$List$filter(
 		A2(
@@ -5401,7 +5408,7 @@ var $author$project$Main$updateTaskById = F2(
 				$author$project$Main$matchesTodoId(id),
 				$author$project$Main$updateTask(newTask)));
 	});
-var $author$project$Main$update = F2(
+var $author$project$Main$updateTodo = F2(
 	function (msg, model) {
 		switch (msg.$) {
 			case 'ToggleTodoStatus':
@@ -5489,11 +5496,85 @@ var $author$project$Main$update = F2(
 				return _Utils_update(
 					model,
 					{editing: $author$project$Main$NotEditing});
+			case 'NoOp':
+				return model;
+			case 'ToggleTimeline':
+				return model;
+			case 'AppMsg':
+				return model;
+			case 'Prev':
+				return model;
 			default:
 				return model;
 		}
 	});
-var $author$project$Main$CancelEdit = {$: 'CancelEdit'};
+var $author$project$Main$update = F2(
+	function (msg, app) {
+		update:
+		while (true) {
+			switch (msg.$) {
+				case 'AppMsg':
+					var innerMsg = msg.a;
+					var timeline = app.timeline;
+					var newModel = A2($author$project$Main$updateTodo, innerMsg, timeline.present);
+					var step = {msg: innerMsg, next: newModel, prev: timeline.present};
+					var newTimeline = {
+						future: _List_Nil,
+						past: A2($elm$core$List$cons, step, timeline.past),
+						present: newModel
+					};
+					return _Utils_update(
+						app,
+						{timeline: newTimeline});
+				case 'Prev':
+					var timeline = app.timeline;
+					var _v1 = timeline.past;
+					if (_v1.b) {
+						var step = _v1.a;
+						var rest = _v1.b;
+						return _Utils_update(
+							app,
+							{
+								timeline: {
+									future: A2($elm$core$List$cons, step, timeline.future),
+									past: rest,
+									present: step.prev
+								}
+							});
+					} else {
+						return app;
+					}
+				case 'Next':
+					var timeline = app.timeline;
+					var _v2 = timeline.future;
+					if (_v2.b) {
+						var step = _v2.a;
+						var rest = _v2.b;
+						return _Utils_update(
+							app,
+							{
+								timeline: {
+									future: rest,
+									past: A2($elm$core$List$cons, step, timeline.past),
+									present: step.next
+								}
+							});
+					} else {
+						return app;
+					}
+				case 'ToggleTimeline':
+					return _Utils_update(
+						app,
+						{showTimeline: !app.showTimeline});
+				default:
+					var $temp$msg = $author$project$Main$AppMsg(msg),
+						$temp$app = app;
+					msg = $temp$msg;
+					app = $temp$app;
+					continue update;
+			}
+		}
+	});
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -5504,6 +5585,23 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$html$Html$div = _VirtualDom_node('div');
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Main$CancelDelete = {$: 'CancelDelete'};
+var $author$project$Main$ConfirmDelete = function (a) {
+	return {$: 'ConfirmDelete', a: a};
+};
+var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -5521,23 +5619,6 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $author$project$Main$CancelDelete = {$: 'CancelDelete'};
-var $author$project$Main$ConfirmDelete = function (a) {
-	return {$: 'ConfirmDelete', a: a};
-};
-var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
 		if (maybe.$ === 'Just') {
@@ -5641,12 +5722,298 @@ var $author$project$Main$viewFilterButtons = function (model) {
 		$elm$html$Html$menu,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('grid grid-template-columns-3 gap-1')
+				$elm$html$Html$Attributes$class('grid grid-template-columns-4 gap-1 padding-0')
 			]),
 		A2(
 			$elm$core$List$map,
 			$author$project$Main$viewFilterButton(model.filter),
 			$author$project$Main$allFilters));
+};
+var $elm$html$Html$ul = _VirtualDom_node('ul');
+var $elm$virtual_dom$VirtualDom$attribute = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_attribute,
+			_VirtualDom_noOnOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlUri(value));
+	});
+var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
+var $elm$html$Html$details = _VirtualDom_node('details');
+var $elm$html$Html$summary = _VirtualDom_node('summary');
+var $author$project$Main$editingToString = function (editing) {
+	if (editing.$ === 'NotEditing') {
+		return 'NotEditing';
+	} else {
+		var id = editing.a;
+		var draft = editing.b;
+		return 'Editing ' + ($elm$core$String$fromInt(
+			$author$project$NonNegative$toInt(id)) + (' \"' + (draft + '\"')));
+	}
+};
+var $author$project$Main$filterToString = function (filter) {
+	switch (filter.$) {
+		case 'All':
+			return 'All';
+		case 'ActiveOnly':
+			return 'ActiveOnly';
+		case 'CompletedOnly':
+			return 'CompletedOnly';
+		default:
+			return 'ImportantOnly';
+	}
+};
+var $author$project$Main$pendingDeleteToString = function (maybeId) {
+	if (maybeId.$ === 'Nothing') {
+		return 'Nothing';
+	} else {
+		var id = maybeId.a;
+		return 'Just ' + $elm$core$String$fromInt(
+			$author$project$NonNegative$toInt(id));
+	}
+};
+var $author$project$Main$statusToString = function (status) {
+	switch (status.$) {
+		case 'Active':
+			return 'Active';
+		case 'Completed':
+			return 'Completed';
+		default:
+			return 'Important';
+	}
+};
+var $author$project$NonEmptyString$toString = function (_v0) {
+	var str = _v0.a;
+	return str;
+};
+var $author$project$Main$viewTodoDebug = function (todo) {
+	return A2(
+		$elm$html$Html$li,
+		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$text('{'),
+				A2(
+				$elm$html$Html$ul,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								'id: ' + $elm$core$String$fromInt(
+									$author$project$NonNegative$toInt(todo.id)))
+							])),
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								'status: ' + $author$project$Main$statusToString(todo.status))
+							])),
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								'task: \"' + ($author$project$NonEmptyString$toString(todo.task) + '\"'))
+							]))
+					])),
+				$elm$html$Html$text('}')
+			]));
+};
+var $author$project$Main$viewModel = function (model) {
+	return A2(
+		$elm$html$Html$ul,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$li,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('draft: \"' + (model.draft + '\"'))
+					])),
+				A2(
+				$elm$html$Html$li,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						'filter: ' + $author$project$Main$filterToString(model.filter))
+					])),
+				A2(
+				$elm$html$Html$li,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						'editing: ' + $author$project$Main$editingToString(model.editing))
+					])),
+				A2(
+				$elm$html$Html$li,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						'pendingDelete: ' + $author$project$Main$pendingDeleteToString(model.pendingDelete))
+					])),
+				A2(
+				$elm$html$Html$li,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('todos:'),
+						A2(
+						$elm$html$Html$ul,
+						_List_Nil,
+						A2($elm$core$List$map, $author$project$Main$viewTodoDebug, model.todos))
+					]))
+			]));
+};
+var $author$project$Main$viewInitialStep = function (model) {
+	return A2(
+		$elm$html$Html$li,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$details,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$attribute, 'name', 'timeline-step')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$summary,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Msg: None (initial state)')
+							])),
+						$author$project$Main$viewModel(model)
+					]))
+			]));
+};
+var $author$project$Main$msgToString = function (msg) {
+	switch (msg.$) {
+		case 'ToggleTodoStatus':
+			var id = msg.a;
+			return 'ToggleTodoStatus ' + $elm$core$String$fromInt(
+				$author$project$NonNegative$toInt(id));
+		case 'AskToDelete':
+			var id = msg.a;
+			return 'AskToDelete ' + $elm$core$String$fromInt(
+				$author$project$NonNegative$toInt(id));
+		case 'ConfirmDelete':
+			var id = msg.a;
+			return 'ConfirmDelete ' + $elm$core$String$fromInt(
+				$author$project$NonNegative$toInt(id));
+		case 'CancelDelete':
+			return 'CancelDelete';
+		case 'UpdateDraft':
+			var str = msg.a;
+			return 'UpdateDraft \"' + (str + '\"');
+		case 'SetFilter':
+			var filter = msg.a;
+			switch (filter.$) {
+				case 'All':
+					return 'SetFilter All';
+				case 'ActiveOnly':
+					return 'SetFilter ActiveOnly';
+				case 'CompletedOnly':
+					return 'SetFilter CompletedOnly';
+				default:
+					return 'SetFilter ImportantOnly';
+			}
+		case 'CreateTodo':
+			return 'CreateTodo';
+		case 'StartEditing':
+			var id = msg.a;
+			var task = msg.b;
+			return 'StartEditing ' + ($elm$core$String$fromInt(
+				$author$project$NonNegative$toInt(id)) + (' \"' + (task + '\"')));
+		case 'UpdateEditDraft':
+			var str = msg.a;
+			return 'UpdateEditDraft \"' + (str + '\"');
+		case 'SaveEdit':
+			return 'SaveEdit';
+		case 'CancelEdit':
+			return 'CancelEdit';
+		case 'NoOp':
+			return 'NoOp';
+		case 'ToggleTimeline':
+			return 'ToggleTimeline';
+		case 'AppMsg':
+			var inner = msg.a;
+			return 'AppMsg (' + ($author$project$Main$msgToString(inner) + ')');
+		case 'Prev':
+			return 'Prev';
+		default:
+			return 'Next';
+	}
+};
+var $author$project$Main$viewStep = function (step) {
+	return A2(
+		$elm$html$Html$li,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$details,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$attribute, 'name', 'timeline-step')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$summary,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								'Msg: ' + $author$project$Main$msgToString(step.msg))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('padding-inline-start-1-5')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Next Model:')
+									])),
+								$author$project$Main$viewModel(step.next)
+							]))
+					]))
+			]));
+};
+var $author$project$Main$viewHistory = function (timeline) {
+	return A2(
+		$elm$html$Html$ul,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('flow padding-0 list-style-none')
+			]),
+		_Utils_ap(
+			A2($elm$core$List$map, $author$project$Main$viewStep, timeline.past),
+			_List_fromArray(
+				[
+					$author$project$Main$viewInitialStep(timeline.present)
+				])));
 };
 var $author$project$Main$CreateTodo = {$: 'CreateTodo'};
 var $author$project$Main$UpdateDraft = function (a) {
@@ -5762,6 +6129,131 @@ var $author$project$Main$viewNewTodoForm = function (model) {
 					]))
 			]));
 };
+var $author$project$Main$Next = {$: 'Next'};
+var $author$project$Main$Prev = {$: 'Prev'};
+var $elm$html$Html$h2 = _VirtualDom_node('h2');
+var $elm$core$List$isEmpty = function (xs) {
+	if (!xs.b) {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$html$Html$section = _VirtualDom_node('section');
+var $author$project$Main$viewTimeline = function (timeline) {
+	return A2(
+		$elm$html$Html$section,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('timeline')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h2,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('margin-bottom-1')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Time Travel Debugger')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('flex gap-1 align-items-center')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Main$Prev),
+								$elm$html$Html$Attributes$disabled(
+								$elm$core$List$isEmpty(timeline.past))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Prev')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Main$Next),
+								$elm$html$Html$Attributes$disabled(
+								$elm$core$List$isEmpty(timeline.future))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Next')
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								'Transitions: ' + $elm$core$String$fromInt(
+									$elm$core$List$length(timeline.past)))
+							]))
+					]))
+			]));
+};
+var $author$project$Main$ToggleTimeline = {$: 'ToggleTimeline'};
+var $elm$core$Basics$always = F2(
+	function (a, _v0) {
+		return a;
+	});
+var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
+var $elm$html$Html$label = _VirtualDom_node('label');
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $elm$html$Html$Events$targetChecked = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'checked']),
+	$elm$json$Json$Decode$bool);
+var $elm$html$Html$Events$onCheck = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'change',
+		A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetChecked));
+};
+var $author$project$Main$viewTimelineToggle = function (app) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('flex gap-1 align-items-center')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$type_('checkbox'),
+						$elm$html$Html$Attributes$checked(app.showTimeline),
+						$elm$html$Html$Events$onCheck(
+						$elm$core$Basics$always($author$project$Main$ToggleTimeline)),
+						A2($elm$html$Html$Attributes$attribute, 'id', 'toggle-timeline')
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$label,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$attribute, 'for', 'toggle-timeline')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Show Time Travel Debugger')
+					]))
+			]));
+};
 var $author$project$Main$filterTodos = function (filterMode) {
 	switch (filterMode.$) {
 		case 'All':
@@ -5792,7 +6284,6 @@ var $author$project$Main$filterTodos = function (filterMode) {
 					$elm$core$Basics$eq($author$project$Main$Important)));
 	}
 };
-var $elm$html$Html$ul = _VirtualDom_node('ul');
 var $author$project$Main$AskToDelete = function (a) {
 	return {$: 'AskToDelete', a: a};
 };
@@ -5815,6 +6306,7 @@ var $author$project$Main$viewDeleteButton = function (todo) {
 				$elm$html$Html$text('✕')
 			]));
 };
+var $author$project$Main$CancelEdit = {$: 'CancelEdit'};
 var $author$project$Main$NoOp = {$: 'NoOp'};
 var $author$project$Main$SaveEdit = {$: 'SaveEdit'};
 var $author$project$Main$UpdateEditDraft = function (a) {
@@ -5860,12 +6352,7 @@ var $author$project$Main$StartEditing = F2(
 var $author$project$Main$ToggleTodoStatus = function (a) {
 	return {$: 'ToggleTodoStatus', a: a};
 };
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$html$Html$span = _VirtualDom_node('span');
-var $author$project$NonEmptyString$toString = function (_v0) {
-	var str = _v0.a;
-	return str;
-};
 var $author$project$Main$viewTaskStatus = function (todo) {
 	var statusClass = function () {
 		var _v0 = todo.status;
@@ -5938,7 +6425,7 @@ var $author$project$Main$viewTodos = function (model) {
 		$elm$html$Html$ul,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('flow')
+				$elm$html$Html$Attributes$class('flow padding-0')
 			]),
 		A2(
 			$elm$core$List$map,
@@ -5954,7 +6441,7 @@ var $author$project$Main$pluralize = F3(
 		}
 	});
 var $author$project$Main$completedLabel = A2($author$project$Main$pluralize, ' item completed', ' items completed');
-var $author$project$Main$importantLabel = A2($author$project$Main$pluralize, ' item completed', ' items completed');
+var $author$project$Main$importantLabel = A2($author$project$Main$pluralize, ' important item', ' important items');
 var $author$project$Main$itemsLabel = A2($author$project$Main$pluralize, ' item', ' items');
 var $author$project$Main$remainingLabel = A2($author$project$Main$pluralize, ' item remaining', ' items remaining');
 var $author$project$Main$viewTodosCount = function (model) {
@@ -5989,13 +6476,14 @@ var $author$project$Main$viewTodosCount = function (model) {
 			}()
 			]));
 };
-var $author$project$Main$view = function (model) {
+var $author$project$Main$view = function (app) {
+	var timeline = app.timeline;
+	var model = timeline.present;
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('flow'),
-				$elm$html$Html$Events$onClick($author$project$Main$CancelEdit)
+				$elm$html$Html$Attributes$class('flow')
 			]),
 		_List_fromArray(
 			[
@@ -6003,7 +6491,19 @@ var $author$project$Main$view = function (model) {
 				$author$project$Main$viewFilterButtons(model),
 				$author$project$Main$viewTodos(model),
 				$author$project$Main$viewTodosCount(model),
-				$author$project$Main$viewConfirmDialog(model)
+				$author$project$Main$viewConfirmDialog(model),
+				$author$project$Main$viewTimelineToggle(app),
+				app.showTimeline ? A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('timeline-wrapper flow')
+					]),
+				_List_fromArray(
+					[
+						$author$project$Main$viewTimeline(timeline),
+						$author$project$Main$viewHistory(timeline)
+					])) : $elm$html$Html$text('')
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$sandbox(
