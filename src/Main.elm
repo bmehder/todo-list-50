@@ -763,10 +763,35 @@ viewStep step =
                 [ text ("Msg: " ++ msgToString step.msg) ]
             , div [ class "padding-inline-start-1-5" ]
                 [ div [] [ text "Next Model:" ]
-                , viewModel step.next
+                , viewModelDiff step.prev step.next
                 ]
             ]
         ]
+
+
+viewModelDiff : Model -> Model -> Html Msg
+viewModelDiff prev next =
+    ul []
+        [ viewField "draft" prev.draft next.draft
+        , viewField "filter" (filterToString prev.filter) (filterToString next.filter)
+        , viewField "editing" (editingToString prev.editing) (editingToString next.editing)
+        , viewField "pendingDelete" (pendingDeleteToString prev.pendingDelete) (pendingDeleteToString next.pendingDelete)
+        , li []
+            [ text "todos:"
+            , ul [] (List.map viewTodoDebug next.todos)
+            ]
+        ]
+
+
+viewField : String -> String -> String -> Html Msg
+viewField name prev next =
+    if prev == next then
+        li [] [ text (name ++ ": " ++ next) ]
+    else
+        li []
+            [ span [ class "text-success" ]
+                [ text (name ++ ": " ++ next) ]
+            ]
 
 
 msgToString : Msg -> String

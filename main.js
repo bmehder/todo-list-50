@@ -5959,6 +5959,68 @@ var $author$project$Main$msgToString = function (msg) {
 			return 'Next';
 	}
 };
+var $elm$html$Html$span = _VirtualDom_node('span');
+var $author$project$Main$viewField = F3(
+	function (name, prev, next) {
+		return _Utils_eq(prev, next) ? A2(
+			$elm$html$Html$li,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text(name + (': ' + next))
+				])) : A2(
+			$elm$html$Html$li,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('text-success')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(name + (': ' + next))
+						]))
+				]));
+	});
+var $author$project$Main$viewModelDiff = F2(
+	function (prev, next) {
+		return A2(
+			$elm$html$Html$ul,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A3($author$project$Main$viewField, 'draft', prev.draft, next.draft),
+					A3(
+					$author$project$Main$viewField,
+					'filter',
+					$author$project$Main$filterToString(prev.filter),
+					$author$project$Main$filterToString(next.filter)),
+					A3(
+					$author$project$Main$viewField,
+					'editing',
+					$author$project$Main$editingToString(prev.editing),
+					$author$project$Main$editingToString(next.editing)),
+					A3(
+					$author$project$Main$viewField,
+					'pendingDelete',
+					$author$project$Main$pendingDeleteToString(prev.pendingDelete),
+					$author$project$Main$pendingDeleteToString(next.pendingDelete)),
+					A2(
+					$elm$html$Html$li,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text('todos:'),
+							A2(
+							$elm$html$Html$ul,
+							_List_Nil,
+							A2($elm$core$List$map, $author$project$Main$viewTodoDebug, next.todos))
+						]))
+				]));
+	});
 var $author$project$Main$viewStep = function (step) {
 	return A2(
 		$elm$html$Html$li,
@@ -5996,7 +6058,7 @@ var $author$project$Main$viewStep = function (step) {
 									[
 										$elm$html$Html$text('Next Model:')
 									])),
-								$author$project$Main$viewModel(step.next)
+								A2($author$project$Main$viewModelDiff, step.prev, step.next)
 							]))
 					]))
 			]));
@@ -6352,7 +6414,6 @@ var $author$project$Main$StartEditing = F2(
 var $author$project$Main$ToggleTodoStatus = function (a) {
 	return {$: 'ToggleTodoStatus', a: a};
 };
-var $elm$html$Html$span = _VirtualDom_node('span');
 var $author$project$Main$viewTaskStatus = function (todo) {
 	var statusClass = function () {
 		var _v0 = todo.status;
