@@ -4461,6 +4461,7 @@ var $elm$core$Basics$LT = {$: 'LT'};
 var $author$project$Main$Active = {$: 'Active'};
 var $author$project$Main$All = {$: 'All'};
 var $author$project$Main$Completed = {$: 'Completed'};
+var $author$project$Main$Important = {$: 'Important'};
 var $author$project$Main$NotEditing = {$: 'NotEditing'};
 var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $elm$core$Maybe$Just = function (a) {
@@ -4487,8 +4488,8 @@ var $author$project$Main$unsafeId = function (n) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 191, column: 13},
-				end: {line: 191, column: 23}
+				start: {line: 194, column: 13},
+				end: {line: 194, column: 23}
 			})('Invalid Id literal');
 	}
 };
@@ -4518,8 +4519,8 @@ var $author$project$Main$unsafeTask = function (str) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 181, column: 13},
-				end: {line: 181, column: 23}
+				start: {line: 184, column: 13},
+				end: {line: 184, column: 23}
 			})('Invalid task literal');
 	}
 };
@@ -4544,6 +4545,11 @@ var $author$project$Main$init = {
 			id: $author$project$Main$unsafeId(2),
 			status: $author$project$Main$Active,
 			task: $author$project$Main$unsafeTask('Profit')
+		},
+			{
+			id: $author$project$Main$unsafeId(3),
+			status: $author$project$Main$Important,
+			task: $author$project$Main$unsafeTask('Do something important')
 		}
 		])
 };
@@ -5363,10 +5369,13 @@ var $author$project$Main$toggleStatus = function (todo) {
 		{
 			status: function () {
 				var _v0 = todo.status;
-				if (_v0.$ === 'Active') {
-					return $author$project$Main$Completed;
-				} else {
-					return $author$project$Main$Active;
+				switch (_v0.$) {
+					case 'Active':
+						return $author$project$Main$Completed;
+					case 'Completed':
+						return $author$project$Main$Important;
+					default:
+						return $author$project$Main$Active;
 				}
 			}()
 		});
@@ -5581,8 +5590,9 @@ var $author$project$Main$viewConfirmDialog = function (model) {
 };
 var $author$project$Main$ActiveOnly = {$: 'ActiveOnly'};
 var $author$project$Main$CompletedOnly = {$: 'CompletedOnly'};
+var $author$project$Main$ImportantOnly = {$: 'ImportantOnly'};
 var $author$project$Main$allFilters = _List_fromArray(
-	[$author$project$Main$All, $author$project$Main$ActiveOnly, $author$project$Main$CompletedOnly]);
+	[$author$project$Main$All, $author$project$Main$ActiveOnly, $author$project$Main$CompletedOnly, $author$project$Main$ImportantOnly]);
 var $elm$html$Html$menu = _VirtualDom_node('menu');
 var $author$project$Main$SetFilter = function (a) {
 	return {$: 'SetFilter', a: a};
@@ -5596,8 +5606,10 @@ var $author$project$Main$viewFilterButton = F2(
 					return 'All';
 				case 'ActiveOnly':
 					return 'Active';
-				default:
+				case 'CompletedOnly':
 					return 'Completed';
+				default:
+					return 'Important';
 			}
 		}();
 		var isSelected = _Utils_eq(value, current);
@@ -5762,7 +5774,7 @@ var $author$project$Main$filterTodos = function (filterMode) {
 						return $.status;
 					},
 					$elm$core$Basics$eq($author$project$Main$Active)));
-		default:
+		case 'CompletedOnly':
 			return $elm$core$List$filter(
 				A2(
 					$elm$core$Basics$composeR,
@@ -5770,23 +5782,17 @@ var $author$project$Main$filterTodos = function (filterMode) {
 						return $.status;
 					},
 					$elm$core$Basics$eq($author$project$Main$Completed)));
+		default:
+			return $elm$core$List$filter(
+				A2(
+					$elm$core$Basics$composeR,
+					function ($) {
+						return $.status;
+					},
+					$elm$core$Basics$eq($author$project$Main$Important)));
 	}
 };
 var $elm$html$Html$ul = _VirtualDom_node('ul');
-var $author$project$Main$StartEditing = F2(
-	function (a, b) {
-		return {$: 'StartEditing', a: a, b: b};
-	});
-var $elm$html$Html$Events$onDoubleClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'dblclick',
-		$elm$json$Json$Decode$succeed(msg));
-};
-var $author$project$NonEmptyString$toString = function (_v0) {
-	var str = _v0.a;
-	return str;
-};
 var $author$project$Main$AskToDelete = function (a) {
 	return {$: 'AskToDelete', a: a};
 };
@@ -5847,17 +5853,29 @@ var $author$project$Main$viewEditing = function (draft) {
 			]),
 		_List_Nil);
 };
+var $author$project$Main$StartEditing = F2(
+	function (a, b) {
+		return {$: 'StartEditing', a: a, b: b};
+	});
 var $author$project$Main$ToggleTodoStatus = function (a) {
 	return {$: 'ToggleTodoStatus', a: a};
 };
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$html$Html$span = _VirtualDom_node('span');
+var $author$project$NonEmptyString$toString = function (_v0) {
+	var str = _v0.a;
+	return str;
+};
 var $author$project$Main$viewTaskStatus = function (todo) {
 	var statusClass = function () {
 		var _v0 = todo.status;
-		if (_v0.$ === 'Active') {
-			return 'cursor-pointer';
-		} else {
-			return 'cursor-pointer line-through opacity-60';
+		switch (_v0.$) {
+			case 'Active':
+				return 'cursor-pointer';
+			case 'Completed':
+				return 'cursor-pointer line-through opacity-60';
+			default:
+				return 'cursor-pointer text-warning';
 		}
 	}();
 	return A2(
@@ -5865,8 +5883,24 @@ var $author$project$Main$viewTaskStatus = function (todo) {
 		_List_fromArray(
 			[
 				$elm$html$Html$Attributes$class(statusClass),
-				$elm$html$Html$Events$onClick(
-				$author$project$Main$ToggleTodoStatus(todo.id))
+				A2(
+				$elm$html$Html$Events$stopPropagationOn,
+				'click',
+				A2(
+					$elm$json$Json$Decode$andThen,
+					function (isShift) {
+						return isShift ? $elm$json$Json$Decode$succeed(
+							_Utils_Tuple2(
+								A2(
+									$author$project$Main$StartEditing,
+									todo.id,
+									$author$project$NonEmptyString$toString(todo.task)),
+								true)) : $elm$json$Json$Decode$succeed(
+							_Utils_Tuple2(
+								$author$project$Main$ToggleTodoStatus(todo.id),
+								true));
+					},
+					A2($elm$json$Json$Decode$field, 'shiftKey', $elm$json$Json$Decode$bool)))
 			]),
 		_List_fromArray(
 			[
@@ -5891,12 +5925,7 @@ var $author$project$Main$viewTodo = F2(
 			$elm$html$Html$li,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('flex space-between align-items-center gap-1'),
-					$elm$html$Html$Events$onDoubleClick(
-					A2(
-						$author$project$Main$StartEditing,
-						todo.id,
-						$author$project$NonEmptyString$toString(todo.task)))
+					$elm$html$Html$Attributes$class('flex space-between align-items-center gap-1')
 				]),
 			_List_fromArray(
 				[
@@ -5925,6 +5954,7 @@ var $author$project$Main$pluralize = F3(
 		}
 	});
 var $author$project$Main$completedLabel = A2($author$project$Main$pluralize, ' item completed', ' items completed');
+var $author$project$Main$importantLabel = A2($author$project$Main$pluralize, ' item completed', ' items completed');
 var $author$project$Main$itemsLabel = A2($author$project$Main$pluralize, ' item', ' items');
 var $author$project$Main$remainingLabel = A2($author$project$Main$pluralize, ' item remaining', ' items remaining');
 var $author$project$Main$viewTodosCount = function (model) {
@@ -5944,8 +5974,10 @@ var $author$project$Main$viewTodosCount = function (model) {
 							return $author$project$Main$itemsLabel;
 						case 'ActiveOnly':
 							return $author$project$Main$remainingLabel;
-						default:
+						case 'CompletedOnly':
 							return $author$project$Main$completedLabel;
+						default:
+							return $author$project$Main$importantLabel;
 					}
 				}();
 				var count = $elm$core$List$length(

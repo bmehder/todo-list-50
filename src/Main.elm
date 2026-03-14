@@ -3,7 +3,7 @@ module Main exposing (main)
 import Browser
 import Html exposing (Html, button, div, form, input, li, menu, span, text, ul)
 import Html.Attributes exposing (class, disabled, placeholder, type_, value)
-import Html.Events exposing (on, onBlur, onClick, onDoubleClick, onInput, onSubmit, stopPropagationOn)
+import Html.Events exposing (on, onBlur, onClick, onInput, onSubmit, stopPropagationOn)
 import Json.Decode as Decode
 import NonEmptyString exposing (NonEmptyString)
 import NonNegative exposing (NonNegative)
@@ -24,6 +24,7 @@ type alias Task =
 type Status
     = Active
     | Completed
+    | Important
 
 
 type Editing
@@ -35,11 +36,12 @@ type Filter
     = All
     | ActiveOnly
     | CompletedOnly
+    | ImportantOnly
 
 
 allFilters : List Filter
 allFilters =
-    [ All, ActiveOnly, CompletedOnly ]
+    [ All, ActiveOnly, CompletedOnly, ImportantOnly ]
 
 
 type alias Todo =
@@ -64,6 +66,7 @@ init =
         [ { id = unsafeId 0, task = unsafeTask "Buy coffee", status = Active }
         , { id = unsafeId 1, task = unsafeTask "Write the smallest Elm app", status = Completed }
         , { id = unsafeId 2, task = unsafeTask "Profit", status = Active }
+        , { id = unsafeId 3, task = unsafeTask "Do something important", status = Important }
         ]
     , draft = ""
     , filter = All
@@ -221,6 +224,9 @@ toggleStatus todo =
                     Completed
 
                 Completed ->
+                    Important
+
+                Important ->
                     Active
     }
 
@@ -256,6 +262,9 @@ filterTodos filterMode =
 
         CompletedOnly ->
             List.filter (.status >> (==) Completed)
+        
+        ImportantOnly ->
+            List.filter (.status >> (==) Important)
 
 
 addTodoFromDraft : Model -> Model
@@ -349,6 +358,9 @@ viewFilterButton current value =
                 CompletedOnly ->
                     "Completed"
 
+                ImportantOnly ->
+                    "Important"
+
         isSelected =
             value == current
 
@@ -379,7 +391,7 @@ viewTodos model =
 
 viewTodo : Model -> Todo -> Html Msg
 viewTodo model todo =
-    li [ class "flex space-between align-items-center gap-1", onDoubleClick (StartEditing todo.id (NonEmptyString.toString todo.task)) ]
+    li [ class "flex space-between align-items-center gap-1" ]
         [ viewTask model todo
         , viewDeleteButton todo
         ]
@@ -434,10 +446,22 @@ viewTaskStatus todo =
 
                 Completed ->
                     "cursor-pointer line-through opacity-60"
+
+                Important ->
+                    "cursor-pointer text-warning"
     in
     span
         [ class statusClass
-        , onClick (ToggleTodoStatus todo.id)
+        , stopPropagationOn "click"
+            (Decode.field "shiftKey" Decode.bool
+                |> Decode.andThen
+                    (\isShift ->
+                        if isShift then
+                            Decode.succeed ( StartEditing todo.id (NonEmptyString.toString todo.task), True )
+                        else
+                            Decode.succeed ( ToggleTodoStatus todo.id, True )
+                    )
+            )
         ]
         [ text (NonEmptyString.toString todo.task) ]
 
@@ -470,6 +494,9 @@ viewTodosCount model =
 
                     CompletedOnly ->
                         completedLabel
+
+                    ImportantOnly ->
+                        importantLabel
           in
           text (String.fromInt count ++ labelForFilter count)
         ]
@@ -505,6 +532,9 @@ remainingLabel =
 
 completedLabel : Int -> String
 completedLabel =
+    pluralize " item completed" " items completed"
+importantLabel : Int -> String
+importantLabel =
     pluralize " item completed" " items completed"
 
 
