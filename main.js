@@ -6506,35 +6506,49 @@ var $author$project$Main$importantLabel = A2($author$project$Main$pluralize, ' i
 var $author$project$Main$itemsLabel = A2($author$project$Main$pluralize, ' item', ' items');
 var $author$project$Main$remainingLabel = A2($author$project$Main$pluralize, ' item remaining', ' items remaining');
 var $author$project$Main$viewTodosCount = function (model) {
+	var labelForFilter = function () {
+		var _v0 = model.filter;
+		switch (_v0.$) {
+			case 'All':
+				return $author$project$Main$itemsLabel;
+			case 'ActiveOnly':
+				return $author$project$Main$remainingLabel;
+			case 'CompletedOnly':
+				return $author$project$Main$completedLabel;
+			default:
+				return $author$project$Main$importantLabel;
+		}
+	}();
+	var count = $elm$core$List$length(
+		A2($author$project$Main$filterTodos, model.filter, model.todos));
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('text-align-center')
+				$elm$html$Html$Attributes$class('text-align-center flow')
 			]),
 		_List_fromArray(
 			[
-				function () {
-				var labelForFilter = function () {
-					var _v0 = model.filter;
-					switch (_v0.$) {
-						case 'All':
-							return $author$project$Main$itemsLabel;
-						case 'ActiveOnly':
-							return $author$project$Main$remainingLabel;
-						case 'CompletedOnly':
-							return $author$project$Main$completedLabel;
-						default:
-							return $author$project$Main$importantLabel;
-					}
-				}();
-				var count = $elm$core$List$length(
-					A2($author$project$Main$filterTodos, model.filter, model.todos));
-				return $elm$html$Html$text(
-					_Utils_ap(
-						$elm$core$String$fromInt(count),
-						labelForFilter(count)));
-			}()
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						_Utils_ap(
+							$elm$core$String$fromInt(count),
+							labelForFilter(count)))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('opacity-60 font-size-small')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Tip: Shift-click a task to edit')
+					]))
 			]));
 };
 var $author$project$Main$view = function (app) {

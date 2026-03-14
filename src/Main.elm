@@ -603,28 +603,31 @@ viewDeleteButton todo =
 
 viewTodosCount : Model -> Html Msg
 viewTodosCount model =
-    div [ class "text-align-center" ]
-        [ let
-            count =
-                model.todos
-                    |> filterTodos model.filter
-                    |> List.length
+    let
+        count =
+            model.todos
+                |> filterTodos model.filter
+                |> List.length
 
-            labelForFilter =
-                case model.filter of
-                    All ->
-                        itemsLabel
+        labelForFilter =
+            case model.filter of
+                All ->
+                    itemsLabel
 
-                    ActiveOnly ->
-                        remainingLabel
+                ActiveOnly ->
+                    remainingLabel
 
-                    CompletedOnly ->
-                        completedLabel
+                CompletedOnly ->
+                    completedLabel
 
-                    ImportantOnly ->
-                        importantLabel
-          in
-          text (String.fromInt count ++ labelForFilter count)
+                ImportantOnly ->
+                    importantLabel
+    in
+    div [ class "text-align-center flow" ]
+        [ div []
+            [ text (String.fromInt count ++ labelForFilter count) ]
+        , div [ class "opacity-60 font-size-small" ]
+            [ text "Tip: Shift-click a task to edit" ]
         ]
 
 

@@ -241,6 +241,10 @@ button {
 	opacity: 0.6;
 }
 
+.font-size-small {
+	font-size: 0.9rem;
+}
+
 .cursor-pointer {
 	cursor: pointer;
 }
