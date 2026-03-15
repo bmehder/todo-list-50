@@ -2,7 +2,7 @@
 
 # Elm Todo App with Time‑Travel Debugger
 
-This project is a ** Todo application written in Elm**.  
+This project is a **Todo application written in Elm**.  
 
 In addition to the standard Todo features, it includes a **custom time‑travel debugger** that records every state transition and allows stepping backward and forward through application history.
 
