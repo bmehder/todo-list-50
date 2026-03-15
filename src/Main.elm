@@ -30,7 +30,10 @@ type Status
 
 type Editing
     = NotEditing
-    | Editing Id String
+    | Editing
+        { id : Id
+        , draft : String
+        }
 
 
 type Filter
@@ -79,6 +82,7 @@ type TimelineVisibility
     = TimelineHidden
     | TimelineVisible
 
+
 type alias AppModel =
     { timeline : Timeline
     , timelineVisibility : TimelineVisibility
@@ -116,7 +120,7 @@ init =
 -------------------------------------------------------------------------------
 
 
-type Msg
+type TodoMsg
     = ToggleTodoStatus Id
     | AskToDelete Id
     | ConfirmDelete Id
@@ -129,13 +133,16 @@ type Msg
     | SaveEdit
     | CancelEdit
     | NoOp
+
+
+type Msg
+    = TodoEvent TodoMsg
     | ToggleTimeline
-    | AppMsg Msg
     | Prev
     | Next
 
 
-updateTodo : Msg -> Model -> Model
+updateTodo : TodoMsg -> Model -> Model
 updateTodo msg model =
     case msg of
         ToggleTodoStatus id ->
@@ -165,19 +172,19 @@ updateTodo msg model =
             addTodoFromDraft model
 
         StartEditing id task ->
-            { model | editing = Editing id task }
+            { model | editing = Editing { id = id, draft = task } }
 
         UpdateEditDraft newValue ->
             case model.editing of
-                Editing id _ ->
-                    { model | editing = Editing id newValue }
+                Editing { id } ->
+                    { model | editing = Editing { id = id, draft = newValue } }
 
                 NotEditing ->
                     model
 
         SaveEdit ->
             case model.editing of
-                Editing id draft ->
+                Editing { id, draft } ->
                     case NonEmptyString.fromString draft of
                         Just task ->
                             { model
@@ -197,32 +204,20 @@ updateTodo msg model =
         NoOp ->
             model
 
-        ToggleTimeline ->
-            model
-
-        AppMsg _ ->
-            model
-
-        Prev ->
-            model
-
-        Next ->
-            model
-
 
 update : Msg -> AppModel -> AppModel
 update msg app =
     case msg of
-        AppMsg innerMsg ->
+        TodoEvent todoMsg ->
             let
                 timeline =
                     app.timeline
 
                 newModel =
-                    updateTodo innerMsg timeline.present
+                    updateTodo todoMsg timeline.present
 
                 step =
-                    { msg = innerMsg
+                    { msg = TodoEvent todoMsg
                     , prev = timeline.present
                     , next = newModel
                     }
@@ -281,9 +276,6 @@ update msg app =
                         TimelineVisible ->
                             TimelineHidden
             }
-
-        _ ->
-            update (AppMsg msg) app
 
 
 
@@ -439,14 +431,15 @@ view app =
         , viewTodosCount model
         , viewConfirmDialog model
         , viewTimelineToggle app
-        , if app.timelineVisibility == TimelineVisible then
-            div [ class "timeline-wrapper flow" ]
-                [ viewTimeline timeline
-                , viewHistory timeline
-                ]
+        , case app.timelineVisibility of
+            TimelineVisible ->
+                div [ class "timeline-wrapper flow" ]
+                    [ viewTimeline timeline
+                    , viewHistory timeline
+                    ]
 
-          else
-            text ""
+            TimelineHidden ->
+                text ""
         ]
 
 
@@ -459,11 +452,11 @@ viewNewTodoForm : Model -> Html Msg
 viewNewTodoForm model =
     form
         [ class "grid gap-1"
-        , onSubmit CreateTodo
+        , onSubmit (TodoEvent CreateTodo)
         ]
         [ input
             [ value model.draft
-            , onInput UpdateDraft
+            , onInput (TodoEvent << UpdateDraft)
             , placeholder "Add a todo..."
             ]
             []
@@ -511,7 +504,7 @@ viewFilterButton current value =
     li [ class "grid list-style-none" ]
         [ button
             [ class buttonClass
-            , onClick (SetFilter value)
+            , onClick (TodoEvent (SetFilter value))
             ]
             [ text label ]
         ]
@@ -537,7 +530,7 @@ viewTodo model todo =
 viewTask : Model -> Todo -> Html Msg
 viewTask model todo =
     case model.editing of
-        Editing id draft ->
+        Editing { id, draft } ->
             if matchesTodoId id todo then
                 viewEditing draft
 
@@ -551,19 +544,19 @@ viewTask model todo =
 viewEditing : String -> Html Msg
 viewEditing draft =
     input
-        [ stopPropagationOn "click" (Decode.succeed ( NoOp, True ))
+        [ stopPropagationOn "click" (Decode.succeed ( TodoEvent NoOp, True ))
         , value draft
-        , onInput UpdateEditDraft
-        , onBlur SaveEdit
+        , onInput (TodoEvent << UpdateEditDraft)
+        , onBlur (TodoEvent SaveEdit)
         , on "keydown"
             (Decode.field "key" Decode.string
                 |> Decode.andThen
                     (\key ->
                         if key == "Enter" then
-                            Decode.succeed SaveEdit
+                            Decode.succeed (TodoEvent SaveEdit)
 
                         else if key == "Escape" then
-                            Decode.succeed CancelEdit
+                            Decode.succeed (TodoEvent CancelEdit)
 
                         else
                             Decode.fail "ignore"
@@ -594,10 +587,10 @@ viewTaskStatus todo =
                 |> Decode.andThen
                     (\isShift ->
                         if isShift then
-                            Decode.succeed ( StartEditing todo.id (NonEmptyString.toString todo.task), True )
+                            Decode.succeed ( TodoEvent (StartEditing todo.id (NonEmptyString.toString todo.task)), True )
 
                         else
-                            Decode.succeed ( ToggleTodoStatus todo.id, True )
+                            Decode.succeed ( TodoEvent (ToggleTodoStatus todo.id), True )
                     )
             )
         ]
@@ -607,7 +600,7 @@ viewTaskStatus todo =
 viewDeleteButton : Todo -> Html Msg
 viewDeleteButton todo =
     button
-        [ stopPropagationOn "click" (Decode.succeed ( AskToDelete todo.id, True ))
+        [ stopPropagationOn "click" (Decode.succeed ( TodoEvent (AskToDelete todo.id), True ))
         , class "delete-btn cursor-pointer"
         ]
         [ text "✕" ]
@@ -650,8 +643,8 @@ viewConfirmDialog model =
             (\id ->
                 div [ class "confirm-dialog flex gap-1 align-items-center" ]
                     [ text "Delete this todo?"
-                    , button [ onClick (ConfirmDelete id) ] [ text "Yes" ]
-                    , button [ onClick CancelDelete ] [ text "Cancel" ]
+                    , button [ onClick (TodoEvent (ConfirmDelete id)) ] [ text "Yes" ]
+                    , button [ onClick (TodoEvent CancelDelete) ] [ text "Cancel" ]
                     ]
             )
         |> Maybe.withDefault (text "")
@@ -752,9 +745,7 @@ viewTimeline timeline =
 viewHistory : Timeline -> Html Msg
 viewHistory timeline =
     ul [ class "flow padding-0 list-style-none" ]
-        ((timeline.past
-            |> List.map viewStep
-         )
+        (List.map viewStep timeline.past
             ++ [ viewInitialStep timeline.present ]
         )
 
@@ -831,6 +822,22 @@ viewTodoDebug todo =
 msgToString : Msg -> String
 msgToString msg =
     case msg of
+        TodoEvent todoMsg ->
+            todoMsgToString todoMsg
+
+        ToggleTimeline ->
+            "ToggleTimeline"
+
+        Prev ->
+            "Prev"
+
+        Next ->
+            "Next"
+
+
+todoMsgToString : TodoMsg -> String
+todoMsgToString msg =
+    case msg of
         ToggleTodoStatus id ->
             "ToggleTodoStatus " ++ String.fromInt (NonNegative.toInt id)
 
@@ -882,18 +889,6 @@ msgToString msg =
         NoOp ->
             "NoOp"
 
-        ToggleTimeline ->
-            "ToggleTimeline"
-
-        AppMsg inner ->
-            "AppMsg (" ++ msgToString inner ++ ")"
-
-        Prev ->
-            "Prev"
-
-        Next ->
-            "Next"
-
 
 filterToString : Filter -> String
 filterToString filter =
@@ -917,7 +912,7 @@ editingToString editing =
         NotEditing ->
             "NotEditing"
 
-        Editing id draft ->
+        Editing { id, draft } ->
             "Editing " ++ String.fromInt (NonNegative.toInt id) ++ " \"" ++ draft ++ "\""
 
 

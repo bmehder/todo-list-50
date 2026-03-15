@@ -12,7 +12,7 @@ The goal of the project is to demonstrate:
 - Clean Elm Architecture
 - Functional domain logic
 - A simple but powerful state history mechanism
-- A visual debugger implemented entirely in Elm
+- A visual debugger
 
 ---
 
@@ -66,6 +66,9 @@ MODEL
   │
   ▼
 VIEW
+  │
+  ▼
+MSG
   │
   ▼
 UPDATE
@@ -147,10 +150,11 @@ Messages are processed in two stages:
 1. **Todo update**
 
 ```
-updateTodo : Msg -> Model -> Model
+updateTodo : TodoMsg -> Model -> Model
 ```
 
 Handles domain behavior only.
+`TodoMsg` represents domain messages for the todo logic, while the outer `Msg` type wraps these messages for the application layer (timeline debugger and UI controls).
 
 2. **Timeline wrapper**
 
