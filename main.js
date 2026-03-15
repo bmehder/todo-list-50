@@ -4458,7 +4458,7 @@ var $elm$core$Set$toList = function (_v0) {
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
-var $elm$core$Basics$False = {$: 'False'};
+var $author$project$Main$TimelineHidden = {$: 'TimelineHidden'};
 var $author$project$Main$Active = {$: 'Active'};
 var $author$project$Main$All = {$: 'All'};
 var $author$project$Main$Completed = {$: 'Completed'};
@@ -4489,8 +4489,8 @@ var $author$project$Main$unsafeId = function (n) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 313, column: 13},
-				end: {line: 313, column: 23}
+				start: {line: 325, column: 13},
+				end: {line: 325, column: 23}
 			})('Invalid Id literal');
 	}
 };
@@ -4520,8 +4520,8 @@ var $author$project$Main$unsafeTask = function (str) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 303, column: 13},
-				end: {line: 303, column: 23}
+				start: {line: 315, column: 13},
+				end: {line: 315, column: 23}
 			})('Invalid task literal');
 	}
 };
@@ -4555,8 +4555,8 @@ var $author$project$Main$initModel = {
 		])
 };
 var $author$project$Main$init = {
-	showTimeline: false,
-	timeline: {future: _List_Nil, past: _List_Nil, present: $author$project$Main$initModel}
+	timeline: {future: _List_Nil, past: _List_Nil, present: $author$project$Main$initModel},
+	timelineVisibility: $author$project$Main$TimelineHidden
 };
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
@@ -4579,6 +4579,7 @@ var $elm$core$Result$Ok = function (a) {
 var $elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 'OneOf', a: a};
 };
+var $elm$core$Basics$False = {$: 'False'};
 var $elm$core$Basics$add = _Basics_add;
 var $elm$core$String$all = _String_all;
 var $elm$core$Basics$and = _Basics_and;
@@ -5275,7 +5276,7 @@ var $elm$browser$Browser$sandbox = function (impl) {
 var $author$project$Main$AppMsg = function (a) {
 	return {$: 'AppMsg', a: a};
 };
-var $elm$core$Basics$not = _Basics_not;
+var $author$project$Main$TimelineVisible = {$: 'TimelineVisible'};
 var $author$project$Main$Editing = F2(
 	function (a, b) {
 		return {$: 'Editing', a: a, b: b};
@@ -5359,6 +5360,7 @@ var $author$project$Main$matchesTodoId = F2(
 	function (id, todo) {
 		return _Utils_eq(id, todo.id);
 	});
+var $elm$core$Basics$not = _Basics_not;
 var $author$project$Main$deleteTodoById = function (id) {
 	return $elm$core$List$filter(
 		A2(
@@ -5565,7 +5567,16 @@ var $author$project$Main$update = F2(
 				case 'ToggleTimeline':
 					return _Utils_update(
 						app,
-						{showTimeline: !app.showTimeline});
+						{
+							timelineVisibility: function () {
+								var _v3 = app.timelineVisibility;
+								if (_v3.$ === 'TimelineHidden') {
+									return $author$project$Main$TimelineVisible;
+								} else {
+									return $author$project$Main$TimelineHidden;
+								}
+							}()
+						});
 				default:
 					var $temp$msg = $author$project$Main$AppMsg(msg),
 						$temp$app = app;
@@ -5960,31 +5971,30 @@ var $author$project$Main$msgToString = function (msg) {
 	}
 };
 var $elm$html$Html$span = _VirtualDom_node('span');
-var $author$project$Main$viewField = F3(
-	function (name, prev, next) {
-		return _Utils_eq(prev, next) ? A2(
-			$elm$html$Html$li,
-			_List_Nil,
-			_List_fromArray(
-				[
-					$elm$html$Html$text(name + (': ' + next))
-				])) : A2(
-			$elm$html$Html$li,
-			_List_Nil,
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$span,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('text-success')
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text(name + (': ' + next))
-						]))
-				]));
-	});
+var $author$project$Main$viewField = function (field) {
+	return _Utils_eq(field.prev, field.next) ? A2(
+		$elm$html$Html$li,
+		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$text(field.name + (': ' + field.next))
+			])) : A2(
+		$elm$html$Html$li,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$span,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('text-success')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(field.name + (': ' + field.next))
+					]))
+			]));
+};
 var $author$project$Main$viewModelDiff = F2(
 	function (prev, next) {
 		return A2(
@@ -5992,22 +6002,26 @@ var $author$project$Main$viewModelDiff = F2(
 			_List_Nil,
 			_List_fromArray(
 				[
-					A3($author$project$Main$viewField, 'draft', prev.draft, next.draft),
-					A3(
-					$author$project$Main$viewField,
-					'filter',
-					$author$project$Main$filterToString(prev.filter),
-					$author$project$Main$filterToString(next.filter)),
-					A3(
-					$author$project$Main$viewField,
-					'editing',
-					$author$project$Main$editingToString(prev.editing),
-					$author$project$Main$editingToString(next.editing)),
-					A3(
-					$author$project$Main$viewField,
-					'pendingDelete',
-					$author$project$Main$pendingDeleteToString(prev.pendingDelete),
-					$author$project$Main$pendingDeleteToString(next.pendingDelete)),
+					$author$project$Main$viewField(
+					{name: 'draft', next: next.draft, prev: prev.draft}),
+					$author$project$Main$viewField(
+					{
+						name: 'filter',
+						next: $author$project$Main$filterToString(next.filter),
+						prev: $author$project$Main$filterToString(prev.filter)
+					}),
+					$author$project$Main$viewField(
+					{
+						name: 'editing',
+						next: $author$project$Main$editingToString(next.editing),
+						prev: $author$project$Main$editingToString(prev.editing)
+					}),
+					$author$project$Main$viewField(
+					{
+						name: 'pendingDelete',
+						next: $author$project$Main$pendingDeleteToString(next.pendingDelete),
+						prev: $author$project$Main$pendingDeleteToString(prev.pendingDelete)
+					}),
 					A2(
 					$elm$html$Html$li,
 					_List_Nil,
@@ -6207,16 +6221,13 @@ var $author$project$Main$viewTimeline = function (timeline) {
 		$elm$html$Html$section,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('timeline')
+				$elm$html$Html$Attributes$class('timeline flow')
 			]),
 		_List_fromArray(
 			[
 				A2(
 				$elm$html$Html$h2,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('margin-bottom-1')
-					]),
+				_List_Nil,
 				_List_fromArray(
 					[
 						$elm$html$Html$text('Time Travel Debugger')
@@ -6298,7 +6309,8 @@ var $author$project$Main$viewTimelineToggle = function (app) {
 				_List_fromArray(
 					[
 						$elm$html$Html$Attributes$type_('checkbox'),
-						$elm$html$Html$Attributes$checked(app.showTimeline),
+						$elm$html$Html$Attributes$checked(
+						_Utils_eq(app.timelineVisibility, $author$project$Main$TimelineVisible)),
 						$elm$html$Html$Events$onCheck(
 						$elm$core$Basics$always($author$project$Main$ToggleTimeline)),
 						A2($elm$html$Html$Attributes$attribute, 'id', 'toggle-timeline')
@@ -6568,7 +6580,7 @@ var $author$project$Main$view = function (app) {
 				$author$project$Main$viewTodosCount(model),
 				$author$project$Main$viewConfirmDialog(model),
 				$author$project$Main$viewTimelineToggle(app),
-				app.showTimeline ? A2(
+				_Utils_eq(app.timelineVisibility, $author$project$Main$TimelineVisible) ? A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[

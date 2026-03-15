@@ -75,9 +75,13 @@ type alias Timeline =
     }
 
 
+type TimelineVisibility
+    = TimelineHidden
+    | TimelineVisible
+
 type alias AppModel =
     { timeline : Timeline
-    , showTimeline : Bool
+    , timelineVisibility : TimelineVisibility
     }
 
 
@@ -103,7 +107,7 @@ init =
         , present = initModel
         , future = []
         }
-    , showTimeline = False
+    , timelineVisibility = TimelineHidden
     }
 
 
@@ -268,7 +272,15 @@ update msg app =
                     app
 
         ToggleTimeline ->
-            { app | showTimeline = not app.showTimeline }
+            { app
+                | timelineVisibility =
+                    case app.timelineVisibility of
+                        TimelineHidden ->
+                            TimelineVisible
+
+                        TimelineVisible ->
+                            TimelineHidden
+            }
 
         _ ->
             update (AppMsg msg) app
@@ -427,7 +439,7 @@ view app =
         , viewTodosCount model
         , viewConfirmDialog model
         , viewTimelineToggle app
-        , if app.showTimeline then
+        , if app.timelineVisibility == TimelineVisible then
             div [ class "timeline-wrapper flow" ]
                 [ viewTimeline timeline
                 , viewHistory timeline
@@ -704,7 +716,7 @@ viewTimelineToggle app =
     div [ class "flex gap-1 align-items-center" ]
         [ input
             [ type_ "checkbox"
-            , Html.Attributes.checked app.showTimeline
+            , Html.Attributes.checked (app.timelineVisibility == TimelineVisible)
             , onCheck (always ToggleTimeline)
             , attribute "id" "toggle-timeline"
             ]
@@ -717,8 +729,8 @@ viewTimelineToggle app =
 
 viewTimeline : Timeline -> Html Msg
 viewTimeline timeline =
-    section [ class "timeline" ]
-        [ h2 [ class "margin-bottom-1" ]
+    section [ class "timeline flow" ]
+        [ h2 []
             [ text "Time Travel Debugger" ]
         , div [ class "flex gap-1 align-items-center" ]
             [ button
@@ -775,10 +787,10 @@ viewStep step =
 viewModelDiff : Model -> Model -> Html Msg
 viewModelDiff prev next =
     ul []
-        [ viewField "draft" prev.draft next.draft
-        , viewField "filter" (filterToString prev.filter) (filterToString next.filter)
-        , viewField "editing" (editingToString prev.editing) (editingToString next.editing)
-        , viewField "pendingDelete" (pendingDeleteToString prev.pendingDelete) (pendingDeleteToString next.pendingDelete)
+        [ viewField { name = "draft", prev = prev.draft, next = next.draft }
+        , viewField { name = "filter", prev = filterToString prev.filter, next = filterToString next.filter }
+        , viewField { name = "editing", prev = editingToString prev.editing, next = editingToString next.editing }
+        , viewField { name = "pendingDelete", prev = pendingDeleteToString prev.pendingDelete, next = pendingDeleteToString next.pendingDelete }
         , li []
             [ text "todos:"
             , ul [] (List.map viewTodoDebug next.todos)
@@ -786,15 +798,34 @@ viewModelDiff prev next =
         ]
 
 
-viewField : String -> String -> String -> Html Msg
-viewField name prev next =
-    if prev == next then
-        li [] [ text (name ++ ": " ++ next) ]
+viewField : { name : String, prev : String, next : String } -> Html Msg
+viewField field =
+    if field.prev == field.next then
+        li [] [ text (field.name ++ ": " ++ field.next) ]
+
     else
         li []
             [ span [ class "text-success" ]
-                [ text (name ++ ": " ++ next) ]
+                [ text (field.name ++ ": " ++ field.next) ]
             ]
+
+
+viewTodoDebug : Todo -> Html Msg
+viewTodoDebug todo =
+    li []
+        [ text "{"
+        , ul []
+            [ li [] [ text ("id: " ++ String.fromInt (NonNegative.toInt todo.id)) ]
+            , li [] [ text ("status: " ++ statusToString todo.status) ]
+            , li [] [ text ("task: \"" ++ NonEmptyString.toString todo.task ++ "\"") ]
+            ]
+        , text "}"
+        ]
+
+
+
+-- DEBUG STRING HELPERS
+-------------------------------------------------------------------------------
 
 
 msgToString : Msg -> String
@@ -898,19 +929,6 @@ pendingDeleteToString maybeId =
 
         Just id ->
             "Just " ++ String.fromInt (NonNegative.toInt id)
-
-
-viewTodoDebug : Todo -> Html Msg
-viewTodoDebug todo =
-    li []
-        [ text "{"
-        , ul []
-            [ li [] [ text ("id: " ++ String.fromInt (NonNegative.toInt todo.id)) ]
-            , li [] [ text ("status: " ++ statusToString todo.status) ]
-            , li [] [ text ("task: \"" ++ NonEmptyString.toString todo.task ++ "\"") ]
-            ]
-        , text "}"
-        ]
 
 
 statusToString : Status -> String

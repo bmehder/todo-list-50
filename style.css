@@ -91,6 +91,14 @@ button {
 	}
 }
 
+summary {
+	cursor: pointer;
+
+	&:hover {
+		opacity: 0.75;
+	}
+}
+
 .selected-btn {
 	background-color: transparent;
 	color: inherit;
@@ -211,10 +219,6 @@ button {
 
 .gap-1 {
 	gap: 1rem;
-}
-
-.margin-bottom-1 {
-	margin-block-end: 1rem;
 }
 
 .padding-0 {
