@@ -38,14 +38,14 @@ type Editing
 
 type Filter
     = All
-    | ActiveOnly
+    | ActiveAndImportantOnly
     | CompletedOnly
     | ImportantOnly
 
 
 allFilters : List Filter
 allFilters =
-    [ All, ActiveOnly, CompletedOnly, ImportantOnly ]
+    [ All, ActiveAndImportantOnly, CompletedOnly, ImportantOnly ]
 
 
 type alias Todo =
@@ -64,7 +64,7 @@ type alias Model =
     }
 
 
-type alias Step =
+type alias Frame =
     { msg : Msg
     , prev : Model
     , next : Model
@@ -72,9 +72,9 @@ type alias Step =
 
 
 type alias Timeline =
-    { past : List Step
+    { past : List Frame
     , present : Model
-    , future : List Step
+    , future : List Frame
     }
 
 
@@ -83,17 +83,24 @@ type TimelineVisibility
     | TimelineVisible
 
 
-type alias AppModel =
+type alias TimeTravelModel =
     { timeline : Timeline
     , timelineVisibility : TimelineVisibility
     }
+
+
+type Change
+    = Added Todo
+    | Removed Todo
+    | Updated { before : Todo, after : Todo }
+    | Unchanged Todo
 
 
 initModel : Model
 initModel =
     { todos =
         [ { id = unsafeId 0, task = unsafeTask "Buy coffee", status = Active }
-        , { id = unsafeId 1, task = unsafeTask "Write the smallest Elm app", status = Completed }
+        , { id = unsafeId 1, task = unsafeTask "Write a 'not so small anymore' Elm app", status = Completed }
         , { id = unsafeId 2, task = unsafeTask "Profit", status = Active }
         , { id = unsafeId 3, task = unsafeTask "Do something important", status = Important }
         ]
@@ -104,8 +111,8 @@ initModel =
     }
 
 
-init : AppModel
-init =
+initTimeTravelModel : TimeTravelModel
+initTimeTravelModel =
     { timeline =
         { past = []
         , present = initModel
@@ -121,60 +128,60 @@ init =
 
 
 type TodoMsg
-    = ToggleTodoStatus Id
-    | AskToDelete Id
-    | ConfirmDelete Id
-    | CancelDelete
-    | UpdateDraft String
+    = ToggledTodoStatus Id
+    | AskedToDelete Id
+    | ConfirmedDelete Id
+    | CanceledDelete
+    | UpdatedDraft String
     | SetFilter Filter
-    | CreateTodo
-    | StartEditing Id String
-    | UpdateEditDraft String
-    | SaveEdit
-    | CancelEdit
+    | CreatedTodo
+    | StartedEditingTask Id String
+    | UpdatedEditingDraft String
+    | SavedEditedTask
+    | CanceledEdit
     | NoOp
 
 
 type Msg
     = TodoEvent TodoMsg
-    | ToggleTimeline
-    | Prev
-    | Next
+    | ToggledTimelineVisibility
+    | PrevFrameRequested
+    | NextFrameRequested
 
 
 updateTodo : TodoMsg -> Model -> Model
 updateTodo msg model =
     case msg of
-        ToggleTodoStatus id ->
+        ToggledTodoStatus id ->
             { model
                 | todos = toggleTodoById id model.todos
             }
 
-        AskToDelete id ->
+        AskedToDelete id ->
             { model | pendingDelete = Just id }
 
-        ConfirmDelete id ->
+        ConfirmedDelete id ->
             { model
                 | todos = deleteTodoById id model.todos
                 , pendingDelete = Nothing
             }
 
-        CancelDelete ->
+        CanceledDelete ->
             { model | pendingDelete = Nothing }
 
-        UpdateDraft newValue ->
+        UpdatedDraft newValue ->
             { model | draft = newValue }
 
         SetFilter newFilter ->
             { model | filter = newFilter }
 
-        CreateTodo ->
+        CreatedTodo ->
             addTodoFromDraft model
 
-        StartEditing id task ->
+        StartedEditingTask id task ->
             { model | editing = Editing { id = id, draft = task } }
 
-        UpdateEditDraft newValue ->
+        UpdatedEditingDraft newValue ->
             case model.editing of
                 Editing { id } ->
                     { model | editing = Editing { id = id, draft = newValue } }
@@ -182,7 +189,7 @@ updateTodo msg model =
                 NotEditing ->
                     model
 
-        SaveEdit ->
+        SavedEditedTask ->
             case model.editing of
                 Editing { id, draft } ->
                     case NonEmptyString.fromString draft of
@@ -198,14 +205,14 @@ updateTodo msg model =
                 NotEditing ->
                     model
 
-        CancelEdit ->
+        CanceledEdit ->
             { model | editing = NotEditing }
 
         NoOp ->
             model
 
 
-update : Msg -> AppModel -> AppModel
+update : Msg -> TimeTravelModel -> TimeTravelModel
 update msg app =
     case msg of
         TodoEvent todoMsg ->
@@ -216,49 +223,49 @@ update msg app =
                 newModel =
                     updateTodo todoMsg timeline.present
 
-                step =
+                frame =
                     { msg = TodoEvent todoMsg
                     , prev = timeline.present
                     , next = newModel
                     }
 
                 newTimeline =
-                    { past = step :: timeline.past
+                    { past = frame :: timeline.past
                     , present = newModel
                     , future = []
                     }
             in
             { app | timeline = newTimeline }
 
-        Prev ->
+        PrevFrameRequested ->
             let
                 timeline =
                     app.timeline
             in
             case timeline.past of
-                step :: rest ->
+                frame :: rest ->
                     { app
                         | timeline =
                             { past = rest
-                            , present = step.prev
-                            , future = step :: timeline.future
+                            , present = frame.prev
+                            , future = frame :: timeline.future
                             }
                     }
 
                 [] ->
                     app
 
-        Next ->
+        NextFrameRequested ->
             let
                 timeline =
                     app.timeline
             in
             case timeline.future of
-                step :: rest ->
+                frame :: rest ->
                     { app
                         | timeline =
-                            { past = step :: timeline.past
-                            , present = step.next
+                            { past = frame :: timeline.past
+                            , present = frame.next
                             , future = rest
                             }
                     }
@@ -266,7 +273,7 @@ update msg app =
                 [] ->
                     app
 
-        ToggleTimeline ->
+        ToggledTimelineVisibility ->
             { app
                 | timelineVisibility =
                     case app.timelineVisibility of
@@ -290,6 +297,21 @@ applyIf predicate transform value =
 
     else
         value
+
+
+unique : List Id -> List Id
+unique list =
+    List.foldl
+        (\item acc ->
+            if List.member item acc then
+                acc
+
+            else
+                item :: acc
+        )
+        []
+        list
+        |> List.reverse
 
 
 
@@ -380,8 +402,8 @@ filterTodos filterMode =
         All ->
             identity
 
-        ActiveOnly ->
-            List.filter (.status >> (==) Active)
+        ActiveAndImportantOnly ->
+            List.filter (\todo -> todo.status == Active || todo.status == Important)
 
         CompletedOnly ->
             List.filter (.status >> (==) Completed)
@@ -415,7 +437,7 @@ addTodoFromDraft model =
 -------------------------------------------------------------------------------
 
 
-view : AppModel -> Html Msg
+view : TimeTravelModel -> Html Msg
 view app =
     let
         timeline =
@@ -452,11 +474,11 @@ viewNewTodoForm : Model -> Html Msg
 viewNewTodoForm model =
     form
         [ class "grid gap-1"
-        , onSubmit (TodoEvent CreateTodo)
+        , onSubmit (TodoEvent CreatedTodo)
         ]
         [ input
             [ value model.draft
-            , onInput (TodoEvent << UpdateDraft)
+            , onInput (TodoEvent << UpdatedDraft)
             , placeholder "Add a todo..."
             ]
             []
@@ -482,7 +504,7 @@ viewFilterButton current value =
                 All ->
                     "All"
 
-                ActiveOnly ->
+                ActiveAndImportantOnly ->
                     "Active"
 
                 CompletedOnly ->
@@ -546,17 +568,17 @@ viewEditing draft =
     input
         [ stopPropagationOn "click" (Decode.succeed ( TodoEvent NoOp, True ))
         , value draft
-        , onInput (TodoEvent << UpdateEditDraft)
-        , onBlur (TodoEvent SaveEdit)
+        , onInput (TodoEvent << UpdatedEditingDraft)
+        , onBlur (TodoEvent SavedEditedTask)
         , on "keydown"
             (Decode.field "key" Decode.string
                 |> Decode.andThen
                     (\key ->
                         if key == "Enter" then
-                            Decode.succeed (TodoEvent SaveEdit)
+                            Decode.succeed (TodoEvent SavedEditedTask)
 
                         else if key == "Escape" then
-                            Decode.succeed (TodoEvent CancelEdit)
+                            Decode.succeed (TodoEvent CanceledEdit)
 
                         else
                             Decode.fail "ignore"
@@ -587,10 +609,10 @@ viewTaskStatus todo =
                 |> Decode.andThen
                     (\isShift ->
                         if isShift then
-                            Decode.succeed ( TodoEvent (StartEditing todo.id (NonEmptyString.toString todo.task)), True )
+                            Decode.succeed ( TodoEvent (StartedEditingTask todo.id (NonEmptyString.toString todo.task)), True )
 
                         else
-                            Decode.succeed ( TodoEvent (ToggleTodoStatus todo.id), True )
+                            Decode.succeed ( TodoEvent (ToggledTodoStatus todo.id), True )
                     )
             )
         ]
@@ -600,8 +622,8 @@ viewTaskStatus todo =
 viewDeleteButton : Todo -> Html Msg
 viewDeleteButton todo =
     button
-        [ stopPropagationOn "click" (Decode.succeed ( TodoEvent (AskToDelete todo.id), True ))
-        , class "delete-btn cursor-pointer"
+        [ stopPropagationOn "click" (Decode.succeed ( TodoEvent (AskedToDelete todo.id), True ))
+        , class "delete-btn delete-task cursor-pointer"
         ]
         [ text "✕" ]
 
@@ -619,7 +641,7 @@ viewTodosCount model =
                 All ->
                     itemsLabel
 
-                ActiveOnly ->
+                ActiveAndImportantOnly ->
                     remainingLabel
 
                 CompletedOnly ->
@@ -643,8 +665,8 @@ viewConfirmDialog model =
             (\id ->
                 div [ class "confirm-dialog flex gap-1 align-items-center" ]
                     [ text "Delete this todo?"
-                    , button [ onClick (TodoEvent (ConfirmDelete id)) ] [ text "Yes" ]
-                    , button [ onClick (TodoEvent CancelDelete) ] [ text "Cancel" ]
+                    , button [ class "delete-btn", onClick (TodoEvent (ConfirmedDelete id)) ] [ text "Yes" ]
+                    , button [ onClick (TodoEvent CanceledDelete) ] [ text "Cancel" ]
                     ]
             )
         |> Maybe.withDefault (text "")
@@ -685,6 +707,83 @@ pluralize singular plural count =
             plural
 
 
+diffTodos : List Todo -> List Todo -> List Change
+diffTodos prev next =
+    let
+        findById id list =
+            List.filter (\t -> t.id == id) list |> List.head
+
+        allIds =
+            (List.map .id prev ++ List.map .id next)
+                |> unique
+    in
+    List.map
+        (\id ->
+            case ( findById id prev, findById id next ) of
+                ( Nothing, Just new ) ->
+                    Added new
+
+                ( Just old, Nothing ) ->
+                    Removed old
+
+                ( Just old, Just new ) ->
+                    if old == new then
+                        Unchanged new
+
+                    else
+                        Updated { before = old, after = new }
+
+                ( Nothing, Nothing ) ->
+                    Debug.todo "Impossible"
+        )
+        allIds
+
+
+todoToString : Todo -> String
+todoToString todo =
+    "{ id: "
+        ++ String.fromInt (NonNegative.toInt todo.id)
+        ++ ", status: "
+        ++ statusToString todo.status
+        ++ ", task: \""
+        ++ NonEmptyString.toString todo.task
+        ++ "\" }"
+
+
+todoDiffToString : Todo -> Todo -> String
+todoDiffToString before after =
+    let
+        statusPart =
+            if before.status /= after.status then
+                "status: "
+                    ++ statusToString before.status
+                    ++ " → "
+                    ++ statusToString after.status
+
+            else
+                ""
+
+        taskPart =
+            if before.task /= after.task then
+                "task: \""
+                    ++ NonEmptyString.toString before.task
+                    ++ "\" → \""
+                    ++ NonEmptyString.toString after.task
+                    ++ "\""
+
+            else
+                ""
+
+        parts =
+            List.filter (\s -> s /= "") [ statusPart, taskPart ]
+    in
+    "{ id: "
+        ++ String.fromInt (NonNegative.toInt before.id)
+        ++ " | "
+        ++ String.join ", " parts
+        ++ " }"
+
+
 
 -- TIME TRAVEL DEBUGGER
 -------------------------------------------------------------------------------
@@ -704,13 +803,13 @@ viewModel model =
         ]
 
 
-viewTimelineToggle : AppModel -> Html Msg
+viewTimelineToggle : TimeTravelModel -> Html Msg
 viewTimelineToggle app =
     div [ class "flex gap-1 align-items-center" ]
         [ input
             [ type_ "checkbox"
             , Html.Attributes.checked (app.timelineVisibility == TimelineVisible)
-            , onCheck (always ToggleTimeline)
+            , onCheck (always ToggledTimelineVisibility)
             , attribute "id" "toggle-timeline"
             ]
             []
@@ -727,17 +826,17 @@ viewTimeline timeline =
             [ text "Time Travel Debugger" ]
         , div [ class "flex gap-1 align-items-center" ]
             [ button
-                [ onClick Prev
+                [ onClick PrevFrameRequested
                 , disabled (List.isEmpty timeline.past)
                 ]
                 [ text "Prev" ]
             , button
-                [ onClick Next
+                [ onClick NextFrameRequested
                 , disabled (List.isEmpty timeline.future)
                 ]
                 [ text "Next" ]
             , div []
-                [ text ("Transitions: " ++ String.fromInt (List.length timeline.past)) ]
+                [ text ("Frames: " ++ String.fromInt (List.length timeline.past)) ]
             ]
         ]
 
@@ -745,13 +844,13 @@ viewTimeline timeline =
 viewHistory : Timeline -> Html Msg
 viewHistory timeline =
     ul [ class "flow padding-0 list-style-none" ]
-        (List.map viewStep timeline.past
-            ++ [ viewInitialStep timeline.present ]
+        (List.map viewFrame timeline.past
+            ++ [ viewInitialModel timeline.present ]
         )
 
 
-viewInitialStep : Model -> Html Msg
-viewInitialStep model =
+viewInitialModel : Model -> Html Msg
+viewInitialModel model =
     li []
         [ details [ attribute "name" "timeline-step" ]
             [ summary []
@@ -761,8 +860,8 @@ viewInitialStep model =
         ]
 
 
-viewStep : Step -> Html Msg
-viewStep step =
+viewFrame : Frame -> Html Msg
+viewFrame step =
     li []
         [ details [ attribute "name" "timeline-step" ]
             [ summary []
@@ -775,6 +874,32 @@ viewStep step =
         ]
 
 
+viewTodoDiff : List Todo -> List Todo -> List (Html Msg)
+viewTodoDiff prev next =
+    diffTodos prev next
+        |> List.map viewTodoChange
+
+
+viewTodoChange : Change -> Html Msg
+viewTodoChange change =
+    case change of
+        Added todo ->
+            li [ class "text-success" ]
+                [ text ("+ " ++ todoToString todo) ]
+
+        Removed todo ->
+            li [ class "text-danger" ]
+                [ text ("- " ++ todoToString todo) ]
+
+        Updated { before, after } ->
+            li [ class "text-warning" ]
+                [ text ("~ " ++ todoDiffToString before after) ]
+
+        Unchanged todo ->
+            li [ class "opacity-60" ]
+                [ text ("  " ++ todoToString todo) ]
+
+
 viewModelDiff : Model -> Model -> Html Msg
 viewModelDiff prev next =
     ul []
@@ -784,7 +909,7 @@ viewModelDiff prev next =
         , viewField { name = "pendingDelete", prev = pendingDeleteToString prev.pendingDelete, next = pendingDeleteToString next.pendingDelete }
         , li []
             [ text "todos:"
-            , ul [] (List.map viewTodoDebug next.todos)
+            , ul [] (viewTodoDiff prev.todos next.todos)
             ]
         ]
 
@@ -825,32 +950,32 @@ msgToString msg =
         TodoEvent todoMsg ->
             todoMsgToString todoMsg
 
-        ToggleTimeline ->
+        ToggledTimelineVisibility ->
             "ToggleTimeline"
 
-        Prev ->
+        PrevFrameRequested ->
             "Prev"
 
-        Next ->
+        NextFrameRequested ->
             "Next"
 
 
 todoMsgToString : TodoMsg -> String
 todoMsgToString msg =
     case msg of
-        ToggleTodoStatus id ->
+        ToggledTodoStatus id ->
             "ToggleTodoStatus " ++ String.fromInt (NonNegative.toInt id)
 
-        AskToDelete id ->
+        AskedToDelete id ->
             "AskToDelete " ++ String.fromInt (NonNegative.toInt id)
 
-        ConfirmDelete id ->
+        ConfirmedDelete id ->
             "ConfirmDelete " ++ String.fromInt (NonNegative.toInt id)
 
-        CancelDelete ->
+        CanceledDelete ->
             "CancelDelete"
 
-        UpdateDraft str ->
+        UpdatedDraft str ->
             "UpdateDraft \"" ++ str ++ "\""
 
         SetFilter filter ->
@@ -858,7 +983,7 @@ todoMsgToString msg =
                 All ->
                     "SetFilter All"
 
-                ActiveOnly ->
+                ActiveAndImportantOnly ->
                     "SetFilter ActiveOnly"
 
                 CompletedOnly ->
@@ -867,23 +992,23 @@ todoMsgToString msg =
                 ImportantOnly ->
                     "SetFilter ImportantOnly"
 
-        CreateTodo ->
+        CreatedTodo ->
             "CreateTodo"
 
-        StartEditing id task ->
+        StartedEditingTask id task ->
             "StartEditing "
                 ++ String.fromInt (NonNegative.toInt id)
                 ++ " \""
                 ++ task
                 ++ "\""
 
-        UpdateEditDraft str ->
+        UpdatedEditingDraft str ->
             "UpdateEditDraft \"" ++ str ++ "\""
 
-        SaveEdit ->
+        SavedEditedTask ->
             "SaveEdit"
 
-        CancelEdit ->
+        CanceledEdit ->
             "CancelEdit"
 
         NoOp ->
@@ -896,7 +1021,7 @@ filterToString filter =
         All ->
             "All"
 
-        ActiveOnly ->
+        ActiveAndImportantOnly ->
             "ActiveOnly"
 
         CompletedOnly ->
@@ -944,10 +1069,10 @@ statusToString status =
 -------------------------------------------------------------------------------
 
 
-main : Program () AppModel Msg
+main : Program () TimeTravelModel Msg
 main =
     Browser.sandbox
-        { init = init
+        { init = initTimeTravelModel
         , update = update
         , view = view
         }

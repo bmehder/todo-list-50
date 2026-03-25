@@ -91,14 +91,6 @@ button {
 	}
 }
 
-summary {
-	cursor: pointer;
-
-	&:hover {
-		opacity: 0.75;
-	}
-}
-
 .selected-btn {
 	background-color: transparent;
 	color: inherit;
@@ -117,8 +109,7 @@ summary {
 }
 
 .delete-btn {
-	inline-size: 1.5rem;
-	block-size: 1.5rem;
+	
 
 	display: inline-flex;
 	align-items: center;
@@ -127,12 +118,9 @@ summary {
 	background-color: var(--danger-500);
 	color: white;
 
-	font-size: 0.85rem;
 	font-weight: 600;
-	line-height: 1;
 
 	border: none;
-	border-radius: 50%;
 
 	cursor: pointer;
 
@@ -146,6 +134,22 @@ summary {
 
 	&:active {
 		transform: scale(0.95);
+	}
+}
+
+.delete-task {
+	block-size: 1.5rem;
+	inline-size: 1.5rem;
+	font-size: 0.85rem;
+	line-height: 1;
+	border-radius: 50%;
+}
+
+summary {
+	cursor: pointer;
+
+	&:hover {
+		opacity: 0.75;
 	}
 }
 
