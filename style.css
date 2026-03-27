@@ -225,6 +225,10 @@ summary {
 	gap: 1rem;
 }
 
+.margin-top-1 {
+	margin-block-start: 1rem;
+}
+
 .padding-0 {
 	padding: 0;
 }
