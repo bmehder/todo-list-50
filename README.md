@@ -112,6 +112,17 @@ The debugger can be enabled or disabled by default using the `visibleByDefault` 
 
 The `visibleByDefault` value can also be overridden at runtime via flags passed from `index.html`, allowing the debugger to be enabled or disabled without changing Elm code.
 
+```html
+<div id="todo-app"></div>
+<script src="main.js"></script>
+<script>
+  Elm.Main.init({
+    node: document.getElementById("todo-app"),
+    flags: { visibleByDefault: true }
+  })
+</script>
+```
+
 ---
 
 # 🧠 Why This Is Powerful
