@@ -28,7 +28,10 @@
 					<div id="todo-app"></div>
 					<script src="main.js"></script>
 					<script>
-						Elm.Main.init({ node: document.querySelector("#todo-app") })
+						Elm.Main.init({
+								node: document.getElementById("todo-app"),
+								flags: { visibleByDefault: true }
+							})
 					</script>
 				</div>
 			</div>

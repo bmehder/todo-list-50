@@ -793,6 +793,66 @@ var _List_sortWith = F2(function(f, xs)
 
 
 
+// MATH
+
+var _Basics_add = F2(function(a, b) { return a + b; });
+var _Basics_sub = F2(function(a, b) { return a - b; });
+var _Basics_mul = F2(function(a, b) { return a * b; });
+var _Basics_fdiv = F2(function(a, b) { return a / b; });
+var _Basics_idiv = F2(function(a, b) { return (a / b) | 0; });
+var _Basics_pow = F2(Math.pow);
+
+var _Basics_remainderBy = F2(function(b, a) { return a % b; });
+
+// https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/divmodnote-letter.pdf
+var _Basics_modBy = F2(function(modulus, x)
+{
+	var answer = x % modulus;
+	return modulus === 0
+		? _Debug_crash(11)
+		:
+	((answer > 0 && modulus < 0) || (answer < 0 && modulus > 0))
+		? answer + modulus
+		: answer;
+});
+
+
+// TRIGONOMETRY
+
+var _Basics_pi = Math.PI;
+var _Basics_e = Math.E;
+var _Basics_cos = Math.cos;
+var _Basics_sin = Math.sin;
+var _Basics_tan = Math.tan;
+var _Basics_acos = Math.acos;
+var _Basics_asin = Math.asin;
+var _Basics_atan = Math.atan;
+var _Basics_atan2 = F2(Math.atan2);
+
+
+// MORE MATH
+
+function _Basics_toFloat(x) { return x; }
+function _Basics_truncate(n) { return n | 0; }
+function _Basics_isInfinite(n) { return n === Infinity || n === -Infinity; }
+
+var _Basics_ceiling = Math.ceil;
+var _Basics_floor = Math.floor;
+var _Basics_round = Math.round;
+var _Basics_sqrt = Math.sqrt;
+var _Basics_log = Math.log;
+var _Basics_isNaN = isNaN;
+
+
+// BOOLEANS
+
+function _Basics_not(bool) { return !bool; }
+var _Basics_and = F2(function(a, b) { return a && b; });
+var _Basics_or  = F2(function(a, b) { return a || b; });
+var _Basics_xor = F2(function(a, b) { return a !== b; });
+
+
+
 var _String_cons = F2(function(chr, str)
 {
 	return chr + str;
@@ -1102,66 +1162,6 @@ function _String_fromList(chars)
 	return _List_toArray(chars).join('');
 }
 
-
-
-
-// MATH
-
-var _Basics_add = F2(function(a, b) { return a + b; });
-var _Basics_sub = F2(function(a, b) { return a - b; });
-var _Basics_mul = F2(function(a, b) { return a * b; });
-var _Basics_fdiv = F2(function(a, b) { return a / b; });
-var _Basics_idiv = F2(function(a, b) { return (a / b) | 0; });
-var _Basics_pow = F2(Math.pow);
-
-var _Basics_remainderBy = F2(function(b, a) { return a % b; });
-
-// https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/divmodnote-letter.pdf
-var _Basics_modBy = F2(function(modulus, x)
-{
-	var answer = x % modulus;
-	return modulus === 0
-		? _Debug_crash(11)
-		:
-	((answer > 0 && modulus < 0) || (answer < 0 && modulus > 0))
-		? answer + modulus
-		: answer;
-});
-
-
-// TRIGONOMETRY
-
-var _Basics_pi = Math.PI;
-var _Basics_e = Math.E;
-var _Basics_cos = Math.cos;
-var _Basics_sin = Math.sin;
-var _Basics_tan = Math.tan;
-var _Basics_acos = Math.acos;
-var _Basics_asin = Math.asin;
-var _Basics_atan = Math.atan;
-var _Basics_atan2 = F2(Math.atan2);
-
-
-// MORE MATH
-
-function _Basics_toFloat(x) { return x; }
-function _Basics_truncate(n) { return n | 0; }
-function _Basics_isInfinite(n) { return n === Infinity || n === -Infinity; }
-
-var _Basics_ceiling = Math.ceil;
-var _Basics_floor = Math.floor;
-var _Basics_round = Math.round;
-var _Basics_sqrt = Math.sqrt;
-var _Basics_log = Math.log;
-var _Basics_isNaN = isNaN;
-
-
-// BOOLEANS
-
-function _Basics_not(bool) { return !bool; }
-var _Basics_and = F2(function(a, b) { return a && b; });
-var _Basics_or  = F2(function(a, b) { return a || b; });
-var _Basics_xor = F2(function(a, b) { return a !== b; });
 
 
 
@@ -4459,263 +4459,6 @@ var $elm$core$Set$toList = function (_v0) {
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
-var $author$project$Types$Active = {$: 'Active'};
-var $author$project$Types$All = {$: 'All'};
-var $author$project$Types$Completed = {$: 'Completed'};
-var $elm$core$Basics$False = {$: 'False'};
-var $author$project$Types$NotEditing = {$: 'NotEditing'};
-var $elm$core$Maybe$Nothing = {$: 'Nothing'};
-var $elm$core$Maybe$Just = function (a) {
-	return {$: 'Just', a: a};
-};
-var $elm$core$Basics$identity = function (x) {
-	return x;
-};
-var $author$project$NonNegative$NonNegative = function (a) {
-	return {$: 'NonNegative', a: a};
-};
-var $elm$core$Basics$ge = _Utils_ge;
-var $author$project$NonNegative$fromInt = function (n) {
-	return (n >= 0) ? $elm$core$Maybe$Just(
-		$author$project$NonNegative$NonNegative(n)) : $elm$core$Maybe$Nothing;
-};
-var $elm$core$Debug$todo = _Debug_todo;
-var $author$project$Main$idFromIntUnsafe = function (n) {
-	var _v0 = $author$project$NonNegative$fromInt(n);
-	if (_v0.$ === 'Just') {
-		var id = _v0.a;
-		return id;
-	} else {
-		return _Debug_todo(
-			'Main',
-			{
-				start: {line: 136, column: 13},
-				end: {line: 136, column: 23}
-			})('Invalid Id literal');
-	}
-};
-var $author$project$NonEmptyString$NonEmptyString = function (a) {
-	return {$: 'NonEmptyString', a: a};
-};
-var $elm$core$Basics$apR = F2(
-	function (x, f) {
-		return f(x);
-	});
-var $elm$core$Basics$eq = _Utils_equal;
-var $elm$core$String$isEmpty = function (string) {
-	return string === '';
-};
-var $elm$core$String$trim = _String_trim;
-var $author$project$NonEmptyString$fromString = function (str) {
-	return $elm$core$String$isEmpty(
-		$elm$core$String$trim(str)) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
-		$author$project$NonEmptyString$NonEmptyString(str));
-};
-var $author$project$Main$taskFromStringUnsafe = function (str) {
-	var _v0 = $author$project$NonEmptyString$fromString(str);
-	if (_v0.$ === 'Just') {
-		var task = _v0.a;
-		return task;
-	} else {
-		return _Debug_todo(
-			'Main',
-			{
-				start: {line: 126, column: 13},
-				end: {line: 126, column: 23}
-			})('Invalid task literal');
-	}
-};
-var $author$project$Main$initModel = {
-	draft: '',
-	editing: $author$project$Types$NotEditing,
-	filter: $author$project$Types$All,
-	pendingDelete: $elm$core$Maybe$Nothing,
-	todos: _List_fromArray(
-		[
-			{
-			id: $author$project$Main$idFromIntUnsafe(0),
-			important: false,
-			status: $author$project$Types$Active,
-			task: $author$project$Main$taskFromStringUnsafe('Buy coffee')
-		},
-			{
-			id: $author$project$Main$idFromIntUnsafe(1),
-			important: false,
-			status: $author$project$Types$Completed,
-			task: $author$project$Main$taskFromStringUnsafe('Write a \'not so small anymore\' Elm app')
-		},
-			{
-			id: $author$project$Main$idFromIntUnsafe(2),
-			important: false,
-			status: $author$project$Types$Active,
-			task: $author$project$Main$taskFromStringUnsafe('Profit')
-		},
-			{
-			id: $author$project$Main$idFromIntUnsafe(3),
-			important: true,
-			status: $author$project$Types$Active,
-			task: $author$project$Main$taskFromStringUnsafe('Do something important')
-		}
-		])
-};
-var $elm$core$Basics$append = _Utils_append;
-var $elm$core$String$fromInt = _String_fromNumber;
-var $author$project$NonNegative$toInt = function (_v0) {
-	var n = _v0.a;
-	return n;
-};
-var $author$project$TimeTravelConfig$editingToString = function (editing) {
-	if (editing.$ === 'NotEditing') {
-		return 'NotEditing';
-	} else {
-		var id = editing.a.id;
-		var draft = editing.a.draft;
-		return 'EditingTask (id: ' + ($elm$core$String$fromInt(
-			$author$project$NonNegative$toInt(id)) + (', draft: \"' + (draft + '\")')));
-	}
-};
-var $author$project$TimeTravelConfig$filterToString = function (filter) {
-	switch (filter.$) {
-		case 'All':
-			return 'All';
-		case 'ActiveOrImportantOnly':
-			return 'Active+Important';
-		case 'CompletedOnly':
-			return 'Completed';
-		default:
-			return 'Important';
-	}
-};
-var $elm$core$String$join = F2(
-	function (sep, chunks) {
-		return A2(
-			_String_join,
-			sep,
-			_List_toArray(chunks));
-	});
-var $elm$core$Basics$add = _Basics_add;
-var $elm$core$List$foldl = F3(
-	function (func, acc, list) {
-		foldl:
-		while (true) {
-			if (!list.b) {
-				return acc;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				var $temp$func = func,
-					$temp$acc = A2(func, x, acc),
-					$temp$list = xs;
-				func = $temp$func;
-				acc = $temp$acc;
-				list = $temp$list;
-				continue foldl;
-			}
-		}
-	});
-var $elm$core$Basics$gt = _Utils_gt;
-var $elm$core$List$reverse = function (list) {
-	return A3($elm$core$List$foldl, $elm$core$List$cons, _List_Nil, list);
-};
-var $elm$core$List$foldrHelper = F4(
-	function (fn, acc, ctr, ls) {
-		if (!ls.b) {
-			return acc;
-		} else {
-			var a = ls.a;
-			var r1 = ls.b;
-			if (!r1.b) {
-				return A2(fn, a, acc);
-			} else {
-				var b = r1.a;
-				var r2 = r1.b;
-				if (!r2.b) {
-					return A2(
-						fn,
-						a,
-						A2(fn, b, acc));
-				} else {
-					var c = r2.a;
-					var r3 = r2.b;
-					if (!r3.b) {
-						return A2(
-							fn,
-							a,
-							A2(
-								fn,
-								b,
-								A2(fn, c, acc)));
-					} else {
-						var d = r3.a;
-						var r4 = r3.b;
-						var res = (ctr > 500) ? A3(
-							$elm$core$List$foldl,
-							fn,
-							acc,
-							$elm$core$List$reverse(r4)) : A4($elm$core$List$foldrHelper, fn, acc, ctr + 1, r4);
-						return A2(
-							fn,
-							a,
-							A2(
-								fn,
-								b,
-								A2(
-									fn,
-									c,
-									A2(fn, d, res))));
-					}
-				}
-			}
-		}
-	});
-var $elm$core$List$foldr = F3(
-	function (fn, acc, ls) {
-		return A4($elm$core$List$foldrHelper, fn, acc, 0, ls);
-	});
-var $elm$core$List$map = F2(
-	function (f, xs) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, acc) {
-					return A2(
-						$elm$core$List$cons,
-						f(x),
-						acc);
-				}),
-			_List_Nil,
-			xs);
-	});
-var $author$project$TimeTravelConfig$pendingDeleteToString = function (maybeId) {
-	if (maybeId.$ === 'Nothing') {
-		return 'Nothing';
-	} else {
-		var id = maybeId.a;
-		return 'Just ' + $elm$core$String$fromInt(
-			$author$project$NonNegative$toInt(id));
-	}
-};
-var $author$project$TimeTravelConfig$statusToString = function (status) {
-	if (status.$ === 'Active') {
-		return 'Active';
-	} else {
-		return 'Completed';
-	}
-};
-var $author$project$NonEmptyString$toString = function (_v0) {
-	var str = _v0.a;
-	return str;
-};
-var $author$project$TimeTravelConfig$todoToRecordString = function (todo) {
-	return '    { id = ' + ($elm$core$String$fromInt(
-		$author$project$NonNegative$toInt(todo.id)) + (', status = ' + ($author$project$TimeTravelConfig$statusToString(todo.status) + (', important = ' + ((todo.important ? 'True' : 'False') + (', task = \"' + ($author$project$NonEmptyString$toString(todo.task) + '\" }')))))));
-};
-var $author$project$TimeTravelConfig$modelToPrettyString = function (model) {
-	return '{\n' + ('    draft = \"' + (model.draft + ('\"\n' + ('  , filter = ' + ($author$project$TimeTravelConfig$filterToString(model.filter) + ('\n' + ('  , editing = ' + ($author$project$TimeTravelConfig$editingToString(model.editing) + ('\n' + ('  , pendingDelete = ' + ($author$project$TimeTravelConfig$pendingDeleteToString(model.pendingDelete) + ('\n' + ('  , todos = [\n' + (A2(
-		$elm$core$String$join,
-		',\n',
-		A2($elm$core$List$map, $author$project$TimeTravelConfig$todoToRecordString, model.todos)) + ('\n    ]\n' + '}')))))))))))))));
-};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
 };
@@ -4737,9 +4480,24 @@ var $elm$core$Result$Ok = function (a) {
 var $elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 'OneOf', a: a};
 };
+var $elm$core$Basics$False = {$: 'False'};
+var $elm$core$Basics$add = _Basics_add;
+var $elm$core$Maybe$Just = function (a) {
+	return {$: 'Just', a: a};
+};
+var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $elm$core$String$all = _String_all;
 var $elm$core$Basics$and = _Basics_and;
+var $elm$core$Basics$append = _Utils_append;
 var $elm$json$Json$Encode$encode = _Json_encode;
+var $elm$core$String$fromInt = _String_fromNumber;
+var $elm$core$String$join = F2(
+	function (sep, chunks) {
+		return A2(
+			_String_join,
+			sep,
+			_List_toArray(chunks));
+	});
 var $elm$core$String$split = F2(
 	function (sep, string) {
 		return _List_fromArray(
@@ -4751,6 +4509,25 @@ var $elm$json$Json$Decode$indent = function (str) {
 		'\n    ',
 		A2($elm$core$String$split, '\n', str));
 };
+var $elm$core$List$foldl = F3(
+	function (func, acc, list) {
+		foldl:
+		while (true) {
+			if (!list.b) {
+				return acc;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				var $temp$func = func,
+					$temp$acc = A2(func, x, acc),
+					$temp$list = xs;
+				func = $temp$func;
+				acc = $temp$acc;
+				list = $temp$list;
+				continue foldl;
+			}
+		}
+	});
 var $elm$core$List$length = function (xs) {
 	return A3(
 		$elm$core$List$foldl,
@@ -4815,6 +4592,9 @@ var $elm$core$Char$isDigit = function (_char) {
 };
 var $elm$core$Char$isAlphaNum = function (_char) {
 	return $elm$core$Char$isLower(_char) || ($elm$core$Char$isUpper(_char) || $elm$core$Char$isDigit(_char));
+};
+var $elm$core$List$reverse = function (list) {
+	return A3($elm$core$List$foldl, $elm$core$List$cons, _List_Nil, list);
 };
 var $elm$core$String$uncons = _String_uncons;
 var $elm$json$Json$Decode$errorOneOf = F2(
@@ -4944,8 +4724,14 @@ var $elm$core$Basics$apL = F2(
 	function (f, x) {
 		return f(x);
 	});
+var $elm$core$Basics$apR = F2(
+	function (x, f) {
+		return f(x);
+	});
+var $elm$core$Basics$eq = _Utils_equal;
 var $elm$core$Basics$floor = _Basics_floor;
 var $elm$core$Elm$JsArray$length = _JsArray_length;
+var $elm$core$Basics$gt = _Utils_gt;
 var $elm$core$Basics$max = F2(
 	function (x, y) {
 		return (_Utils_cmp(x, y) > 0) ? x : y;
@@ -5066,6 +4852,223 @@ var $elm$core$Result$isOk = function (result) {
 	} else {
 		return false;
 	}
+};
+var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $author$project$Types$Active = {$: 'Active'};
+var $author$project$Types$All = {$: 'All'};
+var $author$project$Types$Completed = {$: 'Completed'};
+var $author$project$Types$NotEditing = {$: 'NotEditing'};
+var $elm$core$Basics$identity = function (x) {
+	return x;
+};
+var $author$project$NonNegative$NonNegative = function (a) {
+	return {$: 'NonNegative', a: a};
+};
+var $elm$core$Basics$ge = _Utils_ge;
+var $author$project$NonNegative$fromInt = function (n) {
+	return (n >= 0) ? $elm$core$Maybe$Just(
+		$author$project$NonNegative$NonNegative(n)) : $elm$core$Maybe$Nothing;
+};
+var $elm$core$Debug$todo = _Debug_todo;
+var $author$project$Main$idFromIntUnsafe = function (n) {
+	var _v0 = $author$project$NonNegative$fromInt(n);
+	if (_v0.$ === 'Just') {
+		var id = _v0.a;
+		return id;
+	} else {
+		return _Debug_todo(
+			'Main',
+			{
+				start: {line: 136, column: 13},
+				end: {line: 136, column: 23}
+			})('Invalid Id literal');
+	}
+};
+var $author$project$NonEmptyString$NonEmptyString = function (a) {
+	return {$: 'NonEmptyString', a: a};
+};
+var $elm$core$String$isEmpty = function (string) {
+	return string === '';
+};
+var $elm$core$String$trim = _String_trim;
+var $author$project$NonEmptyString$fromString = function (str) {
+	return $elm$core$String$isEmpty(
+		$elm$core$String$trim(str)) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
+		$author$project$NonEmptyString$NonEmptyString(str));
+};
+var $author$project$Main$taskFromStringUnsafe = function (str) {
+	var _v0 = $author$project$NonEmptyString$fromString(str);
+	if (_v0.$ === 'Just') {
+		var task = _v0.a;
+		return task;
+	} else {
+		return _Debug_todo(
+			'Main',
+			{
+				start: {line: 126, column: 13},
+				end: {line: 126, column: 23}
+			})('Invalid task literal');
+	}
+};
+var $author$project$Main$initModel = {
+	draft: '',
+	editing: $author$project$Types$NotEditing,
+	filter: $author$project$Types$All,
+	pendingDelete: $elm$core$Maybe$Nothing,
+	todos: _List_fromArray(
+		[
+			{
+			id: $author$project$Main$idFromIntUnsafe(0),
+			important: false,
+			status: $author$project$Types$Active,
+			task: $author$project$Main$taskFromStringUnsafe('Buy coffee')
+		},
+			{
+			id: $author$project$Main$idFromIntUnsafe(1),
+			important: false,
+			status: $author$project$Types$Completed,
+			task: $author$project$Main$taskFromStringUnsafe('Write a \'not so small anymore\' Elm app')
+		},
+			{
+			id: $author$project$Main$idFromIntUnsafe(2),
+			important: false,
+			status: $author$project$Types$Active,
+			task: $author$project$Main$taskFromStringUnsafe('Profit')
+		},
+			{
+			id: $author$project$Main$idFromIntUnsafe(3),
+			important: true,
+			status: $author$project$Types$Active,
+			task: $author$project$Main$taskFromStringUnsafe('Do something important')
+		}
+		])
+};
+var $author$project$NonNegative$toInt = function (_v0) {
+	var n = _v0.a;
+	return n;
+};
+var $author$project$TimeTravelConfig$editingToString = function (editing) {
+	if (editing.$ === 'NotEditing') {
+		return 'NotEditing';
+	} else {
+		var id = editing.a.id;
+		var draft = editing.a.draft;
+		return 'EditingTask (id: ' + ($elm$core$String$fromInt(
+			$author$project$NonNegative$toInt(id)) + (', draft: \"' + (draft + '\")')));
+	}
+};
+var $author$project$TimeTravelConfig$filterToString = function (filter) {
+	switch (filter.$) {
+		case 'All':
+			return 'All';
+		case 'ActiveOrImportantOnly':
+			return 'Active+Important';
+		case 'CompletedOnly':
+			return 'Completed';
+		default:
+			return 'Important';
+	}
+};
+var $elm$core$List$foldrHelper = F4(
+	function (fn, acc, ctr, ls) {
+		if (!ls.b) {
+			return acc;
+		} else {
+			var a = ls.a;
+			var r1 = ls.b;
+			if (!r1.b) {
+				return A2(fn, a, acc);
+			} else {
+				var b = r1.a;
+				var r2 = r1.b;
+				if (!r2.b) {
+					return A2(
+						fn,
+						a,
+						A2(fn, b, acc));
+				} else {
+					var c = r2.a;
+					var r3 = r2.b;
+					if (!r3.b) {
+						return A2(
+							fn,
+							a,
+							A2(
+								fn,
+								b,
+								A2(fn, c, acc)));
+					} else {
+						var d = r3.a;
+						var r4 = r3.b;
+						var res = (ctr > 500) ? A3(
+							$elm$core$List$foldl,
+							fn,
+							acc,
+							$elm$core$List$reverse(r4)) : A4($elm$core$List$foldrHelper, fn, acc, ctr + 1, r4);
+						return A2(
+							fn,
+							a,
+							A2(
+								fn,
+								b,
+								A2(
+									fn,
+									c,
+									A2(fn, d, res))));
+					}
+				}
+			}
+		}
+	});
+var $elm$core$List$foldr = F3(
+	function (fn, acc, ls) {
+		return A4($elm$core$List$foldrHelper, fn, acc, 0, ls);
+	});
+var $elm$core$List$map = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, acc) {
+					return A2(
+						$elm$core$List$cons,
+						f(x),
+						acc);
+				}),
+			_List_Nil,
+			xs);
+	});
+var $author$project$TimeTravelConfig$pendingDeleteToString = function (maybeId) {
+	if (maybeId.$ === 'Nothing') {
+		return 'Nothing';
+	} else {
+		var id = maybeId.a;
+		return 'Just ' + $elm$core$String$fromInt(
+			$author$project$NonNegative$toInt(id));
+	}
+};
+var $author$project$TimeTravelConfig$statusToString = function (status) {
+	if (status.$ === 'Active') {
+		return 'Active';
+	} else {
+		return 'Completed';
+	}
+};
+var $author$project$NonEmptyString$toString = function (_v0) {
+	var str = _v0.a;
+	return str;
+};
+var $author$project$TimeTravelConfig$todoToRecordString = function (todo) {
+	return '    { id = ' + ($elm$core$String$fromInt(
+		$author$project$NonNegative$toInt(todo.id)) + (', status = ' + ($author$project$TimeTravelConfig$statusToString(todo.status) + (', important = ' + ((todo.important ? 'True' : 'False') + (', task = \"' + ($author$project$NonEmptyString$toString(todo.task) + '\" }')))))));
+};
+var $author$project$TimeTravelConfig$modelToPrettyString = function (model) {
+	return '{\n' + ('    draft = \"' + (model.draft + ('\"\n' + ('  , filter = ' + ($author$project$TimeTravelConfig$filterToString(model.filter) + ('\n' + ('  , editing = ' + ($author$project$TimeTravelConfig$editingToString(model.editing) + ('\n' + ('  , pendingDelete = ' + ($author$project$TimeTravelConfig$pendingDeleteToString(model.pendingDelete) + ('\n' + ('  , todos = [\n' + (A2(
+		$elm$core$String$join,
+		',\n',
+		A2($elm$core$List$map, $author$project$TimeTravelConfig$todoToRecordString, model.todos)) + ('\n    ]\n' + '}')))))))))))))));
 };
 var $elm$json$Json$Decode$succeed = _Json_succeed;
 var $author$project$TimeTravelConfig$todoMsgToDebug = function (msg) {
@@ -5562,7 +5565,6 @@ var $elm$html$Html$Events$stopPropagationOn = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
 	});
-var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$at = F2(
 	function (fields, decoder) {
 		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
@@ -5693,7 +5695,6 @@ var $author$project$Types$SavedEditedTask = {$: 'SavedEditedTask'};
 var $author$project$Types$UpdatedEditingDraft = function (a) {
 	return {$: 'UpdatedEditingDraft', a: a};
 };
-var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $elm$json$Json$Decode$fail = _Json_fail;
 var $elm$html$Html$Events$onBlur = function (msg) {
 	return A2(
@@ -5736,7 +5737,6 @@ var $author$project$Types$ToggledImportant = function (a) {
 var $author$project$Types$ToggledStatus = function (a) {
 	return {$: 'ToggledStatus', a: a};
 };
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$html$Html$Events$onDoubleClick = function (msg) {
 	return A2(
@@ -5910,17 +5910,6 @@ var $author$project$Main$view = function (model) {
 				$author$project$Main$viewConfirmDialog(model)
 			]));
 };
-var $author$project$TimeTravel$TimeTravel = function (a) {
-	return {$: 'TimeTravel', a: a};
-};
-var $author$project$TimeTravel$init = F2(
-	function (visible, model) {
-		return $author$project$TimeTravel$TimeTravel(
-			{
-				timeline: {future: _List_Nil, past: _List_Nil, present: model},
-				visibility: visible
-			});
-	});
 var $elm$browser$Browser$External = function (a) {
 	return {$: 'External', a: a};
 };
@@ -6144,28 +6133,22 @@ var $elm$core$Task$perform = F2(
 			$elm$core$Task$Perform(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
+var $elm$browser$Browser$element = _Browser_element;
+var $author$project$TimeTravel$TimeTravel = function (a) {
+	return {$: 'TimeTravel', a: a};
+};
+var $author$project$TimeTravel$init = F2(
+	function (visible, model) {
+		return $author$project$TimeTravel$TimeTravel(
+			{
+				timeline: {future: _List_Nil, past: _List_Nil, present: model},
+				visibility: visible
+			});
+	});
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $elm$browser$Browser$sandbox = function (impl) {
-	return _Browser_element(
-		{
-			init: function (_v0) {
-				return _Utils_Tuple2(impl.init, $elm$core$Platform$Cmd$none);
-			},
-			subscriptions: function (_v1) {
-				return $elm$core$Platform$Sub$none;
-			},
-			update: F2(
-				function (msg, model) {
-					return _Utils_Tuple2(
-						A2(impl.update, msg, model),
-						$elm$core$Platform$Cmd$none);
-				}),
-			view: impl.view
-		});
-};
 var $author$project$TimeTravel$update = F3(
 	function (updateModel, timeTravelMsg, _v0) {
 		var app = _v0.a;
@@ -6411,10 +6394,22 @@ var $author$project$TimeTravel$view = F2(
 				]));
 	});
 var $author$project$TimeTravel$withTimeTravel = function (config) {
-	return $elm$browser$Browser$sandbox(
+	return $elm$browser$Browser$element(
 		{
-			init: A2($author$project$TimeTravel$init, config.visibleByDefault, config.init),
-			update: $author$project$TimeTravel$update(config.update),
+			init: function (flags) {
+				return _Utils_Tuple2(
+					A2($author$project$TimeTravel$init, flags.visibleByDefault, config.init),
+					$elm$core$Platform$Cmd$none);
+			},
+			subscriptions: function (_v0) {
+				return $elm$core$Platform$Sub$none;
+			},
+			update: F2(
+				function (msg, model) {
+					return _Utils_Tuple2(
+						A3($author$project$TimeTravel$update, config.update, msg, model),
+						$elm$core$Platform$Cmd$none);
+				}),
 			view: function (model) {
 				return A2(
 					$author$project$TimeTravel$view,
@@ -6426,4 +6421,10 @@ var $author$project$TimeTravel$withTimeTravel = function (config) {
 var $author$project$Main$main = $author$project$TimeTravel$withTimeTravel(
 	{init: $author$project$Main$initModel, modelToString: $author$project$TimeTravelConfig$modelToPrettyString, msgToDebug: $author$project$TimeTravelConfig$todoMsgToDebug, update: $author$project$Main$update, view: $author$project$Main$view, visibleByDefault: true});
 _Platform_export({'Main':{'init':$author$project$Main$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
+	A2(
+		$elm$json$Json$Decode$andThen,
+		function (visibleByDefault) {
+			return $elm$json$Json$Decode$succeed(
+				{visibleByDefault: visibleByDefault});
+		},
+		A2($elm$json$Json$Decode$field, 'visibleByDefault', $elm$json$Json$Decode$bool)))(0)}});}(this));

@@ -1,5 +1,6 @@
 module TimeTravel exposing
     ( DebugInfo
+    , Flags
     , Frame
     , Msg(..)
     , TimeTravel
@@ -11,8 +12,8 @@ module TimeTravel exposing
     )
 
 import Browser
-import Html exposing (Html, button, details, div, h2, input, label, summary, text)
-import Html.Attributes exposing (checked, class, disabled, for, id, name, type_)
+import Html exposing (Html, button, details, div, h2, summary, text)
+import Html.Attributes exposing (class, disabled, id, name)
 import Html.Events exposing (onClick)
 
 
@@ -23,6 +24,11 @@ type alias AppConfig msg model =
     , msgToDebug : msg -> DebugInfo
     , modelToString : model -> String
     , visibleByDefault : Bool
+    }
+
+
+type alias Flags =
+    { visibleByDefault : Bool
     }
 
 
@@ -141,11 +147,19 @@ update updateModel timeTravelMsg (TimeTravel app) =
 
 withTimeTravel :
     AppConfig msg model
-    -> Program () (TimeTravel msg model) (Msg msg)
+    -> Program Flags (TimeTravel msg model) (Msg msg)
 withTimeTravel config =
-    Browser.sandbox
-        { init = init config.visibleByDefault config.init
-        , update = update config.update
+    Browser.element
+        { init =
+            \flags ->
+                ( init flags.visibleByDefault config.init
+                , Cmd.none
+                )
+        , update =
+            \msg model ->
+                ( update config.update msg model
+                , Cmd.none
+                )
         , view =
             \model ->
                 view
@@ -154,6 +168,7 @@ withTimeTravel config =
                     , modelToString = config.modelToString
                     }
                     model
+        , subscriptions = \_ -> Sub.none
         }
 
 

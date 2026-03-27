@@ -511,7 +511,7 @@ pluralize singular plural count =
 -------------------------------------------------------------------------------
 
 
-main : Program () (TimeTravel.TimeTravel Msg Model) (TimeTravel.Msg Msg)
+main : Program TimeTravel.Flags (TimeTravel.TimeTravel Msg Model) (TimeTravel.Msg Msg)
 main =
     TimeTravel.withTimeTravel
         { init = initModel
