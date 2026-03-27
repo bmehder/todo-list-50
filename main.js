@@ -6227,6 +6227,7 @@ var $author$project$TimeTravel$AppMsg = function (a) {
 };
 var $author$project$TimeTravel$Next = {$: 'Next'};
 var $author$project$TimeTravel$Prev = {$: 'Prev'};
+var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $elm$core$List$isEmpty = function (xs) {
 	if (!xs.b) {
 		return true;
@@ -6365,6 +6366,13 @@ var $author$project$TimeTravel$view = F2(
 						]),
 					_List_fromArray(
 						[
+							A2(
+							$elm$html$Html$h2,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Time Travel Debugger')
+								])),
 							A2(
 							$elm$html$Html$div,
 							_List_fromArray(

@@ -11,7 +11,7 @@ module TimeTravel exposing
     )
 
 import Browser
-import Html exposing (Html, button, details, div, input, label, summary, text)
+import Html exposing (Html, button, details, div, h2, input, label, summary, text)
 import Html.Attributes exposing (checked, class, disabled, for, id, name, type_)
 import Html.Events exposing (onClick)
 
@@ -167,7 +167,8 @@ view config (TimeTravel app) =
             |> Html.map AppMsg
         , if app.visibility then
             div [ class "flow" ]
-                [ div [ class "flex gap-1" ]
+                [ h2 [] [ text "Time Travel Debugger" ]
+                , div [ class "flex gap-1" ]
                     [ button [ onClick Prev, disabled (List.isEmpty app.timeline.past) ] [ text "Prev" ]
                     , button [ onClick Next, disabled (List.isEmpty app.timeline.future) ] [ text "Next" ]
                     ]
