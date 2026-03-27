@@ -34,7 +34,6 @@ type alias DebugInfo =
 
 type Msg msg
     = AppMsg msg
-    | Toggle
     | Prev
     | Next
 
@@ -86,8 +85,6 @@ update :
     -> TimeTravel msg model
 update updateModel timeTravelMsg (TimeTravel app) =
     case timeTravelMsg of
-        Toggle ->
-            TimeTravel { app | visibility = not app.visibility }
 
         Prev ->
             case app.timeline.past of
@@ -168,19 +165,6 @@ view config (TimeTravel app) =
     div [ class "flow" ]
         [ config.viewModel app.timeline.present
             |> Html.map AppMsg
-        , if app.visibility then
-            div [ class "flex align-items-center gap-0-5" ]
-                [ input
-                    [ type_ "checkbox"
-                    , id "time-travel-toggle"
-                    , checked app.visibility
-                    , onClick Toggle
-                    ]
-                    []
-                , label [ for "time-travel-toggle" ] [ text "Time Travel Debugger" ]
-                ]
-          else
-            text ""
         , if app.visibility then
             div [ class "flow" ]
                 [ div [ class "flex gap-1" ]

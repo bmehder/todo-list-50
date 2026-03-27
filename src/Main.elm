@@ -519,5 +519,5 @@ main =
         , view = view
         , msgToDebug = TimeTravelConfig.todoMsgToDebug
         , modelToString = TimeTravelConfig.modelToPrettyString
-        , visibleByDefault = True
+        , visibleByDefault = False
         }

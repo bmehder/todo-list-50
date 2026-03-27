@@ -36,7 +36,7 @@ This module wraps an application and adds:
 It introduces:
 
 - `TimeTravel msg model`
-- `Msg msg` (internal messages like Toggle, Prev, Next, and wrapped app messages)
+- `Msg msg` (internal messages like Prev, Next, and wrapped app messages)
 
 ---
 

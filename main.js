@@ -4378,7 +4378,7 @@ function _Browser_load(url)
 		}
 	}));
 }
-var $elm$core$Basics$True = {$: 'True'};
+var $elm$core$Basics$False = {$: 'False'};
 var $elm$core$List$cons = _List_cons;
 var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
 var $elm$core$Array$foldr = F3(
@@ -4462,9 +4462,9 @@ var $elm$core$Basics$LT = {$: 'LT'};
 var $author$project$Types$Active = {$: 'Active'};
 var $author$project$Types$All = {$: 'All'};
 var $author$project$Types$Completed = {$: 'Completed'};
-var $elm$core$Basics$False = {$: 'False'};
 var $author$project$Types$NotEditing = {$: 'NotEditing'};
 var $elm$core$Maybe$Nothing = {$: 'Nothing'};
+var $elm$core$Basics$True = {$: 'True'};
 var $elm$core$Maybe$Just = function (a) {
 	return {$: 'Just', a: a};
 };
@@ -6170,11 +6170,6 @@ var $author$project$TimeTravel$update = F3(
 	function (updateModel, timeTravelMsg, _v0) {
 		var app = _v0.a;
 		switch (timeTravelMsg.$) {
-			case 'Toggle':
-				return $author$project$TimeTravel$TimeTravel(
-					_Utils_update(
-						app,
-						{visibility: !app.visibility}));
 			case 'Prev':
 				var _v2 = app.timeline.past;
 				if (!_v2.b) {
@@ -6232,10 +6227,6 @@ var $author$project$TimeTravel$AppMsg = function (a) {
 };
 var $author$project$TimeTravel$Next = {$: 'Next'};
 var $author$project$TimeTravel$Prev = {$: 'Prev'};
-var $author$project$TimeTravel$Toggle = {$: 'Toggle'};
-var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
-var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
-var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $elm$core$List$isEmpty = function (xs) {
 	if (!xs.b) {
 		return true;
@@ -6243,7 +6234,6 @@ var $elm$core$List$isEmpty = function (xs) {
 		return false;
 	}
 };
-var $elm$html$Html$label = _VirtualDom_node('label');
 var $elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
 var $elm$html$Html$map = $elm$virtual_dom$VirtualDom$map;
 var $elm$html$Html$details = _VirtualDom_node('details');
@@ -6371,35 +6361,6 @@ var $author$project$TimeTravel$view = F2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('flex align-items-center gap-0-5')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('checkbox'),
-									$elm$html$Html$Attributes$id('time-travel-toggle'),
-									$elm$html$Html$Attributes$checked(app.visibility),
-									$elm$html$Html$Events$onClick($author$project$TimeTravel$Toggle)
-								]),
-							_List_Nil),
-							A2(
-							$elm$html$Html$label,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$for('time-travel-toggle')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Time Travel Debugger')
-								]))
-						])) : $elm$html$Html$text(''),
-					app.visibility ? A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
 							$elm$html$Html$Attributes$class('flow')
 						]),
 					_List_fromArray(
@@ -6455,6 +6416,6 @@ var $author$project$TimeTravel$withTimeTravel = function (config) {
 		});
 };
 var $author$project$Main$main = $author$project$TimeTravel$withTimeTravel(
-	{init: $author$project$Main$initModel, modelToString: $author$project$TimeTravelConfig$modelToPrettyString, msgToDebug: $author$project$TimeTravelConfig$todoMsgToDebug, update: $author$project$Main$update, view: $author$project$Main$view, visibleByDefault: true});
+	{init: $author$project$Main$initModel, modelToString: $author$project$TimeTravelConfig$modelToPrettyString, msgToDebug: $author$project$TimeTravelConfig$todoMsgToDebug, update: $author$project$Main$update, view: $author$project$Main$view, visibleByDefault: false});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
