@@ -102,10 +102,13 @@ Developers provide the application configuration:
 , view = view
 , msgToDebug = todoMsgToDebug
 , modelToString = modelToPrettyString
+, visibleByDefault = False
 }
 ```
 
 It returns a fully working Elm program with time travel enabled.
+
+The debugger can be enabled or disabled by default using the `visibleByDefault` flag.
 
 ---
 
