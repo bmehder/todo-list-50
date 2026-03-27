@@ -4378,7 +4378,7 @@ function _Browser_load(url)
 		}
 	}));
 }
-var $elm$core$Basics$False = {$: 'False'};
+var $elm$core$Basics$True = {$: 'True'};
 var $elm$core$List$cons = _List_cons;
 var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
 var $elm$core$Array$foldr = F3(
@@ -4462,9 +4462,9 @@ var $elm$core$Basics$LT = {$: 'LT'};
 var $author$project$Types$Active = {$: 'Active'};
 var $author$project$Types$All = {$: 'All'};
 var $author$project$Types$Completed = {$: 'Completed'};
+var $elm$core$Basics$False = {$: 'False'};
 var $author$project$Types$NotEditing = {$: 'NotEditing'};
 var $elm$core$Maybe$Nothing = {$: 'Nothing'};
-var $elm$core$Basics$True = {$: 'True'};
 var $elm$core$Maybe$Just = function (a) {
 	return {$: 'Just', a: a};
 };
@@ -6416,6 +6416,6 @@ var $author$project$TimeTravel$withTimeTravel = function (config) {
 		});
 };
 var $author$project$Main$main = $author$project$TimeTravel$withTimeTravel(
-	{init: $author$project$Main$initModel, modelToString: $author$project$TimeTravelConfig$modelToPrettyString, msgToDebug: $author$project$TimeTravelConfig$todoMsgToDebug, update: $author$project$Main$update, view: $author$project$Main$view, visibleByDefault: false});
+	{init: $author$project$Main$initModel, modelToString: $author$project$TimeTravelConfig$modelToPrettyString, msgToDebug: $author$project$TimeTravelConfig$todoMsgToDebug, update: $author$project$Main$update, view: $author$project$Main$view, visibleByDefault: true});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
