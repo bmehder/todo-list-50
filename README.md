@@ -102,15 +102,12 @@ Developers provide the application configuration:
 , view = view
 , msgToDebug = todoMsgToDebug
 , modelToString = modelToPrettyString
-, visibleByDefault = False
 }
 ```
 
 It returns a fully working Elm program with time travel enabled.
 
-The debugger can be enabled or disabled by default using the `visibleByDefault` flag.
-
-The `visibleByDefault` value can also be overridden at runtime via flags passed from `index.html`, allowing the debugger to be enabled or disabled without changing Elm code.
+The debugger visibility is controlled via flags passed from `index.html`, allowing it to be enabled or disabled without changing Elm code.
 
 ```html
 <div id="todo-app"></div>

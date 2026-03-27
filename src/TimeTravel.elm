@@ -23,7 +23,6 @@ type alias AppConfig msg model =
     , view : model -> Html msg
     , msgToDebug : msg -> DebugInfo
     , modelToString : model -> String
-    , visibleByDefault : Bool
     }
 
 
@@ -91,7 +90,6 @@ update :
     -> TimeTravel msg model
 update updateModel timeTravelMsg (TimeTravel app) =
     case timeTravelMsg of
-
         Prev ->
             case app.timeline.past of
                 [] ->
@@ -209,23 +207,22 @@ viewHistory msgToDebug modelToString timeline =
                     )
 
         initial =
+            let
+                initialModelValue =
+                    case List.reverse timeline.past of
+                        [] ->
+                            timeline.present
+
+                        frame :: _ ->
+                            frame.prev
+            in
             details
                 [ name "frame" ]
                 [ summary [ class "font-size-small" ] [ text "No Msg: Initial Model" ]
-                , Html.pre [ class "font-size-small" ] [ text (modelToString (initialModel timeline)) ]
+                , Html.pre [ class "font-size-small" ] [ text (modelToString initialModelValue) ]
                 ]
     in
     div [] (history ++ [ initial ])
-
-
-initialModel : Timeline msg model -> model
-initialModel timeline =
-    case List.reverse timeline.past of
-        [] ->
-            timeline.present
-
-        frame :: _ ->
-            frame.prev
 
 
 viewFrame : (msg -> DebugInfo) -> (model -> String) -> Int -> Frame msg model -> Html (Msg msg)

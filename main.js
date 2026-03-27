@@ -4378,7 +4378,6 @@ function _Browser_load(url)
 		}
 	}));
 }
-var $elm$core$Basics$True = {$: 'True'};
 var $elm$core$List$cons = _List_cons;
 var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
 var $elm$core$Array$foldr = F3(
@@ -4846,6 +4845,7 @@ var $elm$core$Array$initialize = F2(
 			return A5($elm$core$Array$initializeHelp, fn, initialFromIndex, len, _List_Nil, tail);
 		}
 	});
+var $elm$core$Basics$True = {$: 'True'};
 var $elm$core$Result$isOk = function (result) {
 	if (result.$ === 'Ok') {
 		return true;
@@ -6221,15 +6221,6 @@ var $elm$core$List$isEmpty = function (xs) {
 var $elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
 var $elm$html$Html$map = $elm$virtual_dom$VirtualDom$map;
 var $elm$html$Html$details = _VirtualDom_node('details');
-var $author$project$TimeTravel$initialModel = function (timeline) {
-	var _v0 = $elm$core$List$reverse(timeline.past);
-	if (!_v0.b) {
-		return timeline.present;
-	} else {
-		var frame = _v0.a;
-		return frame.prev;
-	}
-};
 var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
 var $elm$html$Html$pre = _VirtualDom_node('pre');
 var $elm$html$Html$summary = _VirtualDom_node('summary');
@@ -6280,37 +6271,47 @@ var $author$project$TimeTravel$viewFrame = F4(
 var $author$project$TimeTravel$viewHistory = F3(
 	function (msgToDebug, modelToString, timeline) {
 		var total = $elm$core$List$length(timeline.past);
-		var initial = A2(
-			$elm$html$Html$details,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$name('frame')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$summary,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('font-size-small')
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text('No Msg: Initial Model')
-						])),
-					A2(
-					$elm$html$Html$pre,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('font-size-small')
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text(
-							modelToString(
-								$author$project$TimeTravel$initialModel(timeline)))
-						]))
-				]));
+		var initial = function () {
+			var initialModelValue = function () {
+				var _v0 = $elm$core$List$reverse(timeline.past);
+				if (!_v0.b) {
+					return timeline.present;
+				} else {
+					var frame = _v0.a;
+					return frame.prev;
+				}
+			}();
+			return A2(
+				$elm$html$Html$details,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$name('frame')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$summary,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('font-size-small')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('No Msg: Initial Model')
+							])),
+						A2(
+						$elm$html$Html$pre,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('font-size-small')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								modelToString(initialModelValue))
+							]))
+					]));
+		}();
 		var history = A2(
 			$elm$core$List$indexedMap,
 			F2(
@@ -6419,7 +6420,7 @@ var $author$project$TimeTravel$withTimeTravel = function (config) {
 		});
 };
 var $author$project$Main$main = $author$project$TimeTravel$withTimeTravel(
-	{init: $author$project$Main$initModel, modelToString: $author$project$TimeTravelConfig$modelToPrettyString, msgToDebug: $author$project$TimeTravelConfig$todoMsgToDebug, update: $author$project$Main$update, view: $author$project$Main$view, visibleByDefault: true});
+	{init: $author$project$Main$initModel, modelToString: $author$project$TimeTravelConfig$modelToPrettyString, msgToDebug: $author$project$TimeTravelConfig$todoMsgToDebug, update: $author$project$Main$update, view: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	A2(
 		$elm$json$Json$Decode$andThen,
