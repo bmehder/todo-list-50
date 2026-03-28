@@ -227,11 +227,22 @@ update initModel updateModel msgToDebug decodeMsg timeTravelMsg (TimeTravel app)
                         _ =
                             Debug.log "Import OK (count)" (List.length items)
 
+                        _ =
+                            Debug.log "Decoded messages"
+                                (items |> List.map decodeMsg)
+
                         framesRebuilt =
-                            items
-                                |> List.filter (\item -> item.index >= 0)
-                                |> List.sortBy .index
-                                |> List.filterMap decodeMsg
+                            let
+                                msgs =
+                                    items
+                                        |> List.filter (\item -> item.index >= 0)
+                                        |> List.sortBy .index
+                                        |> List.filterMap decodeMsg
+
+                                _ =
+                                    Debug.log "Replay msgs" msgs
+                            in
+                            msgs
                                 |> List.foldl
                                     (\msg (prevModel, frames) ->
                                         let
@@ -251,7 +262,7 @@ update initModel updateModel msgToDebug decodeMsg timeTravelMsg (TimeTravel app)
                         newTimeline =
                             case framesRebuilt of
                                 ( finalModel, frames ) ->
-                                    { past = List.reverse frames
+                                    { past = frames
                                     , present = finalModel
                                     , future = []
                                     }

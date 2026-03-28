@@ -309,7 +309,7 @@ viewTodo model todo =
              , onCheck (\_ -> ToggledStatus todo.id)
              , class "flex-shrink-0 cursor-pointer user-select-none"
              , Html.Attributes.attribute "aria-label"
-                 ("Mark todo as completed: " ++ NonEmptyString.toString todo.todoText)
+                ("Mark todo as completed: " ++ NonEmptyString.toString todo.todoText)
              ]
                 ++ (if isEditingThis then
                         [ Html.Attributes.style "visibility" "hidden" ]
@@ -323,11 +323,13 @@ viewTodo model todo =
          ]
             ++ (if isEditingThis then
                     []
+
                 else
                     case model.pendingDelete of
                         Just id ->
                             if todoHasId id todo then
                                 [ viewConfirmInline todo ]
+
                             else
                                 [ viewDeleteButton todo ]
 
@@ -414,7 +416,7 @@ viewTodoStatus todo =
         , Html.Attributes.tabindex 0
         , Html.Attributes.attribute "role" "button"
         , Html.Attributes.attribute "aria-label"
-             ("Edit todo " ++ NonEmptyString.toString todo.todoText)
+            ("Edit todo " ++ NonEmptyString.toString todo.todoText)
         , preventDefaultOn "mousedown" (Decode.succeed ( NoOp, True ))
         , stopPropagationOn "click"
             (Decode.field "shiftKey" Decode.bool
@@ -442,7 +444,7 @@ viewDeleteButton todo =
         [ stopPropagationOn "click" (Decode.succeed ( AskedToDelete todo.id, True ))
         , class "delete-btn delete-task cursor-pointer"
         , Html.Attributes.attribute "aria-label"
-             ("Delete todo " ++ NonEmptyString.toString todo.todoText)
+            ("Delete todo " ++ NonEmptyString.toString todo.todoText)
         ]
         [ text "✕" ]
 
@@ -491,10 +493,9 @@ viewTodosCount model =
 
 
 
-
-
 -- PROGRAM
 -------------------------------------------------------------------------------
+
 
 decodeMsg : { index : Int, type_ : String, id : Maybe String } -> Maybe Msg
 decodeMsg item =
@@ -509,6 +510,8 @@ decodeMsg item =
 
         "SavedEditedTodoText" ->
             Just SavedEditedTodoText
+        "CanceledEdit" ->
+            Just CanceledEdit
 
         "ToggledStatus" ->
             parseId
@@ -529,6 +532,8 @@ decodeMsg item =
             parseId
                 |> Maybe.andThen NonNegative.fromInt
                 |> Maybe.map ConfirmedDelete
+        "CanceledDelete" ->
+            Just CanceledDelete
 
         "SetFilter ActiveAndImportantOnly" ->
             Just (SetFilter ActiveOrImportantOnly)
@@ -539,8 +544,38 @@ decodeMsg item =
         "SetFilter All" ->
             Just (SetFilter All)
 
-        _ ->
-            Nothing
+        "SetFilter Important" ->
+            Just (SetFilter ImportantOnly)
+
+        "SetFilter ImportantOnly" ->
+            Just (SetFilter ImportantOnly)
+
+        "CreatedTodo" ->
+            Just CreatedTodo
+
+        typeStr ->
+            if String.startsWith "UpdatedDraft (typing) " typeStr then
+                typeStr
+                    |> String.dropLeft (String.length "UpdatedDraft (typing) \"")
+                    |> String.dropRight 1
+                    |> Just
+                    |> Maybe.map UpdatedDraft
+
+            else if String.startsWith "UpdatedEditingDraft (editing) " typeStr then
+                typeStr
+                    |> String.dropLeft (String.length "UpdatedEditingDraft (editing) \"")
+                    |> String.dropRight 1
+                    |> Just
+                    |> Maybe.map UpdatedEditingDraft
+
+            else if String.startsWith "StartedEditingTodoText " typeStr then
+                parseId
+                    |> Maybe.andThen NonNegative.fromInt
+                    |> Maybe.map (\idVal -> StartedEditingTodoText idVal "")
+
+            else
+                Nothing
+
 
 main : Program TimeTravel.Flags (TimeTravel.TimeTravel Msg Model) (TimeTravel.Msg Msg)
 main =

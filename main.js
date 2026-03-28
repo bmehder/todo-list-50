@@ -4860,20 +4860,34 @@ var $author$project$Types$All = {$: 'All'};
 var $author$project$Types$AskedToDelete = function (a) {
 	return {$: 'AskedToDelete', a: a};
 };
+var $author$project$Types$CanceledDelete = {$: 'CanceledDelete'};
+var $author$project$Types$CanceledEdit = {$: 'CanceledEdit'};
 var $author$project$Types$CompletedOnly = {$: 'CompletedOnly'};
 var $author$project$Types$ConfirmedDelete = function (a) {
 	return {$: 'ConfirmedDelete', a: a};
 };
+var $author$project$Types$CreatedTodo = {$: 'CreatedTodo'};
+var $author$project$Types$ImportantOnly = {$: 'ImportantOnly'};
 var $author$project$Types$NoOp = {$: 'NoOp'};
 var $author$project$Types$SavedEditedTodoText = {$: 'SavedEditedTodoText'};
 var $author$project$Types$SetFilter = function (a) {
 	return {$: 'SetFilter', a: a};
 };
+var $author$project$Types$StartedEditingTodoText = F2(
+	function (a, b) {
+		return {$: 'StartedEditingTodoText', a: a, b: b};
+	});
 var $author$project$Types$ToggledImportant = function (a) {
 	return {$: 'ToggledImportant', a: a};
 };
 var $author$project$Types$ToggledStatus = function (a) {
 	return {$: 'ToggledStatus', a: a};
+};
+var $author$project$Types$UpdatedDraft = function (a) {
+	return {$: 'UpdatedDraft', a: a};
+};
+var $author$project$Types$UpdatedEditingDraft = function (a) {
+	return {$: 'UpdatedEditingDraft', a: a};
 };
 var $elm$core$Maybe$andThen = F2(
 	function (callback, maybeValue) {
@@ -4883,6 +4897,23 @@ var $elm$core$Maybe$andThen = F2(
 		} else {
 			return $elm$core$Maybe$Nothing;
 		}
+	});
+var $elm$core$String$length = _String_length;
+var $elm$core$String$slice = _String_slice;
+var $elm$core$String$dropLeft = F2(
+	function (n, string) {
+		return (n < 1) ? string : A3(
+			$elm$core$String$slice,
+			n,
+			$elm$core$String$length(string),
+			string);
+	});
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$core$String$dropRight = F2(
+	function (n, string) {
+		return (n < 1) ? string : A3($elm$core$String$slice, 0, -n, string);
 	});
 var $elm$core$Basics$identity = function (x) {
 	return x;
@@ -4905,6 +4936,7 @@ var $elm$core$Maybe$map = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
+var $elm$core$String$startsWith = _String_startsWith;
 var $elm$core$String$toInt = _String_toInt;
 var $author$project$Main$decodeMsg = function (item) {
 	var parseId = A2($elm$core$Maybe$andThen, $elm$core$String$toInt, item.id);
@@ -4914,6 +4946,8 @@ var $author$project$Main$decodeMsg = function (item) {
 			return $elm$core$Maybe$Just($author$project$Types$NoOp);
 		case 'SavedEditedTodoText':
 			return $elm$core$Maybe$Just($author$project$Types$SavedEditedTodoText);
+		case 'CanceledEdit':
+			return $elm$core$Maybe$Just($author$project$Types$CanceledEdit);
 		case 'ToggledStatus':
 			return A2(
 				$elm$core$Maybe$map,
@@ -4934,6 +4968,8 @@ var $author$project$Main$decodeMsg = function (item) {
 				$elm$core$Maybe$map,
 				$author$project$Types$ConfirmedDelete,
 				A2($elm$core$Maybe$andThen, $author$project$NonNegative$fromInt, parseId));
+		case 'CanceledDelete':
+			return $elm$core$Maybe$Just($author$project$Types$CanceledDelete);
 		case 'SetFilter ActiveAndImportantOnly':
 			return $elm$core$Maybe$Just(
 				$author$project$Types$SetFilter($author$project$Types$ActiveOrImportantOnly));
@@ -4943,8 +4979,42 @@ var $author$project$Main$decodeMsg = function (item) {
 		case 'SetFilter All':
 			return $elm$core$Maybe$Just(
 				$author$project$Types$SetFilter($author$project$Types$All));
+		case 'SetFilter Important':
+			return $elm$core$Maybe$Just(
+				$author$project$Types$SetFilter($author$project$Types$ImportantOnly));
+		case 'SetFilter ImportantOnly':
+			return $elm$core$Maybe$Just(
+				$author$project$Types$SetFilter($author$project$Types$ImportantOnly));
+		case 'CreatedTodo':
+			return $elm$core$Maybe$Just($author$project$Types$CreatedTodo);
 		default:
-			return $elm$core$Maybe$Nothing;
+			var typeStr = _v0;
+			return A2($elm$core$String$startsWith, 'UpdatedDraft (typing) ', typeStr) ? A2(
+				$elm$core$Maybe$map,
+				$author$project$Types$UpdatedDraft,
+				$elm$core$Maybe$Just(
+					A2(
+						$elm$core$String$dropRight,
+						1,
+						A2(
+							$elm$core$String$dropLeft,
+							$elm$core$String$length('UpdatedDraft (typing) \"'),
+							typeStr)))) : (A2($elm$core$String$startsWith, 'UpdatedEditingDraft (editing) ', typeStr) ? A2(
+				$elm$core$Maybe$map,
+				$author$project$Types$UpdatedEditingDraft,
+				$elm$core$Maybe$Just(
+					A2(
+						$elm$core$String$dropRight,
+						1,
+						A2(
+							$elm$core$String$dropLeft,
+							$elm$core$String$length('UpdatedEditingDraft (editing) \"'),
+							typeStr)))) : (A2($elm$core$String$startsWith, 'StartedEditingTodoText ', typeStr) ? A2(
+				$elm$core$Maybe$map,
+				function (idVal) {
+					return A2($author$project$Types$StartedEditingTodoText, idVal, '');
+				},
+				A2($elm$core$Maybe$andThen, $author$project$NonNegative$fromInt, parseId)) : $elm$core$Maybe$Nothing));
 	}
 };
 var $elm$json$Json$Decode$field = _Json_decodeField;
@@ -5490,7 +5560,6 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $author$project$Types$ImportantOnly = {$: 'ImportantOnly'};
 var $author$project$Filter$allFilters = _List_fromArray(
 	[$author$project$Types$All, $author$project$Types$ActiveOrImportantOnly, $author$project$Types$CompletedOnly, $author$project$Types$ImportantOnly]);
 var $elm$html$Html$menu = _VirtualDom_node('menu');
@@ -5565,10 +5634,6 @@ var $author$project$Main$viewFilterButtons = function (model) {
 			$elm$core$List$map,
 			$author$project$Main$viewFilterButton(model.filter),
 			$author$project$Filter$allFilters));
-};
-var $author$project$Types$CreatedTodo = {$: 'CreatedTodo'};
-var $author$project$Types$UpdatedDraft = function (a) {
-	return {$: 'UpdatedDraft', a: a};
 };
 var $elm$virtual_dom$VirtualDom$attribute = F2(
 	function (key, value) {
@@ -5729,7 +5794,6 @@ var $elm$html$Html$Events$onCheck = function (tagger) {
 };
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
-var $author$project$Types$CanceledDelete = {$: 'CanceledDelete'};
 var $author$project$Main$viewConfirmInline = function (todo) {
 	return A2(
 		$elm$html$Html$div,
@@ -5788,10 +5852,6 @@ var $author$project$Main$viewDeleteButton = function (todo) {
 			[
 				$elm$html$Html$text('✕')
 			]));
-};
-var $author$project$Types$CanceledEdit = {$: 'CanceledEdit'};
-var $author$project$Types$UpdatedEditingDraft = function (a) {
-	return {$: 'UpdatedEditingDraft', a: a};
 };
 var $elm$json$Json$Decode$fail = _Json_fail;
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
@@ -5856,10 +5916,6 @@ var $author$project$Main$viewEditing = function (draft) {
 					]))
 			]));
 };
-var $author$project$Types$StartedEditingTodoText = F2(
-	function (a, b) {
-		return {$: 'StartedEditingTodoText', a: a, b: b};
-	});
 var $elm$html$Html$span = _VirtualDom_node('span');
 var $elm$html$Html$Attributes$tabindex = function (n) {
 	return A2(
@@ -6100,16 +6156,6 @@ var $elm$url$Url$Url = F6(
 		return {fragment: fragment, host: host, path: path, port_: port_, protocol: protocol, query: query};
 	});
 var $elm$core$String$contains = _String_contains;
-var $elm$core$String$length = _String_length;
-var $elm$core$String$slice = _String_slice;
-var $elm$core$String$dropLeft = F2(
-	function (n, string) {
-		return (n < 1) ? string : A3(
-			$elm$core$String$slice,
-			n,
-			$elm$core$String$length(string),
-			string);
-	});
 var $elm$core$String$indexes = _String_indexes;
 var $elm$core$String$left = F2(
 	function (n, string) {
@@ -6208,7 +6254,6 @@ var $elm$url$Url$chompAfterProtocol = F2(
 			}
 		}
 	});
-var $elm$core$String$startsWith = _String_startsWith;
 var $elm$url$Url$fromString = function (str) {
 	return A2($elm$core$String$startsWith, 'http://', str) ? A2(
 		$elm$url$Url$chompAfterProtocol,
@@ -6347,9 +6392,6 @@ var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$json$Json$Decode$list = _Json_decodeList;
 var $elm$core$Debug$log = _Debug_log;
 var $elm$json$Json$Decode$map3 = _Json_map3;
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
 var $elm$json$Json$Decode$null = _Json_decodeNull;
 var $elm$json$Json$Decode$oneOf = _Json_oneOf;
 var $elm$json$Json$Decode$nullable = function (decoder) {
@@ -6480,20 +6522,8 @@ var $author$project$TimeTravel$update = F6(
 				var result = A2($elm$json$Json$Decode$decodeString, decoder, app.importText);
 				if (result.$ === 'Ok') {
 					var items = result.a;
-					var framesRebuilt = A3(
-						$elm$core$List$foldl,
-						F2(
-							function (msg, _v9) {
-								var prevModel = _v9.a;
-								var frames = _v9.b;
-								var nextModel = A2(updateModel, msg, prevModel);
-								var frame = {msg: msg, next: nextModel, prev: prevModel};
-								return _Utils_Tuple2(
-									nextModel,
-									A2($elm$core$List$cons, frame, frames));
-							}),
-						_Utils_Tuple2(initModel, _List_Nil),
-						A2(
+					var framesRebuilt = function () {
+						var msgs = A2(
 							$elm$core$List$filterMap,
 							decodeMsg,
 							A2(
@@ -6506,27 +6536,43 @@ var $author$project$TimeTravel$update = F6(
 									function (item) {
 										return item.index >= 0;
 									},
-									items))));
+									items)));
+						var _v10 = A2($elm$core$Debug$log, 'Replay msgs', msgs);
+						return A3(
+							$elm$core$List$foldl,
+							F2(
+								function (msg, _v11) {
+									var prevModel = _v11.a;
+									var frames = _v11.b;
+									var nextModel = A2(updateModel, msg, prevModel);
+									var frame = {msg: msg, next: nextModel, prev: prevModel};
+									return _Utils_Tuple2(
+										nextModel,
+										A2($elm$core$List$cons, frame, frames));
+								}),
+							_Utils_Tuple2(initModel, _List_Nil),
+							msgs);
+					}();
 					var newTimeline = function () {
 						var finalModel = framesRebuilt.a;
 						var frames = framesRebuilt.b;
-						return {
-							future: _List_Nil,
-							past: $elm$core$List$reverse(frames),
-							present: finalModel
-						};
+						return {future: _List_Nil, past: frames, present: finalModel};
 					}();
 					var _v7 = A2(
 						$elm$core$Debug$log,
 						'Import OK (count)',
 						$elm$core$List$length(items));
+					var _v8 = A2(
+						$elm$core$Debug$log,
+						'Decoded messages',
+						A2($elm$core$List$map, decodeMsg, items));
 					return $author$project$TimeTravel$TimeTravel(
 						_Utils_update(
 							app,
 							{timeline: newTimeline}));
 				} else {
 					var err = result.a;
-					var _v10 = A2($elm$core$Debug$log, 'Import error', err);
+					var _v12 = A2($elm$core$Debug$log, 'Import error', err);
 					return $author$project$TimeTravel$TimeTravel(app);
 				}
 			default:
@@ -6607,10 +6653,6 @@ var $elm$core$List$drop = F2(
 				}
 			}
 		}
-	});
-var $elm$core$String$dropRight = F2(
-	function (n, string) {
-		return (n < 1) ? string : A3($elm$core$String$slice, 0, -n, string);
 	});
 var $elm$core$String$endsWith = _String_endsWith;
 var $elm$core$Basics$min = F2(
