@@ -210,8 +210,6 @@ TimeTravel handles:
 
 ## Config vs Runtime Control
 
-The debugger can be controlled in two ways:
-
 The debugger visibility is controlled via runtime flags passed from JavaScript:
 
 ```elm

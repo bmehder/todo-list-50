@@ -225,6 +225,10 @@ summary {
 	gap: 1rem;
 }
 
+.flex-shrink-0 {
+	flex-shrink: 0;
+}
+
 .padding-0 {
 	padding: 0;
 }

@@ -51,8 +51,8 @@ todoToRecordString todo =
             else
                 "False"
            )
-        ++ ", task = \""
-        ++ NonEmptyString.toString todo.task
+        ++ ", todo text = \""
+        ++ NonEmptyString.toString todo.todoText
         ++ "\" }"
 
 
@@ -88,8 +88,8 @@ editingToString editing =
         NotEditing ->
             "NotEditing"
 
-        EditingTask { id, draft } ->
-            "EditingTask (id: "
+        EditingTodoText { id, draft } ->
+            "EditingTodoText (id: "
                 ++ String.fromInt (NonNegative.toInt id)
                 ++ ", draft: \""
                 ++ draft
@@ -164,9 +164,9 @@ todoMsgToDebug msg =
             , id = Nothing
             }
 
-        StartedEditingTask id draft ->
+        StartedEditingTodoText id draft ->
             { label =
-                "StartedEditingTask \"" ++ draft ++ "\""
+                "StartedEditingTodoText \"" ++ draft ++ "\""
             , id = Just (String.fromInt (NonNegative.toInt id))
             }
 
@@ -175,8 +175,8 @@ todoMsgToDebug msg =
             , id = Nothing
             }
 
-        SavedEditedTask ->
-            { label = "SavedEditedTask"
+        SavedEditedTodoText ->
+            { label = "SavedEditedTodoText"
             , id = Nothing
             }
 

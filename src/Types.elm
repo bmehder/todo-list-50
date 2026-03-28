@@ -1,4 +1,4 @@
-module Types exposing (Editing(..), Filter(..), Id, Model, Msg(..), Status(..), Task, Todo)
+module Types exposing (Editing(..), Filter(..), Id, Model, Msg(..), Status(..), TodoText, Todo)
 
 import NonEmptyString exposing (NonEmptyString)
 import NonNegative exposing (NonNegative)
@@ -15,13 +15,13 @@ type alias Model =
 
 type alias Todo =
     { id : Id
-    , task : Task
+    , todoText : TodoText
     , status : Status
     , important : Bool
     }
 
 
-type alias Task =
+type alias TodoText =
     NonEmptyString
 
 
@@ -39,7 +39,7 @@ type Filter
 
 type Editing
     = NotEditing
-    | EditingTask
+    | EditingTodoText
         { id : Id
         , draft : String
         }
@@ -58,8 +58,8 @@ type Msg
     | UpdatedDraft String
     | SetFilter Filter
     | CreatedTodo
-    | StartedEditingTask Id String
+    | StartedEditingTodoText Id String
     | UpdatedEditingDraft String
-    | SavedEditedTask
+    | SavedEditedTodoText
     | CanceledEdit
     | NoOp

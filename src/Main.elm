@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Filter exposing (allFilters, applyFilter, filterToString)
 import Html exposing (Html, button, div, form, input, label, li, menu, span, text, ul)
-import Html.Attributes exposing (checked, class, disabled, id, placeholder, type_, value)
+import Html.Attributes exposing (attribute, checked, class, disabled, id, placeholder, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput, onSubmit, preventDefaultOn, stopPropagationOn)
 import Json.Decode as Decode
 import NonEmptyString
@@ -22,10 +22,10 @@ import Utils exposing (applyIf)
 initModel : Model
 initModel =
     { todos =
-        [ { id = idFromIntUnsafe 0, task = taskFromStringUnsafe "Buy coffee", status = Active, important = False }
-        , { id = idFromIntUnsafe 1, task = taskFromStringUnsafe "Write a 'not so small anymore' Elm app", status = Completed, important = False }
-        , { id = idFromIntUnsafe 2, task = taskFromStringUnsafe "Profit", status = Active, important = False }
-        , { id = idFromIntUnsafe 3, task = taskFromStringUnsafe "Do something important", status = Active, important = True }
+        [ { id = idFromIntUnsafe 0, todoText = todoTextFromStringUnsafe "Buy coffee", status = Active, important = False }
+        , { id = idFromIntUnsafe 1, todoText = todoTextFromStringUnsafe "Write a small app in Elm", status = Completed, important = False }
+        , { id = idFromIntUnsafe 2, todoText = todoTextFromStringUnsafe "Profit", status = Active, important = False }
+        , { id = idFromIntUnsafe 3, todoText = todoTextFromStringUnsafe "Do something important", status = Active, important = True }
         ]
     , draft = ""
     , filter = All
@@ -69,24 +69,24 @@ update msg model =
         CreatedTodo ->
             createTodoFromDraft model
 
-        StartedEditingTask id task ->
-            { model | editing = EditingTask { id = id, draft = task } }
+        StartedEditingTodoText id todoText ->
+            { model | editing = EditingTodoText { id = id, draft = todoText } }
 
         UpdatedEditingDraft newValue ->
             case model.editing of
-                EditingTask { id } ->
-                    { model | editing = EditingTask { id = id, draft = newValue } }
+                EditingTodoText { id } ->
+                    { model | editing = EditingTodoText { id = id, draft = newValue } }
 
                 NotEditing ->
                     model
 
-        SavedEditedTask ->
+        SavedEditedTodoText ->
             case model.editing of
-                EditingTask { id, draft } ->
+                EditingTodoText { id, draft } ->
                     case NonEmptyString.fromString draft of
-                        Just task ->
+                        Just todoText ->
                             { model
-                                | todos = setTaskById id task model.todos
+                                | todos = setTodoTextById id todoText model.todos
                                 , editing = NotEditing
                             }
 
@@ -108,14 +108,14 @@ update msg model =
 -------------------------------------------------------------------------------
 
 
-taskFromStringUnsafe : String -> Task
-taskFromStringUnsafe str =
+todoTextFromStringUnsafe : String -> TodoText
+todoTextFromStringUnsafe str =
     case NonEmptyString.fromString str of
-        Just task ->
-            task
+        Just todoText ->
+            todoText
 
         Nothing ->
-            Debug.todo "Invalid task literal"
+            Debug.todo "Invalid TodoText literal"
 
 
 idFromIntUnsafe : Int -> Id
@@ -172,9 +172,9 @@ toggleImportantById id =
     List.map (applyIf (todoHasId id) toggleImportant)
 
 
-setTask : Task -> Todo -> Todo
-setTask newTask todo =
-    { todo | task = newTask }
+setTodoText : TodoText -> Todo -> Todo
+setTodoText newTodoText todo =
+    { todo | todoText = newTodoText }
 
 
 toggleStatusById : Id -> List Todo -> List Todo
@@ -182,9 +182,9 @@ toggleStatusById id =
     List.map (applyIf (todoHasId id) toggleStatus)
 
 
-setTaskById : Id -> Task -> List Todo -> List Todo
-setTaskById id newTask =
-    List.map (applyIf (todoHasId id) (setTask newTask))
+setTodoTextById : Id -> TodoText -> List Todo -> List Todo
+setTodoTextById id newTodoText =
+    List.map (applyIf (todoHasId id) (setTodoText newTodoText))
 
 
 deleteTodoById : Id -> List Todo -> List Todo
@@ -195,11 +195,11 @@ deleteTodoById id =
 createTodoFromDraft : Model -> Model
 createTodoFromDraft model =
     case NonEmptyString.fromString model.draft of
-        Just task ->
+        Just todoText ->
             let
                 newTodo =
                     { id = nextId model.todos
-                    , task = task
+                    , todoText = todoText
                     , status = Active
                     , important = False
                     }
@@ -235,10 +235,12 @@ viewNewTodoForm model =
         , onSubmit CreatedTodo
         ]
         [ input
-            [ value model.draft
+            [ type_ "search"
+            , value model.draft
             , onInput UpdatedDraft
             , placeholder "Add a todo..."
-            , Html.Attributes.attribute "aria-label" "Add a new todo"
+            , attribute "aria-label" "Add a new todo"
+            , attribute "role" "textbox"
             ]
             []
         , button
@@ -294,7 +296,7 @@ viewTodo model todo =
     let
         isEditingThis =
             case model.editing of
-                EditingTask { id } ->
+                EditingTodoText { id } ->
                     todoHasId id todo
 
                 NotEditing ->
@@ -305,9 +307,9 @@ viewTodo model todo =
             ([ type_ "checkbox"
              , checked (todo.status == Completed)
              , onCheck (\_ -> ToggledStatus todo.id)
-             , class "cursor-pointer user-select-none"
+             , class "flex-shrink-0 cursor-pointer user-select-none"
              , Html.Attributes.attribute "aria-label"
-                 ("Mark todo as completed: " ++ NonEmptyString.toString todo.task)
+                 ("Mark todo as completed: " ++ NonEmptyString.toString todo.todoText)
              ]
                 ++ (if isEditingThis then
                         [ Html.Attributes.style "visibility" "hidden" ]
@@ -317,7 +319,7 @@ viewTodo model todo =
                    )
             )
             []
-         , viewTask model todo
+         , viewTodoText model todo
          ]
             ++ (if isEditingThis then
                     []
@@ -335,18 +337,18 @@ viewTodo model todo =
         )
 
 
-viewTask : Model -> Todo -> Html Msg
-viewTask model todo =
+viewTodoText : Model -> Todo -> Html Msg
+viewTodoText model todo =
     case model.editing of
-        EditingTask { id, draft } ->
+        EditingTodoText { id, draft } ->
             if todoHasId id todo then
                 viewEditing draft
 
             else
-                viewTaskStatus todo
+                viewTodoStatus todo
 
         NotEditing ->
-            viewTaskStatus todo
+            viewTodoStatus todo
 
 
 viewEditing : String -> Html Msg
@@ -363,7 +365,7 @@ viewEditing draft =
                     |> Decode.andThen
                         (\key ->
                             if key == "Enter" then
-                                Decode.succeed ( SavedEditedTask, True )
+                                Decode.succeed ( SavedEditedTodoText, True )
 
                             else if key == "Escape" then
                                 Decode.succeed ( CanceledEdit, True )
@@ -375,7 +377,7 @@ viewEditing draft =
             ]
             []
         , button
-            [ onClick SavedEditedTask
+            [ onClick SavedEditedTodoText
             , class "save-btn"
             , disabled (not <| NonEmptyString.isValid draft)
             ]
@@ -388,8 +390,8 @@ viewEditing draft =
         ]
 
 
-viewTaskStatus : Todo -> Html Msg
-viewTaskStatus todo =
+viewTodoStatus : Todo -> Html Msg
+viewTodoStatus todo =
     let
         statusClass =
             let
@@ -412,7 +414,7 @@ viewTaskStatus todo =
         , Html.Attributes.tabindex 0
         , Html.Attributes.attribute "role" "button"
         , Html.Attributes.attribute "aria-label"
-             ("Edit todo " ++ NonEmptyString.toString todo.task)
+             ("Edit todo " ++ NonEmptyString.toString todo.todoText)
         , preventDefaultOn "mousedown" (Decode.succeed ( NoOp, True ))
         , stopPropagationOn "click"
             (Decode.field "shiftKey" Decode.bool
@@ -423,15 +425,15 @@ viewTaskStatus todo =
 
                         else
                             Decode.succeed
-                                ( StartedEditingTask
+                                ( StartedEditingTodoText
                                     todo.id
-                                    (NonEmptyString.toString todo.task)
+                                    (NonEmptyString.toString todo.todoText)
                                 , True
                                 )
                     )
             )
         ]
-        [ text (NonEmptyString.toString todo.task) ]
+        [ text (NonEmptyString.toString todo.todoText) ]
 
 
 viewDeleteButton : Todo -> Html Msg
@@ -440,7 +442,7 @@ viewDeleteButton todo =
         [ stopPropagationOn "click" (Decode.succeed ( AskedToDelete todo.id, True ))
         , class "delete-btn delete-task cursor-pointer"
         , Html.Attributes.attribute "aria-label"
-             ("Delete todo " ++ NonEmptyString.toString todo.task)
+             ("Delete todo " ++ NonEmptyString.toString todo.todoText)
         ]
         [ text "✕" ]
 

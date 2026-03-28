@@ -4898,18 +4898,18 @@ var $author$project$NonEmptyString$fromString = function (str) {
 		$elm$core$String$trim(str)) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
 		$author$project$NonEmptyString$NonEmptyString(str));
 };
-var $author$project$Main$taskFromStringUnsafe = function (str) {
+var $author$project$Main$todoTextFromStringUnsafe = function (str) {
 	var _v0 = $author$project$NonEmptyString$fromString(str);
 	if (_v0.$ === 'Just') {
-		var task = _v0.a;
-		return task;
+		var todoText = _v0.a;
+		return todoText;
 	} else {
 		return _Debug_todo(
 			'Main',
 			{
 				start: {line: 118, column: 13},
 				end: {line: 118, column: 23}
-			})('Invalid task literal');
+			})('Invalid TodoText literal');
 	}
 };
 var $author$project$Main$initModel = {
@@ -4923,25 +4923,25 @@ var $author$project$Main$initModel = {
 			id: $author$project$Main$idFromIntUnsafe(0),
 			important: false,
 			status: $author$project$Types$Active,
-			task: $author$project$Main$taskFromStringUnsafe('Buy coffee')
+			todoText: $author$project$Main$todoTextFromStringUnsafe('Buy coffee')
 		},
 			{
 			id: $author$project$Main$idFromIntUnsafe(1),
 			important: false,
 			status: $author$project$Types$Completed,
-			task: $author$project$Main$taskFromStringUnsafe('Write a \'not so small anymore\' Elm app')
+			todoText: $author$project$Main$todoTextFromStringUnsafe('Write a small app in Elm')
 		},
 			{
 			id: $author$project$Main$idFromIntUnsafe(2),
 			important: false,
 			status: $author$project$Types$Active,
-			task: $author$project$Main$taskFromStringUnsafe('Profit')
+			todoText: $author$project$Main$todoTextFromStringUnsafe('Profit')
 		},
 			{
 			id: $author$project$Main$idFromIntUnsafe(3),
 			important: true,
 			status: $author$project$Types$Active,
-			task: $author$project$Main$taskFromStringUnsafe('Do something important')
+			todoText: $author$project$Main$todoTextFromStringUnsafe('Do something important')
 		}
 		])
 };
@@ -4955,7 +4955,7 @@ var $author$project$TimeTravelConfig$editingToString = function (editing) {
 	} else {
 		var id = editing.a.id;
 		var draft = editing.a.draft;
-		return 'EditingTask (id: ' + ($elm$core$String$fromInt(
+		return 'EditingTodoText (id: ' + ($elm$core$String$fromInt(
 			$author$project$NonNegative$toInt(id)) + (', draft: \"' + (draft + '\")')));
 	}
 };
@@ -5062,7 +5062,7 @@ var $author$project$NonEmptyString$toString = function (_v0) {
 };
 var $author$project$TimeTravelConfig$todoToRecordString = function (todo) {
 	return '    { id = ' + ($elm$core$String$fromInt(
-		$author$project$NonNegative$toInt(todo.id)) + (', status = ' + ($author$project$TimeTravelConfig$statusToString(todo.status) + (', important = ' + ((todo.important ? 'True' : 'False') + (', task = \"' + ($author$project$NonEmptyString$toString(todo.task) + '\" }')))))));
+		$author$project$NonNegative$toInt(todo.id)) + (', status = ' + ($author$project$TimeTravelConfig$statusToString(todo.status) + (', important = ' + ((todo.important ? 'True' : 'False') + (', todo text = \"' + ($author$project$NonEmptyString$toString(todo.todoText) + '\" }')))))));
 };
 var $author$project$TimeTravelConfig$modelToPrettyString = function (model) {
 	return '{\n' + ('    draft = \"' + (model.draft + ('\"\n' + ('  , filter = ' + ($author$project$TimeTravelConfig$filterToString(model.filter) + ('\n' + ('  , editing = ' + ($author$project$TimeTravelConfig$editingToString(model.editing) + ('\n' + ('  , pendingDelete = ' + ($author$project$TimeTravelConfig$pendingDeleteToString(model.pendingDelete) + ('\n' + ('  , todos = [\n' + (A2(
@@ -5127,28 +5127,28 @@ var $author$project$TimeTravelConfig$todoMsgToDebug = function (msg) {
 			return {id: $elm$core$Maybe$Nothing, label: 'SetFilter ' + filterLabel};
 		case 'CreatedTodo':
 			return {id: $elm$core$Maybe$Nothing, label: 'CreatedTodo'};
-		case 'StartedEditingTask':
+		case 'StartedEditingTodoText':
 			var id = msg.a;
 			var draft = msg.b;
 			return {
 				id: $elm$core$Maybe$Just(
 					$elm$core$String$fromInt(
 						$author$project$NonNegative$toInt(id))),
-				label: 'StartedEditingTask \"' + (draft + '\"')
+				label: 'StartedEditingTodoText \"' + (draft + '\"')
 			};
 		case 'UpdatedEditingDraft':
 			var str = msg.a;
 			return {id: $elm$core$Maybe$Nothing, label: 'UpdatedEditingDraft (editing) \"' + (str + '\"')};
-		case 'SavedEditedTask':
-			return {id: $elm$core$Maybe$Nothing, label: 'SavedEditedTask'};
+		case 'SavedEditedTodoText':
+			return {id: $elm$core$Maybe$Nothing, label: 'SavedEditedTodoText'};
 		case 'CanceledEdit':
 			return {id: $elm$core$Maybe$Nothing, label: 'CanceledEdit'};
 		default:
 			return {id: $elm$core$Maybe$Nothing, label: 'NoOp (ignored UI event)'};
 	}
 };
-var $author$project$Types$EditingTask = function (a) {
-	return {$: 'EditingTask', a: a};
+var $author$project$Types$EditingTodoText = function (a) {
+	return {$: 'EditingTodoText', a: a};
 };
 var $elm$core$Basics$composeR = F3(
 	function (f, g, x) {
@@ -5186,12 +5186,12 @@ var $author$project$Main$nextId = function (todos) {
 var $author$project$Main$createTodoFromDraft = function (model) {
 	var _v0 = $author$project$NonEmptyString$fromString(model.draft);
 	if (_v0.$ === 'Just') {
-		var task = _v0.a;
+		var todoText = _v0.a;
 		var newTodo = {
 			id: $author$project$Main$nextId(model.todos),
 			important: false,
 			status: $author$project$Types$Active,
-			task: task
+			todoText: todoText
 		};
 		return _Utils_update(
 			model,
@@ -5238,19 +5238,19 @@ var $author$project$Utils$applyIf = F3(
 	function (predicate, fn, value) {
 		return predicate(value) ? fn(value) : value;
 	});
-var $author$project$Main$setTask = F2(
-	function (newTask, todo) {
+var $author$project$Main$setTodoText = F2(
+	function (newTodoText, todo) {
 		return _Utils_update(
 			todo,
-			{task: newTask});
+			{todoText: newTodoText});
 	});
-var $author$project$Main$setTaskById = F2(
-	function (id, newTask) {
+var $author$project$Main$setTodoTextById = F2(
+	function (id, newTodoText) {
 		return $elm$core$List$map(
 			A2(
 				$author$project$Utils$applyIf,
 				$author$project$Main$todoHasId(id),
-				$author$project$Main$setTask(newTask)));
+				$author$project$Main$setTodoText(newTodoText)));
 	});
 var $author$project$Main$toggleImportant = function (todo) {
 	return _Utils_update(
@@ -5333,42 +5333,42 @@ var $author$project$Main$update = F2(
 					{filter: newFilter});
 			case 'CreatedTodo':
 				return $author$project$Main$createTodoFromDraft(model);
-			case 'StartedEditingTask':
+			case 'StartedEditingTodoText':
 				var id = msg.a;
-				var task = msg.b;
+				var todoText = msg.b;
 				return _Utils_update(
 					model,
 					{
-						editing: $author$project$Types$EditingTask(
-							{draft: task, id: id})
+						editing: $author$project$Types$EditingTodoText(
+							{draft: todoText, id: id})
 					});
 			case 'UpdatedEditingDraft':
 				var newValue = msg.a;
 				var _v1 = model.editing;
-				if (_v1.$ === 'EditingTask') {
+				if (_v1.$ === 'EditingTodoText') {
 					var id = _v1.a.id;
 					return _Utils_update(
 						model,
 						{
-							editing: $author$project$Types$EditingTask(
+							editing: $author$project$Types$EditingTodoText(
 								{draft: newValue, id: id})
 						});
 				} else {
 					return model;
 				}
-			case 'SavedEditedTask':
+			case 'SavedEditedTodoText':
 				var _v2 = model.editing;
-				if (_v2.$ === 'EditingTask') {
+				if (_v2.$ === 'EditingTodoText') {
 					var id = _v2.a.id;
 					var draft = _v2.a.draft;
 					var _v3 = $author$project$NonEmptyString$fromString(draft);
 					if (_v3.$ === 'Just') {
-						var task = _v3.a;
+						var todoText = _v3.a;
 						return _Utils_update(
 							model,
 							{
 								editing: $author$project$Types$NotEditing,
-								todos: A3($author$project$Main$setTaskById, id, task, model.todos)
+								todos: A3($author$project$Main$setTodoTextById, id, todoText, model.todos)
 							});
 					} else {
 						return _Utils_update(
@@ -5593,10 +5593,12 @@ var $author$project$Main$viewNewTodoForm = function (model) {
 				$elm$html$Html$input,
 				_List_fromArray(
 					[
+						$elm$html$Html$Attributes$type_('search'),
 						$elm$html$Html$Attributes$value(model.draft),
 						$elm$html$Html$Events$onInput($author$project$Types$UpdatedDraft),
 						$elm$html$Html$Attributes$placeholder('Add a todo...'),
-						A2($elm$html$Html$Attributes$attribute, 'aria-label', 'Add a new todo')
+						A2($elm$html$Html$Attributes$attribute, 'aria-label', 'Add a new todo'),
+						A2($elm$html$Html$Attributes$attribute, 'role', 'textbox')
 					]),
 				_List_Nil),
 				A2(
@@ -5714,7 +5716,7 @@ var $author$project$Main$viewDeleteButton = function (todo) {
 				A2(
 				$elm$html$Html$Attributes$attribute,
 				'aria-label',
-				'Delete todo ' + $author$project$NonEmptyString$toString(todo.task))
+				'Delete todo ' + $author$project$NonEmptyString$toString(todo.todoText))
 			]),
 		_List_fromArray(
 			[
@@ -5723,7 +5725,7 @@ var $author$project$Main$viewDeleteButton = function (todo) {
 };
 var $author$project$Types$CanceledEdit = {$: 'CanceledEdit'};
 var $author$project$Types$NoOp = {$: 'NoOp'};
-var $author$project$Types$SavedEditedTask = {$: 'SavedEditedTask'};
+var $author$project$Types$SavedEditedTodoText = {$: 'SavedEditedTodoText'};
 var $author$project$Types$UpdatedEditingDraft = function (a) {
 	return {$: 'UpdatedEditingDraft', a: a};
 };
@@ -5758,7 +5760,7 @@ var $author$project$Main$viewEditing = function (draft) {
 							$elm$json$Json$Decode$andThen,
 							function (key) {
 								return (key === 'Enter') ? $elm$json$Json$Decode$succeed(
-									_Utils_Tuple2($author$project$Types$SavedEditedTask, true)) : ((key === 'Escape') ? $elm$json$Json$Decode$succeed(
+									_Utils_Tuple2($author$project$Types$SavedEditedTodoText, true)) : ((key === 'Escape') ? $elm$json$Json$Decode$succeed(
 									_Utils_Tuple2($author$project$Types$CanceledEdit, true)) : $elm$json$Json$Decode$fail('ignore'));
 							},
 							A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string)))
@@ -5768,7 +5770,7 @@ var $author$project$Main$viewEditing = function (draft) {
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
-						$elm$html$Html$Events$onClick($author$project$Types$SavedEditedTask),
+						$elm$html$Html$Events$onClick($author$project$Types$SavedEditedTodoText),
 						$elm$html$Html$Attributes$class('save-btn'),
 						$elm$html$Html$Attributes$disabled(
 						!$author$project$NonEmptyString$isValid(draft))
@@ -5790,9 +5792,9 @@ var $author$project$Main$viewEditing = function (draft) {
 					]))
 			]));
 };
-var $author$project$Types$StartedEditingTask = F2(
+var $author$project$Types$StartedEditingTodoText = F2(
 	function (a, b) {
-		return {$: 'StartedEditingTask', a: a, b: b};
+		return {$: 'StartedEditingTodoText', a: a, b: b};
 	});
 var $author$project$Types$ToggledImportant = function (a) {
 	return {$: 'ToggledImportant', a: a};
@@ -5804,7 +5806,7 @@ var $elm$html$Html$Attributes$tabindex = function (n) {
 		'tabIndex',
 		$elm$core$String$fromInt(n));
 };
-var $author$project$Main$viewTaskStatus = function (todo) {
+var $author$project$Main$viewTodoStatus = function (todo) {
 	var statusClass = function () {
 		var base = function () {
 			var _v0 = todo.status;
@@ -5826,7 +5828,7 @@ var $author$project$Main$viewTaskStatus = function (todo) {
 				A2(
 				$elm$html$Html$Attributes$attribute,
 				'aria-label',
-				'Edit todo ' + $author$project$NonEmptyString$toString(todo.task)),
+				'Edit todo ' + $author$project$NonEmptyString$toString(todo.todoText)),
 				A2(
 				$elm$html$Html$Events$preventDefaultOn,
 				'mousedown',
@@ -5844,9 +5846,9 @@ var $author$project$Main$viewTaskStatus = function (todo) {
 								true)) : $elm$json$Json$Decode$succeed(
 							_Utils_Tuple2(
 								A2(
-									$author$project$Types$StartedEditingTask,
+									$author$project$Types$StartedEditingTodoText,
 									todo.id,
-									$author$project$NonEmptyString$toString(todo.task)),
+									$author$project$NonEmptyString$toString(todo.todoText)),
 								true));
 					},
 					A2($elm$json$Json$Decode$field, 'shiftKey', $elm$json$Json$Decode$bool)))
@@ -5854,25 +5856,25 @@ var $author$project$Main$viewTaskStatus = function (todo) {
 		_List_fromArray(
 			[
 				$elm$html$Html$text(
-				$author$project$NonEmptyString$toString(todo.task))
+				$author$project$NonEmptyString$toString(todo.todoText))
 			]));
 };
-var $author$project$Main$viewTask = F2(
+var $author$project$Main$viewTodoText = F2(
 	function (model, todo) {
 		var _v0 = model.editing;
-		if (_v0.$ === 'EditingTask') {
+		if (_v0.$ === 'EditingTodoText') {
 			var id = _v0.a.id;
 			var draft = _v0.a.draft;
-			return A2($author$project$Main$todoHasId, id, todo) ? $author$project$Main$viewEditing(draft) : $author$project$Main$viewTaskStatus(todo);
+			return A2($author$project$Main$todoHasId, id, todo) ? $author$project$Main$viewEditing(draft) : $author$project$Main$viewTodoStatus(todo);
 		} else {
-			return $author$project$Main$viewTaskStatus(todo);
+			return $author$project$Main$viewTodoStatus(todo);
 		}
 	});
 var $author$project$Main$viewTodo = F2(
 	function (model, todo) {
 		var isEditingThis = function () {
 			var _v2 = model.editing;
-			if (_v2.$ === 'EditingTask') {
+			if (_v2.$ === 'EditingTodoText') {
 				var id = _v2.a.id;
 				return A2($author$project$Main$todoHasId, id, todo);
 			} else {
@@ -5900,18 +5902,18 @@ var $author$project$Main$viewTodo = F2(
 									function (_v0) {
 										return $author$project$Types$ToggledStatus(todo.id);
 									}),
-									$elm$html$Html$Attributes$class('cursor-pointer user-select-none'),
+									$elm$html$Html$Attributes$class('flex-shrink-0 cursor-pointer user-select-none'),
 									A2(
 									$elm$html$Html$Attributes$attribute,
 									'aria-label',
-									'Mark todo as completed: ' + $author$project$NonEmptyString$toString(todo.task))
+									'Mark todo as completed: ' + $author$project$NonEmptyString$toString(todo.todoText))
 								]),
 							isEditingThis ? _List_fromArray(
 								[
 									A2($elm$html$Html$Attributes$style, 'visibility', 'hidden')
 								]) : _List_Nil),
 						_List_Nil),
-						A2($author$project$Main$viewTask, model, todo)
+						A2($author$project$Main$viewTodoText, model, todo)
 					]),
 				function () {
 					if (isEditingThis) {
