@@ -29,8 +29,8 @@ filterToString filter =
 
 
 applyFilter : Filter -> List Todo -> List Todo
-applyFilter filterMode =
-    case filterMode of
+applyFilter filter =
+    case filter of
         All ->
             identity
 

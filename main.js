@@ -5410,11 +5410,29 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $author$project$Types$CanceledDelete = {$: 'CanceledDelete'};
-var $author$project$Types$ConfirmedDelete = function (a) {
-	return {$: 'ConfirmedDelete', a: a};
+var $author$project$Types$ActiveOrImportantOnly = {$: 'ActiveOrImportantOnly'};
+var $author$project$Types$CompletedOnly = {$: 'CompletedOnly'};
+var $author$project$Types$ImportantOnly = {$: 'ImportantOnly'};
+var $author$project$Filter$allFilters = _List_fromArray(
+	[$author$project$Types$All, $author$project$Types$ActiveOrImportantOnly, $author$project$Types$CompletedOnly, $author$project$Types$ImportantOnly]);
+var $elm$html$Html$menu = _VirtualDom_node('menu');
+var $author$project$Types$SetFilter = function (a) {
+	return {$: 'SetFilter', a: a};
 };
 var $elm$html$Html$button = _VirtualDom_node('button');
+var $author$project$Filter$filterToString = function (filter) {
+	switch (filter.$) {
+		case 'All':
+			return 'All';
+		case 'ActiveOrImportantOnly':
+			return 'Active';
+		case 'CompletedOnly':
+			return 'Completed';
+		default:
+			return 'Important';
+	}
+};
+var $elm$html$Html$li = _VirtualDom_node('li');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -5434,68 +5452,6 @@ var $elm$html$Html$Events$onClick = function (msg) {
 };
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$Main$viewConfirmDialog = function (model) {
-	var _v0 = model.pendingDelete;
-	if (_v0.$ === 'Just') {
-		var id = _v0.a;
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('confirm-dialog flex align-items-center gap-1')
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text('Delete this todo?'),
-					A2(
-					$elm$html$Html$button,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('delete-btn'),
-							$elm$html$Html$Events$onClick(
-							$author$project$Types$ConfirmedDelete(id))
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text('Yes')
-						])),
-					A2(
-					$elm$html$Html$button,
-					_List_fromArray(
-						[
-							$elm$html$Html$Events$onClick($author$project$Types$CanceledDelete)
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text('Cancel')
-						]))
-				]));
-	} else {
-		return $elm$html$Html$text('');
-	}
-};
-var $author$project$Types$ActiveOrImportantOnly = {$: 'ActiveOrImportantOnly'};
-var $author$project$Types$CompletedOnly = {$: 'CompletedOnly'};
-var $author$project$Types$ImportantOnly = {$: 'ImportantOnly'};
-var $author$project$Filter$allFilters = _List_fromArray(
-	[$author$project$Types$All, $author$project$Types$ActiveOrImportantOnly, $author$project$Types$CompletedOnly, $author$project$Types$ImportantOnly]);
-var $elm$html$Html$menu = _VirtualDom_node('menu');
-var $author$project$Types$SetFilter = function (a) {
-	return {$: 'SetFilter', a: a};
-};
-var $author$project$Filter$filterToString = function (filter) {
-	switch (filter.$) {
-		case 'All':
-			return 'All';
-		case 'ActiveOrImportantOnly':
-			return 'Active';
-		case 'CompletedOnly':
-			return 'Completed';
-		default:
-			return 'Important';
-	}
-};
-var $elm$html$Html$li = _VirtualDom_node('li');
 var $author$project$Main$viewFilterButton = F2(
 	function (current, value) {
 		var label = $author$project$Filter$filterToString(value);
@@ -5648,8 +5604,8 @@ var $author$project$Main$viewNewTodoForm = function (model) {
 					]))
 			]));
 };
-var $author$project$Filter$applyFilter = function (filterMode) {
-	switch (filterMode.$) {
+var $author$project$Filter$applyFilter = function (filter) {
+	switch (filter.$) {
 		case 'All':
 			return $elm$core$Basics$identity;
 		case 'ActiveOrImportantOnly':
@@ -5690,6 +5646,44 @@ var $elm$html$Html$Events$onCheck = function (tagger) {
 };
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $author$project$Types$CanceledDelete = {$: 'CanceledDelete'};
+var $author$project$Types$ConfirmedDelete = function (a) {
+	return {$: 'ConfirmedDelete', a: a};
+};
+var $author$project$Main$viewConfirmInline = function (todo) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('flex align-items-center gap-1 confirm-inline')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text('Delete?'),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('delete-btn'),
+						$elm$html$Html$Events$onClick(
+						$author$project$Types$ConfirmedDelete(todo.id))
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Yes')
+					])),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick($author$project$Types$CanceledDelete)
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Cancel')
+					]))
+			]));
+};
 var $author$project$Types$AskedToDelete = function (a) {
 	return {$: 'AskedToDelete', a: a};
 };
@@ -5849,9 +5843,9 @@ var $author$project$Main$viewTask = F2(
 var $author$project$Main$viewTodo = F2(
 	function (model, todo) {
 		var isEditingThis = function () {
-			var _v1 = model.editing;
-			if (_v1.$ === 'EditingTask') {
-				var id = _v1.a.id;
+			var _v2 = model.editing;
+			if (_v2.$ === 'EditingTask') {
+				var id = _v2.a.id;
 				return A2($author$project$Main$todoHasId, id, todo);
 			} else {
 				return false;
@@ -5887,10 +5881,28 @@ var $author$project$Main$viewTodo = F2(
 						_List_Nil),
 						A2($author$project$Main$viewTask, model, todo)
 					]),
-				isEditingThis ? _List_Nil : _List_fromArray(
-					[
-						$author$project$Main$viewDeleteButton(todo)
-					])));
+				function () {
+					if (isEditingThis) {
+						return _List_Nil;
+					} else {
+						var _v1 = model.pendingDelete;
+						if (_v1.$ === 'Just') {
+							var id = _v1.a;
+							return A2($author$project$Main$todoHasId, id, todo) ? _List_fromArray(
+								[
+									$author$project$Main$viewConfirmInline(todo)
+								]) : _List_fromArray(
+								[
+									$author$project$Main$viewDeleteButton(todo)
+								]);
+						} else {
+							return _List_fromArray(
+								[
+									$author$project$Main$viewDeleteButton(todo)
+								]);
+						}
+					}
+				}()));
 	});
 var $author$project$Main$viewTodos = function (model) {
 	return A2(
@@ -5974,8 +5986,7 @@ var $author$project$Main$view = function (model) {
 				$author$project$Main$viewNewTodoForm(model),
 				$author$project$Main$viewFilterButtons(model),
 				$author$project$Main$viewTodos(model),
-				$author$project$Main$viewTodosCount(model),
-				$author$project$Main$viewConfirmDialog(model)
+				$author$project$Main$viewTodosCount(model)
 			]));
 };
 var $elm$browser$Browser$External = function (a) {

@@ -225,7 +225,6 @@ view model =
         , viewFilterButtons model
         , viewTodos model
         , viewTodosCount model
-        , viewConfirmDialog model
         ]
 
 
@@ -319,9 +318,16 @@ viewTodo model todo =
          ]
             ++ (if isEditingThis then
                     []
-
                 else
-                    [ viewDeleteButton todo ]
+                    case model.pendingDelete of
+                        Just id ->
+                            if todoHasId id todo then
+                                [ viewConfirmInline todo ]
+                            else
+                                [ viewDeleteButton todo ]
+
+                        Nothing ->
+                            [ viewDeleteButton todo ]
                )
         )
 
@@ -429,6 +435,15 @@ viewDeleteButton todo =
         [ text "✕" ]
 
 
+viewConfirmInline : Todo -> Html Msg
+viewConfirmInline todo =
+    div [ class "flex align-items-center gap-1 confirm-inline" ]
+        [ text "Delete?"
+        , button [ class "delete-btn", onClick (ConfirmedDelete todo.id) ] [ text "Yes" ]
+        , button [ onClick CanceledDelete ] [ text "Cancel" ]
+        ]
+
+
 viewTodosCount : Model -> Html Msg
 viewTodosCount model =
     let
@@ -459,18 +474,6 @@ viewTodosCount model =
         ]
 
 
-viewConfirmDialog : Model -> Html Msg
-viewConfirmDialog model =
-    case model.pendingDelete of
-        Just id ->
-            div [ class "confirm-dialog flex align-items-center gap-1" ]
-                [ text "Delete this todo?"
-                , button [ class "delete-btn", onClick (ConfirmedDelete id) ] [ text "Yes" ]
-                , button [ onClick CanceledDelete ] [ text "Cancel" ]
-                ]
-
-        Nothing ->
-            text ""
 
 
 
