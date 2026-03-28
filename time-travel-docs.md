@@ -22,11 +22,19 @@ view : Model -> Html Msg
 Becomes:
 
 ```elm
-update : TimeTravel.Msg Msg -> TimeTravel Model -> TimeTravel Model
-view : TimeTravel Model -> Html (TimeTravel.Msg Msg)
+update :
+    TimeTravel.Msg Msg
+    -> TimeTravel Msg Model
+    -> TimeTravel Msg Model
+
+view :
+    TimeTravel Msg Model
+    -> Html (TimeTravel.Msg Msg)
 ```
 
 This transformation happens through `withTimeTravel`, which acts as a structural wrapper around your app.
+
+Importantly, your original `update` and `view` functions remain unchanged. TimeTravel composes around them rather than modifying them.
 
 ---
 
@@ -35,10 +43,16 @@ This transformation happens through `withTimeTravel`, which acts as a structural
 At the heart of the system is a `Timeline`:
 
 ```elm
-type alias Timeline model =
-    { past : List model
+type alias Timeline msg model =
+    { past : List (Frame msg model)
     , present : model
-    , future : List model
+    , future : List (Frame msg model)
+    }
+
+type alias Frame msg model =
+    { msg : msg
+    , prev : model
+    , next : model
     }
 ```
 
@@ -64,6 +78,8 @@ type Msg msg
     | Prev
     | Next
 ```
+
+The `AppMsg` constructor wraps your application's messages so they can be intercepted and recorded alongside state transitions.
 
 This allows TimeTravel to intercept messages and decide whether to:
 
@@ -95,8 +111,14 @@ AppMsg msg ->
     let
         newModel =
             updateModel msg app.timeline.present
+
+        frame =
+            { msg = msg
+            , prev = app.timeline.present
+            , next = newModel
+            }
     in
-    { past = app.timeline.present :: app.timeline.past
+    { past = frame :: app.timeline.past
     , present = newModel
     , future = []
     }
@@ -190,26 +212,13 @@ TimeTravel handles:
 
 The debugger can be controlled in two ways:
 
-### 1. Elm Configuration
+The debugger visibility is controlled via runtime flags passed from JavaScript:
 
 ```elm
-visibleByDefault = True
+type alias Flags =
+    { visibleByDefault : Bool
+    }
 ```
-
-### 2. Runtime Flags (index.html)
-
-```html
-<div id="todo-app"></div>
-<script src="main.js"></script>
-<script>
-	Elm.Main.init({
-		node: document.getElementById('todo-app'),
-		flags: { visibleByDefault: true },
-	})
-</script>
-```
-
-Flags override the default configuration.
 
 ---
 
@@ -238,7 +247,10 @@ No knowledge of your domain is required.
 Think of TimeTravel as:
 
 ```text
-A recorder that observes your app
+A recorder that captures:
+
+- what happened (Msg)
+- what changed (Model before/after)
 ```
 
 It does not control your logic—it records and replays it.

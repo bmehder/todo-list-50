@@ -219,7 +219,10 @@ viewHistory msgToDebug modelToString timeline =
             details
                 [ name "frame" ]
                 [ summary [ class "font-size-small" ] [ text "No Msg: Initial Model" ]
-                , Html.pre [ class "font-size-small" ] [ text (modelToString initialModelValue) ]
+                , Html.pre [ class "font-size-small" ]
+                    (String.lines (modelToString initialModelValue)
+                        |> List.map (\line -> Html.div [] [ text line ])
+                    )
                 ]
     in
     div [] (history ++ [ initial ])
@@ -246,5 +249,61 @@ viewFrame msgToDebug modelToString index frame =
         [ name "frame" ]
         [ summary [ class "font-size-small" ] [ text summaryText ]
         , Html.pre [ class "font-size-small" ]
-            [ text (modelToString frame.next) ]
+            (diffLines
+                (modelToString frame.prev)
+                (modelToString frame.next)
+            )
         ]
+
+
+diffLines : String -> String -> List (Html msg)
+diffLines before after =
+    let
+        beforeLines =
+            String.lines before
+
+        afterLines =
+            String.lines after
+
+        commonLength =
+            Basics.min (List.length beforeLines) (List.length afterLines)
+
+        paired =
+            List.map2 Tuple.pair
+                (List.take commonLength beforeLines)
+                (List.take commonLength afterLines)
+
+        diffs =
+            paired
+                |> List.concatMap
+                    (\( b, a ) ->
+                        let
+                            normalize line =
+                                line
+                                    |> String.trim
+                                    |> (\l ->
+                                            if String.endsWith "," l then
+                                                String.dropRight 1 l |> String.trimRight
+
+                                            else
+                                                l
+                                       )
+                        in
+                        if normalize b == normalize a then
+                            [ Html.div [] [ text ("  " ++ a) ] ]
+
+                        else
+                            [ Html.div [ class "text-danger" ] [ text ("- " ++ b) ]
+                            , Html.div [ class "text-success" ] [ text ("+ " ++ a) ]
+                            ]
+                    )
+
+        extraBefore =
+            List.drop commonLength beforeLines
+                |> List.map (\line -> Html.div [ class "text-danger" ] [ text ("- " ++ line) ])
+
+        extraAfter =
+            List.drop commonLength afterLines
+                |> List.map (\line -> Html.div [ class "text-success" ] [ text ("+ " ++ line) ])
+    in
+    diffs ++ extraBefore ++ extraAfter

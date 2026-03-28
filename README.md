@@ -36,7 +36,7 @@ This module wraps an application and adds:
 It introduces:
 
 - `TimeTravel msg model`
-- `Msg msg` (internal messages like Prev, Next, and wrapped app messages)
+- `Msg msg` (internal messages like Prev, Next, and wrapped application messages via `AppMsg`)
 
 ---
 
@@ -44,18 +44,25 @@ It introduces:
 
 Each time the app updates:
 
-1. The current model and message are saved as a "frame"
+1. The current model, message, and resulting model are saved as a "frame"
 2. The new model becomes the "present"
-3. Older states are stored in `past`
-4. Future states are stored in `future`
+3. Previous transitions are stored in `past`
+4. Future transitions are stored in `future`
 
 So the state becomes:
 
 ```
-{ past : List (Frame msg model)
-, present : model
-, future : List (Frame msg model)
-}
+type alias Timeline msg model =
+    { past : List (Frame msg model)
+    , present : model
+    , future : List (Frame msg model)
+    }
+
+type alias Frame msg model =
+    { msg : msg
+    , prev : model
+    , next : model
+    }
 ```
 
 This allows you to:
@@ -144,7 +151,7 @@ This module can be used with any Elm app by providing:
 
 - update
 - view
-- model serializer
+- model serializer (for readable debugging output)
 
 ---
 
@@ -186,10 +193,10 @@ focus management or HTTP requests would require extending the wrapper.
 
 # 🧪 Debugger Features
 
-- Step through history
-- See each message (Msg)
-- Inspect model changes
-- View previous states
+- Step through history (Prev / Next)
+- See each message (Msg) that caused a transition
+- Inspect model changes (with diffing)
+- View previous and next states
 
 ---
 

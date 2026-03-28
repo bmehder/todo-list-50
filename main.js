@@ -6284,9 +6284,285 @@ var $elm$core$List$isEmpty = function (xs) {
 var $elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
 var $elm$html$Html$map = $elm$virtual_dom$VirtualDom$map;
 var $elm$html$Html$details = _VirtualDom_node('details');
+var $elm$core$String$lines = _String_lines;
 var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
 var $elm$html$Html$pre = _VirtualDom_node('pre');
 var $elm$html$Html$summary = _VirtualDom_node('summary');
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
+		}
+	});
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
+};
+var $elm$core$List$concatMap = F2(
+	function (f, list) {
+		return $elm$core$List$concat(
+			A2($elm$core$List$map, f, list));
+	});
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$core$String$dropRight = F2(
+	function (n, string) {
+		return (n < 1) ? string : A3($elm$core$String$slice, 0, -n, string);
+	});
+var $elm$core$String$endsWith = _String_endsWith;
+var $elm$core$Basics$min = F2(
+	function (x, y) {
+		return (_Utils_cmp(x, y) < 0) ? x : y;
+	});
+var $elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
+	});
+var $elm$core$List$takeReverse = F3(
+	function (n, list, kept) {
+		takeReverse:
+		while (true) {
+			if (n <= 0) {
+				return kept;
+			} else {
+				if (!list.b) {
+					return kept;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs,
+						$temp$kept = A2($elm$core$List$cons, x, kept);
+					n = $temp$n;
+					list = $temp$list;
+					kept = $temp$kept;
+					continue takeReverse;
+				}
+			}
+		}
+	});
+var $elm$core$List$takeTailRec = F2(
+	function (n, list) {
+		return $elm$core$List$reverse(
+			A3($elm$core$List$takeReverse, n, list, _List_Nil));
+	});
+var $elm$core$List$takeFast = F3(
+	function (ctr, n, list) {
+		if (n <= 0) {
+			return _List_Nil;
+		} else {
+			var _v0 = _Utils_Tuple2(n, list);
+			_v0$1:
+			while (true) {
+				_v0$5:
+				while (true) {
+					if (!_v0.b.b) {
+						return list;
+					} else {
+						if (_v0.b.b.b) {
+							switch (_v0.a) {
+								case 1:
+									break _v0$1;
+								case 2:
+									var _v2 = _v0.b;
+									var x = _v2.a;
+									var _v3 = _v2.b;
+									var y = _v3.a;
+									return _List_fromArray(
+										[x, y]);
+								case 3:
+									if (_v0.b.b.b.b) {
+										var _v4 = _v0.b;
+										var x = _v4.a;
+										var _v5 = _v4.b;
+										var y = _v5.a;
+										var _v6 = _v5.b;
+										var z = _v6.a;
+										return _List_fromArray(
+											[x, y, z]);
+									} else {
+										break _v0$5;
+									}
+								default:
+									if (_v0.b.b.b.b && _v0.b.b.b.b.b) {
+										var _v7 = _v0.b;
+										var x = _v7.a;
+										var _v8 = _v7.b;
+										var y = _v8.a;
+										var _v9 = _v8.b;
+										var z = _v9.a;
+										var _v10 = _v9.b;
+										var w = _v10.a;
+										var tl = _v10.b;
+										return (ctr > 1000) ? A2(
+											$elm$core$List$cons,
+											x,
+											A2(
+												$elm$core$List$cons,
+												y,
+												A2(
+													$elm$core$List$cons,
+													z,
+													A2(
+														$elm$core$List$cons,
+														w,
+														A2($elm$core$List$takeTailRec, n - 4, tl))))) : A2(
+											$elm$core$List$cons,
+											x,
+											A2(
+												$elm$core$List$cons,
+												y,
+												A2(
+													$elm$core$List$cons,
+													z,
+													A2(
+														$elm$core$List$cons,
+														w,
+														A3($elm$core$List$takeFast, ctr + 1, n - 4, tl)))));
+									} else {
+										break _v0$5;
+									}
+							}
+						} else {
+							if (_v0.a === 1) {
+								break _v0$1;
+							} else {
+								break _v0$5;
+							}
+						}
+					}
+				}
+				return list;
+			}
+			var _v1 = _v0.b;
+			var x = _v1.a;
+			return _List_fromArray(
+				[x]);
+		}
+	});
+var $elm$core$List$take = F2(
+	function (n, list) {
+		return A3($elm$core$List$takeFast, 0, n, list);
+	});
+var $elm$core$String$trimRight = _String_trimRight;
+var $author$project$TimeTravel$diffLines = F2(
+	function (before, after) {
+		var beforeLines = $elm$core$String$lines(before);
+		var afterLines = $elm$core$String$lines(after);
+		var commonLength = A2(
+			$elm$core$Basics$min,
+			$elm$core$List$length(beforeLines),
+			$elm$core$List$length(afterLines));
+		var extraBefore = A2(
+			$elm$core$List$map,
+			function (line) {
+				return A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('text-danger')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('- ' + line)
+						]));
+			},
+			A2($elm$core$List$drop, commonLength, beforeLines));
+		var extraAfter = A2(
+			$elm$core$List$map,
+			function (line) {
+				return A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('text-success')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('+ ' + line)
+						]));
+			},
+			A2($elm$core$List$drop, commonLength, afterLines));
+		var paired = A3(
+			$elm$core$List$map2,
+			$elm$core$Tuple$pair,
+			A2($elm$core$List$take, commonLength, beforeLines),
+			A2($elm$core$List$take, commonLength, afterLines));
+		var diffs = A2(
+			$elm$core$List$concatMap,
+			function (_v0) {
+				var b = _v0.a;
+				var a = _v0.b;
+				var normalize = function (line) {
+					return function (l) {
+						return A2($elm$core$String$endsWith, ',', l) ? $elm$core$String$trimRight(
+							A2($elm$core$String$dropRight, 1, l)) : l;
+					}(
+						$elm$core$String$trim(line));
+				};
+				return _Utils_eq(
+					normalize(b),
+					normalize(a)) ? _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('  ' + a)
+							]))
+					]) : _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('text-danger')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('- ' + b)
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('text-success')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('+ ' + a)
+							]))
+					]);
+			},
+			paired);
+		return _Utils_ap(
+			diffs,
+			_Utils_ap(extraBefore, extraAfter));
+	});
 var $author$project$TimeTravel$viewFrame = F4(
 	function (msgToDebug, modelToString, index, frame) {
 		var info = msgToDebug(frame.msg);
@@ -6324,11 +6600,10 @@ var $author$project$TimeTravel$viewFrame = F4(
 						[
 							$elm$html$Html$Attributes$class('font-size-small')
 						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text(
-							modelToString(frame.next))
-						]))
+					A2(
+						$author$project$TimeTravel$diffLines,
+						modelToString(frame.prev),
+						modelToString(frame.next)))
 				]));
 	});
 var $author$project$TimeTravel$viewHistory = F3(
@@ -6368,11 +6643,19 @@ var $author$project$TimeTravel$viewHistory = F3(
 							[
 								$elm$html$Html$Attributes$class('font-size-small')
 							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text(
-								modelToString(initialModelValue))
-							]))
+						A2(
+							$elm$core$List$map,
+							function (line) {
+								return A2(
+									$elm$html$Html$div,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(line)
+										]));
+							},
+							$elm$core$String$lines(
+								modelToString(initialModelValue))))
 					]));
 		}();
 		var history = A2(
