@@ -5495,6 +5495,14 @@ var $author$project$Types$CreatedTodo = {$: 'CreatedTodo'};
 var $author$project$Types$UpdatedDraft = function (a) {
 	return {$: 'UpdatedDraft', a: a};
 };
+var $elm$virtual_dom$VirtualDom$attribute = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_attribute,
+			_VirtualDom_noOnOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlUri(value));
+	});
+var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
 var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
@@ -5587,7 +5595,8 @@ var $author$project$Main$viewNewTodoForm = function (model) {
 					[
 						$elm$html$Html$Attributes$value(model.draft),
 						$elm$html$Html$Events$onInput($author$project$Types$UpdatedDraft),
-						$elm$html$Html$Attributes$placeholder('Add a todo...')
+						$elm$html$Html$Attributes$placeholder('Add a todo...'),
+						A2($elm$html$Html$Attributes$attribute, 'aria-label', 'Add a new todo')
 					]),
 				_List_Nil),
 				A2(
@@ -5655,7 +5664,9 @@ var $author$project$Main$viewConfirmInline = function (todo) {
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('flex align-items-center gap-1 confirm-inline')
+				$elm$html$Html$Attributes$class('flex align-items-center gap-1 confirm-inline'),
+				A2($elm$html$Html$Attributes$attribute, 'role', 'group'),
+				A2($elm$html$Html$Attributes$attribute, 'aria-label', 'Confirm delete')
 			]),
 		_List_fromArray(
 			[
@@ -5699,7 +5710,11 @@ var $author$project$Main$viewDeleteButton = function (todo) {
 					_Utils_Tuple2(
 						$author$project$Types$AskedToDelete(todo.id),
 						true))),
-				$elm$html$Html$Attributes$class('delete-btn delete-task cursor-pointer')
+				$elm$html$Html$Attributes$class('delete-btn delete-task cursor-pointer'),
+				A2(
+				$elm$html$Html$Attributes$attribute,
+				'aria-label',
+				'Delete todo ' + $author$project$NonEmptyString$toString(todo.task))
 			]),
 		_List_fromArray(
 			[
@@ -5728,6 +5743,7 @@ var $author$project$Main$viewEditing = function (draft) {
 				_List_fromArray(
 					[
 						$elm$html$Html$Attributes$id('editing-input'),
+						A2($elm$html$Html$Attributes$attribute, 'aria-label', 'Edit todo'),
 						A2(
 						$elm$html$Html$Events$stopPropagationOn,
 						'mousedown',
@@ -5782,6 +5798,12 @@ var $author$project$Types$ToggledImportant = function (a) {
 	return {$: 'ToggledImportant', a: a};
 };
 var $elm$html$Html$span = _VirtualDom_node('span');
+var $elm$html$Html$Attributes$tabindex = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'tabIndex',
+		$elm$core$String$fromInt(n));
+};
 var $author$project$Main$viewTaskStatus = function (todo) {
 	var statusClass = function () {
 		var base = function () {
@@ -5799,6 +5821,12 @@ var $author$project$Main$viewTaskStatus = function (todo) {
 		_List_fromArray(
 			[
 				$elm$html$Html$Attributes$class(statusClass + ' user-select-none'),
+				$elm$html$Html$Attributes$tabindex(0),
+				A2($elm$html$Html$Attributes$attribute, 'role', 'button'),
+				A2(
+				$elm$html$Html$Attributes$attribute,
+				'aria-label',
+				'Edit todo ' + $author$project$NonEmptyString$toString(todo.task)),
 				A2(
 				$elm$html$Html$Events$preventDefaultOn,
 				'mousedown',
@@ -5872,7 +5900,11 @@ var $author$project$Main$viewTodo = F2(
 									function (_v0) {
 										return $author$project$Types$ToggledStatus(todo.id);
 									}),
-									$elm$html$Html$Attributes$class('cursor-pointer user-select-none')
+									$elm$html$Html$Attributes$class('cursor-pointer user-select-none'),
+									A2(
+									$elm$html$Html$Attributes$attribute,
+									'aria-label',
+									'Mark todo as completed: ' + $author$project$NonEmptyString$toString(todo.task))
 								]),
 							isEditingThis ? _List_fromArray(
 								[

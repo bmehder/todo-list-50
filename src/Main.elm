@@ -238,6 +238,7 @@ viewNewTodoForm model =
             [ value model.draft
             , onInput UpdatedDraft
             , placeholder "Add a todo..."
+            , Html.Attributes.attribute "aria-label" "Add a new todo"
             ]
             []
         , button
@@ -305,6 +306,8 @@ viewTodo model todo =
              , checked (todo.status == Completed)
              , onCheck (\_ -> ToggledStatus todo.id)
              , class "cursor-pointer user-select-none"
+             , Html.Attributes.attribute "aria-label"
+                 ("Mark todo as completed: " ++ NonEmptyString.toString todo.task)
              ]
                 ++ (if isEditingThis then
                         [ Html.Attributes.style "visibility" "hidden" ]
@@ -351,6 +354,7 @@ viewEditing draft =
     div [ class "flex align-items-center gap-1" ]
         [ input
             [ Html.Attributes.id "editing-input"
+            , Html.Attributes.attribute "aria-label" "Edit todo"
             , stopPropagationOn "mousedown" (Decode.succeed ( NoOp, True ))
             , value draft
             , onInput UpdatedEditingDraft
@@ -405,6 +409,10 @@ viewTaskStatus todo =
     in
     span
         [ class (statusClass ++ " user-select-none")
+        , Html.Attributes.tabindex 0
+        , Html.Attributes.attribute "role" "button"
+        , Html.Attributes.attribute "aria-label"
+             ("Edit todo " ++ NonEmptyString.toString todo.task)
         , preventDefaultOn "mousedown" (Decode.succeed ( NoOp, True ))
         , stopPropagationOn "click"
             (Decode.field "shiftKey" Decode.bool
@@ -431,13 +439,19 @@ viewDeleteButton todo =
     button
         [ stopPropagationOn "click" (Decode.succeed ( AskedToDelete todo.id, True ))
         , class "delete-btn delete-task cursor-pointer"
+        , Html.Attributes.attribute "aria-label"
+             ("Delete todo " ++ NonEmptyString.toString todo.task)
         ]
         [ text "✕" ]
 
 
 viewConfirmInline : Todo -> Html Msg
 viewConfirmInline todo =
-    div [ class "flex align-items-center gap-1 confirm-inline" ]
+    div
+        [ class "flex align-items-center gap-1 confirm-inline"
+        , Html.Attributes.attribute "role" "group"
+        , Html.Attributes.attribute "aria-label" "Confirm delete"
+        ]
         [ text "Delete?"
         , button [ class "delete-btn", onClick (ConfirmedDelete todo.id) ] [ text "Yes" ]
         , button [ onClick CanceledDelete ] [ text "Cancel" ]
