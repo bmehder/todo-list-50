@@ -4881,8 +4881,8 @@ var $author$project$Main$idFromIntUnsafe = function (n) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 136, column: 13},
-				end: {line: 136, column: 23}
+				start: {line: 132, column: 13},
+				end: {line: 132, column: 23}
 			})('Invalid Id literal');
 	}
 };
@@ -4907,8 +4907,8 @@ var $author$project$Main$taskFromStringUnsafe = function (str) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 126, column: 13},
-				end: {line: 126, column: 23}
+				start: {line: 122, column: 13},
+				end: {line: 122, column: 23}
 			})('Invalid task literal');
 	}
 };
@@ -5217,17 +5217,17 @@ var $elm$core$List$filter = F2(
 			_List_Nil,
 			list);
 	});
-var $author$project$Main$hasId = F2(
+var $elm$core$Basics$not = _Basics_not;
+var $author$project$Main$todoHasId = F2(
 	function (id, todo) {
 		return _Utils_eq(id, todo.id);
 	});
-var $elm$core$Basics$not = _Basics_not;
 var $author$project$Main$deleteTodoById = function (id) {
 	return $elm$core$List$filter(
 		A2(
 			$elm$core$Basics$composeL,
 			$elm$core$Basics$not,
-			$author$project$Main$hasId(id)));
+			$author$project$Main$todoHasId(id)));
 };
 var $author$project$Utils$applyIf = F3(
 	function (predicate, fn, value) {
@@ -5244,7 +5244,7 @@ var $author$project$Main$setTaskById = F2(
 		return $elm$core$List$map(
 			A2(
 				$author$project$Utils$applyIf,
-				$author$project$Main$hasId(id),
+				$author$project$Main$todoHasId(id),
 				$author$project$Main$setTask(newTask)));
 	});
 var $author$project$Main$toggleImportant = function (todo) {
@@ -5256,7 +5256,7 @@ var $author$project$Main$toggleImportantById = function (id) {
 	return $elm$core$List$map(
 		A2(
 			$author$project$Utils$applyIf,
-			$author$project$Main$hasId(id),
+			$author$project$Main$todoHasId(id),
 			$author$project$Main$toggleImportant));
 };
 var $author$project$Main$toggleStatus = function (todo) {
@@ -5277,7 +5277,7 @@ var $author$project$Main$toggleStatusById = function (id) {
 	return $elm$core$List$map(
 		A2(
 			$author$project$Utils$applyIf,
-			$author$project$Main$hasId(id),
+			$author$project$Main$todoHasId(id),
 			$author$project$Main$toggleStatus));
 };
 var $author$project$Main$update = F2(
@@ -5437,7 +5437,7 @@ var $author$project$Main$viewConfirmDialog = function (model) {
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('confirm-dialog flex gap-1 align-items-center')
+					$elm$html$Html$Attributes$class('confirm-dialog flex align-items-center gap-1')
 				]),
 			_List_fromArray(
 				[
@@ -5472,27 +5472,28 @@ var $author$project$Main$viewConfirmDialog = function (model) {
 var $author$project$Types$ActiveOrImportantOnly = {$: 'ActiveOrImportantOnly'};
 var $author$project$Types$CompletedOnly = {$: 'CompletedOnly'};
 var $author$project$Types$ImportantOnly = {$: 'ImportantOnly'};
-var $author$project$Main$allFilters = _List_fromArray(
+var $author$project$Filter$allFilters = _List_fromArray(
 	[$author$project$Types$All, $author$project$Types$ActiveOrImportantOnly, $author$project$Types$CompletedOnly, $author$project$Types$ImportantOnly]);
 var $elm$html$Html$menu = _VirtualDom_node('menu');
 var $author$project$Types$SetFilter = function (a) {
 	return {$: 'SetFilter', a: a};
 };
+var $author$project$Filter$filterToString = function (filter) {
+	switch (filter.$) {
+		case 'All':
+			return 'All';
+		case 'ActiveOrImportantOnly':
+			return 'Active';
+		case 'CompletedOnly':
+			return 'Completed';
+		default:
+			return 'Important';
+	}
+};
 var $elm$html$Html$li = _VirtualDom_node('li');
 var $author$project$Main$viewFilterButton = F2(
 	function (current, value) {
-		var label = function () {
-			switch (value.$) {
-				case 'All':
-					return 'All';
-				case 'ActiveOrImportantOnly':
-					return 'Active';
-				case 'CompletedOnly':
-					return 'Completed';
-				default:
-					return 'Important';
-			}
-		}();
+		var label = $author$project$Filter$filterToString(value);
 		var isSelected = _Utils_eq(value, current);
 		var buttonClass = isSelected ? 'filter-btn selected-btn' : 'filter-btn';
 		return A2(
@@ -5527,7 +5528,7 @@ var $author$project$Main$viewFilterButtons = function (model) {
 		A2(
 			$elm$core$List$map,
 			$author$project$Main$viewFilterButton(model.filter),
-			$author$project$Main$allFilters));
+			$author$project$Filter$allFilters));
 };
 var $author$project$Types$CreatedTodo = {$: 'CreatedTodo'};
 var $author$project$Types$UpdatedDraft = function (a) {
@@ -5642,7 +5643,7 @@ var $author$project$Main$viewNewTodoForm = function (model) {
 					]))
 			]));
 };
-var $author$project$Main$applyFilter = function (filterMode) {
+var $author$project$Filter$applyFilter = function (filterMode) {
 	switch (filterMode.$) {
 		case 'All':
 			return $elm$core$Basics$identity;
@@ -5667,6 +5668,21 @@ var $author$project$Main$applyFilter = function (filterMode) {
 	}
 };
 var $elm$html$Html$ul = _VirtualDom_node('ul');
+var $author$project$Types$ToggledStatus = function (a) {
+	return {$: 'ToggledStatus', a: a};
+};
+var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
+var $elm$html$Html$Events$targetChecked = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'checked']),
+	$elm$json$Json$Decode$bool);
+var $elm$html$Html$Events$onCheck = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'change',
+		A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetChecked));
+};
 var $author$project$Types$AskedToDelete = function (a) {
 	return {$: 'AskedToDelete', a: a};
 };
@@ -5696,12 +5712,6 @@ var $author$project$Types$UpdatedEditingDraft = function (a) {
 	return {$: 'UpdatedEditingDraft', a: a};
 };
 var $elm$json$Json$Decode$fail = _Json_fail;
-var $elm$html$Html$Events$onBlur = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'blur',
-		$elm$json$Json$Decode$succeed(msg));
-};
 var $author$project$Main$viewEditing = function (draft) {
 	return A2(
 		$elm$html$Html$input,
@@ -5709,19 +5719,20 @@ var $author$project$Main$viewEditing = function (draft) {
 			[
 				A2(
 				$elm$html$Html$Events$stopPropagationOn,
-				'click',
+				'mousedown',
 				$elm$json$Json$Decode$succeed(
 					_Utils_Tuple2($author$project$Types$NoOp, true))),
 				$elm$html$Html$Attributes$value(draft),
 				$elm$html$Html$Events$onInput($author$project$Types$UpdatedEditingDraft),
-				$elm$html$Html$Events$onBlur($author$project$Types$SavedEditedTask),
 				A2(
-				$elm$html$Html$Events$on,
+				$elm$html$Html$Events$stopPropagationOn,
 				'keydown',
 				A2(
 					$elm$json$Json$Decode$andThen,
 					function (key) {
-						return (key === 'Enter') ? $elm$json$Json$Decode$succeed($author$project$Types$SavedEditedTask) : ((key === 'Escape') ? $elm$json$Json$Decode$succeed($author$project$Types$CanceledEdit) : $elm$json$Json$Decode$fail('ignore'));
+						return (key === 'Enter') ? $elm$json$Json$Decode$succeed(
+							_Utils_Tuple2($author$project$Types$SavedEditedTask, true)) : ((key === 'Escape') ? $elm$json$Json$Decode$succeed(
+							_Utils_Tuple2($author$project$Types$CanceledEdit, true)) : $elm$json$Json$Decode$fail('ignore'));
 					},
 					A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string)))
 			]),
@@ -5734,26 +5745,12 @@ var $author$project$Types$StartedEditingTask = F2(
 var $author$project$Types$ToggledImportant = function (a) {
 	return {$: 'ToggledImportant', a: a};
 };
-var $author$project$Types$ToggledStatus = function (a) {
-	return {$: 'ToggledStatus', a: a};
-};
-var $elm$json$Json$Decode$int = _Json_decodeInt;
-var $elm$html$Html$Events$onDoubleClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'dblclick',
-		$elm$json$Json$Decode$succeed(msg));
-};
-var $elm$core$Tuple$pair = F2(
-	function (a, b) {
-		return _Utils_Tuple2(a, b);
-	});
 var $elm$html$Html$span = _VirtualDom_node('span');
 var $author$project$Main$viewTaskStatus = function (todo) {
 	var statusClass = function () {
 		var base = function () {
-			var _v1 = todo.status;
-			if (_v1.$ === 'Active') {
+			var _v0 = todo.status;
+			if (_v0.$ === 'Active') {
 				return 'cursor-pointer';
 			} else {
 				return 'cursor-pointer line-through opacity-60';
@@ -5765,33 +5762,30 @@ var $author$project$Main$viewTaskStatus = function (todo) {
 		$elm$html$Html$span,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class(statusClass),
+				$elm$html$Html$Attributes$class(statusClass + ' user-select-none'),
+				A2(
+				$elm$html$Html$Events$preventDefaultOn,
+				'mousedown',
+				$elm$json$Json$Decode$succeed(
+					_Utils_Tuple2($author$project$Types$NoOp, true))),
 				A2(
 				$elm$html$Html$Events$stopPropagationOn,
 				'click',
 				A2(
 					$elm$json$Json$Decode$andThen,
-					function (_v0) {
-						var isShift = _v0.a;
-						var clickCount = _v0.b;
-						return (clickCount === 1) ? (isShift ? $elm$json$Json$Decode$succeed(
+					function (isShift) {
+						return isShift ? $elm$json$Json$Decode$succeed(
 							_Utils_Tuple2(
 								$author$project$Types$ToggledImportant(todo.id),
 								true)) : $elm$json$Json$Decode$succeed(
 							_Utils_Tuple2(
-								$author$project$Types$ToggledStatus(todo.id),
-								true))) : $elm$json$Json$Decode$fail('ignore');
+								A2(
+									$author$project$Types$StartedEditingTask,
+									todo.id,
+									$author$project$NonEmptyString$toString(todo.task)),
+								true));
 					},
-					A3(
-						$elm$json$Json$Decode$map2,
-						$elm$core$Tuple$pair,
-						A2($elm$json$Json$Decode$field, 'shiftKey', $elm$json$Json$Decode$bool),
-						A2($elm$json$Json$Decode$field, 'detail', $elm$json$Json$Decode$int)))),
-				$elm$html$Html$Events$onDoubleClick(
-				A2(
-					$author$project$Types$StartedEditingTask,
-					todo.id,
-					$author$project$NonEmptyString$toString(todo.task)))
+					A2($elm$json$Json$Decode$field, 'shiftKey', $elm$json$Json$Decode$bool)))
 			]),
 		_List_fromArray(
 			[
@@ -5805,7 +5799,7 @@ var $author$project$Main$viewTask = F2(
 		if (_v0.$ === 'EditingTask') {
 			var id = _v0.a.id;
 			var draft = _v0.a.draft;
-			return A2($author$project$Main$hasId, id, todo) ? $author$project$Main$viewEditing(draft) : $author$project$Main$viewTaskStatus(todo);
+			return A2($author$project$Main$todoHasId, id, todo) ? $author$project$Main$viewEditing(draft) : $author$project$Main$viewTaskStatus(todo);
 		} else {
 			return $author$project$Main$viewTaskStatus(todo);
 		}
@@ -5816,10 +5810,24 @@ var $author$project$Main$viewTodo = F2(
 			$elm$html$Html$li,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('flex space-between align-items-center gap-1')
+					$elm$html$Html$Attributes$class('flex align-items-center gap-1')
 				]),
 			_List_fromArray(
 				[
+					A2(
+					$elm$html$Html$input,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$type_('checkbox'),
+							$elm$html$Html$Attributes$checked(
+							_Utils_eq(todo.status, $author$project$Types$Completed)),
+							$elm$html$Html$Events$onCheck(
+							function (_v0) {
+								return $author$project$Types$ToggledStatus(todo.id);
+							}),
+							$elm$html$Html$Attributes$class('cursor-pointer user-select-none')
+						]),
+					_List_Nil),
 					A2($author$project$Main$viewTask, model, todo),
 					$author$project$Main$viewDeleteButton(todo)
 				]));
@@ -5834,9 +5842,9 @@ var $author$project$Main$viewTodos = function (model) {
 		A2(
 			$elm$core$List$map,
 			$author$project$Main$viewTodo(model),
-			A2($author$project$Main$applyFilter, model.filter, model.todos)));
+			A2($author$project$Filter$applyFilter, model.filter, model.todos)));
 };
-var $author$project$Main$pluralize = F3(
+var $author$project$Text$pluralize = F3(
 	function (singular, plural, count) {
 		if (count === 1) {
 			return singular;
@@ -5844,26 +5852,26 @@ var $author$project$Main$pluralize = F3(
 			return plural;
 		}
 	});
-var $author$project$Main$completedLabel = A2($author$project$Main$pluralize, ' item completed', ' items completed');
-var $author$project$Main$importantLabel = A2($author$project$Main$pluralize, ' important item', ' important items');
-var $author$project$Main$itemsLabel = A2($author$project$Main$pluralize, ' item', ' items');
-var $author$project$Main$remainingLabel = A2($author$project$Main$pluralize, ' item remaining', ' items remaining');
+var $author$project$Text$completedLabel = A2($author$project$Text$pluralize, ' item completed', ' items completed');
+var $author$project$Text$importantLabel = A2($author$project$Text$pluralize, ' important item', ' important items');
+var $author$project$Text$itemsLabel = A2($author$project$Text$pluralize, ' item', ' items');
+var $author$project$Text$remainingLabel = A2($author$project$Text$pluralize, ' item remaining', ' items remaining');
 var $author$project$Main$viewTodosCount = function (model) {
 	var labelForFilter = function () {
 		var _v0 = model.filter;
 		switch (_v0.$) {
 			case 'All':
-				return $author$project$Main$itemsLabel;
+				return $author$project$Text$itemsLabel;
 			case 'ActiveOrImportantOnly':
-				return $author$project$Main$remainingLabel;
+				return $author$project$Text$remainingLabel;
 			case 'CompletedOnly':
-				return $author$project$Main$completedLabel;
+				return $author$project$Text$completedLabel;
 			default:
-				return $author$project$Main$importantLabel;
+				return $author$project$Text$importantLabel;
 		}
 	}();
 	var count = $elm$core$List$length(
-		A2($author$project$Main$applyFilter, model.filter, model.todos));
+		A2($author$project$Filter$applyFilter, model.filter, model.todos));
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -5880,7 +5888,7 @@ var $author$project$Main$viewTodosCount = function (model) {
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Tip: Double-click to edit • Shift-click to mark important')
+						$elm$html$Html$text('Tip: Click to edit • Shift-click to mark important')
 					])),
 				A2(
 				$elm$html$Html$div,

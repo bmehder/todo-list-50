@@ -44,7 +44,7 @@ It introduces:
 
 Each time the app updates:
 
-1. The current model is saved as a "frame"
+1. The current model and message are saved as a "frame"
 2. The new model becomes the "present"
 3. Older states are stored in `past`
 4. Future states are stored in `future`
@@ -107,7 +107,7 @@ Developers provide the application configuration:
 
 It returns a fully working Elm program with time travel enabled.
 
-The debugger visibility is controlled via flags passed from `index.html`, allowing it to be enabled or disabled without changing Elm code.
+The debugger visibility is controlled via flags passed from `index.html`, allowing it to be enabled or disabled at runtime without changing Elm code.
 
 ```html
 <div id="todo-app"></div>
@@ -119,6 +119,8 @@ The debugger visibility is controlled via flags passed from `index.html`, allowi
   })
 </script>
 ```
+
+There is no UI toggle for enabling/disabling the debugger; it is controlled entirely via configuration.
 
 ---
 
@@ -160,8 +162,9 @@ Each one enhances the app without changing it.
 
 # 🎮 User Interactions
 
-- Click → Toggle complete
-- Double Click → Start editing a task
+- Checkbox → Toggle complete
+- Click task text → Start editing a task
+- Shift + Click → Toggle important
 
 ---
 

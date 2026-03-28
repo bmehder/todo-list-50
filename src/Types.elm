@@ -1,4 +1,4 @@
-module Types exposing (Editing(..), Filter(..), Id, Model, Status(..), Task, Todo, Msg(..))
+module Types exposing (Editing(..), Filter(..), Id, Model, Msg(..), Status(..), Task, Todo)
 
 import NonEmptyString exposing (NonEmptyString)
 import NonNegative exposing (NonNegative)

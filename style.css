@@ -109,11 +109,11 @@ button {
 }
 
 .delete-btn {
-	
-
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+
+	margin-inline-start: auto;
 
 	background-color: var(--danger-500);
 	color: white;
@@ -225,10 +225,6 @@ summary {
 	gap: 1rem;
 }
 
-.margin-top-1 {
-	margin-block-start: 1rem;
-}
-
 .padding-0 {
 	padding: 0;
 }
@@ -259,6 +255,10 @@ summary {
 
 .cursor-pointer {
 	cursor: pointer;
+}
+
+.user-select-none {
+	user-select: none;
 }
 
 .text-success {

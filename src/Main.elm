@@ -1,12 +1,13 @@
 module Main exposing (main)
 
-import Browser
+import Filter exposing (allFilters, applyFilter, filterToString)
 import Html exposing (Html, button, div, form, input, label, li, menu, span, text, ul)
-import Html.Attributes exposing (class, disabled, placeholder, type_, value)
-import Html.Events exposing (on, onBlur, onClick, onDoubleClick, onInput, onSubmit, stopPropagationOn)
+import Html.Attributes exposing (checked, class, disabled, placeholder, type_, value)
+import Html.Events exposing (onCheck, onClick, onInput, onSubmit, preventDefaultOn, stopPropagationOn)
 import Json.Decode as Decode
 import NonEmptyString
 import NonNegative
+import Text exposing (completedLabel, importantLabel, itemsLabel, remainingLabel)
 import TimeTravel
 import TimeTravelConfig
 import Types exposing (..)
@@ -16,11 +17,6 @@ import Utils exposing (applyIf)
 
 -- MODEL
 -------------------------------------------------------------------------------
-
-
-allFilters : List Filter
-allFilters =
-    [ All, ActiveOrImportantOnly, CompletedOnly, ImportantOnly ]
 
 
 initModel : Model
@@ -112,7 +108,7 @@ update msg model =
 
 
 
--- DOMAIN HELPERS
+-- DOMAIN HELPERS (Todo Logic)
 -------------------------------------------------------------------------------
 
 
@@ -152,8 +148,8 @@ nextId todos =
             idFromIntUnsafe 0
 
 
-hasId : Id -> Todo -> Bool
-hasId id todo =
+todoHasId : Id -> Todo -> Bool
+todoHasId id todo =
     id == todo.id
 
 
@@ -177,7 +173,7 @@ toggleImportant todo =
 
 toggleImportantById : Id -> List Todo -> List Todo
 toggleImportantById id =
-    List.map (applyIf (hasId id) toggleImportant)
+    List.map (applyIf (todoHasId id) toggleImportant)
 
 
 setTask : Task -> Todo -> Todo
@@ -187,33 +183,17 @@ setTask newTask todo =
 
 toggleStatusById : Id -> List Todo -> List Todo
 toggleStatusById id =
-    List.map (applyIf (hasId id) toggleStatus)
+    List.map (applyIf (todoHasId id) toggleStatus)
 
 
 setTaskById : Id -> Task -> List Todo -> List Todo
 setTaskById id newTask =
-    List.map (applyIf (hasId id) (setTask newTask))
+    List.map (applyIf (todoHasId id) (setTask newTask))
 
 
 deleteTodoById : Id -> List Todo -> List Todo
 deleteTodoById id =
-    List.filter (not << hasId id)
-
-
-applyFilter : Filter -> List Todo -> List Todo
-applyFilter filterMode =
-    case filterMode of
-        All ->
-            identity
-
-        ActiveOrImportantOnly ->
-            List.filter (\todo -> todo.status == Active || todo.important)
-
-        CompletedOnly ->
-            List.filter (.status >> (==) Completed)
-
-        ImportantOnly ->
-            List.filter .important
+    List.filter (not << todoHasId id)
 
 
 createTodoFromDraft : Model -> Model
@@ -283,18 +263,7 @@ viewFilterButton : Filter -> Filter -> Html Msg
 viewFilterButton current value =
     let
         label =
-            case value of
-                All ->
-                    "All"
-
-                ActiveOrImportantOnly ->
-                    "Active"
-
-                CompletedOnly ->
-                    "Completed"
-
-                ImportantOnly ->
-                    "Important"
+            filterToString value
 
         isSelected =
             value == current
@@ -326,8 +295,15 @@ viewTodos model =
 
 viewTodo : Model -> Todo -> Html Msg
 viewTodo model todo =
-    li [ class "flex space-between align-items-center gap-1" ]
-        [ viewTask model todo
+    li [ class "flex align-items-center gap-1" ]
+        [ input
+            [ type_ "checkbox"
+            , checked (todo.status == Completed)
+            , onCheck (\_ -> ToggledStatus todo.id)
+            , class "cursor-pointer user-select-none"
+            ]
+            []
+        , viewTask model todo
         , viewDeleteButton todo
         ]
 
@@ -336,7 +312,7 @@ viewTask : Model -> Todo -> Html Msg
 viewTask model todo =
     case model.editing of
         EditingTask { id, draft } ->
-            if hasId id todo then
+            if todoHasId id todo then
                 viewEditing draft
 
             else
@@ -349,19 +325,18 @@ viewTask model todo =
 viewEditing : String -> Html Msg
 viewEditing draft =
     input
-        [ stopPropagationOn "click" (Decode.succeed ( NoOp, True ))
+        [ stopPropagationOn "mousedown" (Decode.succeed ( NoOp, True ))
         , value draft
         , onInput UpdatedEditingDraft
-        , onBlur SavedEditedTask
-        , on "keydown"
+        , stopPropagationOn "keydown"
             (Decode.field "key" Decode.string
                 |> Decode.andThen
                     (\key ->
                         if key == "Enter" then
-                            Decode.succeed SavedEditedTask
+                            Decode.succeed ( SavedEditedTask, True )
 
                         else if key == "Escape" then
-                            Decode.succeed CanceledEdit
+                            Decode.succeed ( CanceledEdit, True )
 
                         else
                             Decode.fail "ignore"
@@ -391,28 +366,23 @@ viewTaskStatus todo =
                 base
     in
     span
-        [ class statusClass
+        [ class (statusClass ++ " user-select-none")
+        , preventDefaultOn "mousedown" (Decode.succeed ( NoOp, True ))
         , stopPropagationOn "click"
-            (Decode.map2 Tuple.pair
-                (Decode.field "shiftKey" Decode.bool)
-                (Decode.field "detail" Decode.int)
+            (Decode.field "shiftKey" Decode.bool
                 |> Decode.andThen
-                    (\( isShift, clickCount ) ->
-                        if clickCount == 1 then
-                            if isShift then
-                                Decode.succeed ( ToggledImportant todo.id, True )
-
-                            else
-                                Decode.succeed ( ToggledStatus todo.id, True )
+                    (\isShift ->
+                        if isShift then
+                            Decode.succeed ( ToggledImportant todo.id, True )
 
                         else
-                            Decode.fail "ignore"
+                            Decode.succeed
+                                ( StartedEditingTask
+                                    todo.id
+                                    (NonEmptyString.toString todo.task)
+                                , True
+                                )
                     )
-            )
-        , onDoubleClick
-            (StartedEditingTask
-                todo.id
-                (NonEmptyString.toString todo.task)
             )
         ]
         [ text (NonEmptyString.toString todo.task) ]
@@ -451,7 +421,7 @@ viewTodosCount model =
     in
     div [ class "text-align-center flow" ]
         [ div [ class "opacity-60 font-size-small" ]
-            [ text "Tip: Double-click to edit • Shift-click to mark important" ]
+            [ text "Tip: Click to edit • Shift-click to mark important" ]
         , div []
             [ text (String.fromInt count ++ labelForFilter count) ]
         ]
@@ -461,7 +431,7 @@ viewConfirmDialog : Model -> Html Msg
 viewConfirmDialog model =
     case model.pendingDelete of
         Just id ->
-            div [ class "confirm-dialog flex gap-1 align-items-center" ]
+            div [ class "confirm-dialog flex align-items-center gap-1" ]
                 [ text "Delete this todo?"
                 , button [ class "delete-btn", onClick (ConfirmedDelete id) ] [ text "Yes" ]
                 , button [ onClick CanceledDelete ] [ text "Cancel" ]
@@ -469,41 +439,6 @@ viewConfirmDialog model =
 
         Nothing ->
             text ""
-
-
-
--- TEXT / LABEL HELPERS
--------------------------------------------------------------------------------
-
-
-itemsLabel : Int -> String
-itemsLabel =
-    pluralize " item" " items"
-
-
-remainingLabel : Int -> String
-remainingLabel =
-    pluralize " item remaining" " items remaining"
-
-
-completedLabel : Int -> String
-completedLabel =
-    pluralize " item completed" " items completed"
-
-
-importantLabel : Int -> String
-importantLabel =
-    pluralize " important item" " important items"
-
-
-pluralize : String -> String -> Int -> String
-pluralize singular plural count =
-    case count of
-        1 ->
-            singular
-
-        _ ->
-            plural
 
 
 
