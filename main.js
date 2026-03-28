@@ -4881,8 +4881,8 @@ var $author$project$Main$idFromIntUnsafe = function (n) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 132, column: 13},
-				end: {line: 132, column: 23}
+				start: {line: 128, column: 13},
+				end: {line: 128, column: 23}
 			})('Invalid Id literal');
 	}
 };
@@ -4907,8 +4907,8 @@ var $author$project$Main$taskFromStringUnsafe = function (str) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 122, column: 13},
-				end: {line: 122, column: 23}
+				start: {line: 118, column: 13},
+				end: {line: 118, column: 23}
 			})('Invalid task literal');
 	}
 };
@@ -5683,6 +5683,8 @@ var $elm$html$Html$Events$onCheck = function (tagger) {
 		'change',
 		A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetChecked));
 };
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $author$project$Types$AskedToDelete = function (a) {
 	return {$: 'AskedToDelete', a: a};
 };
@@ -5712,31 +5714,66 @@ var $author$project$Types$UpdatedEditingDraft = function (a) {
 	return {$: 'UpdatedEditingDraft', a: a};
 };
 var $elm$json$Json$Decode$fail = _Json_fail;
+var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $author$project$Main$viewEditing = function (draft) {
 	return A2(
-		$elm$html$Html$input,
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('flex align-items-center gap-1')
+			]),
 		_List_fromArray(
 			[
 				A2(
-				$elm$html$Html$Events$stopPropagationOn,
-				'mousedown',
-				$elm$json$Json$Decode$succeed(
-					_Utils_Tuple2($author$project$Types$NoOp, true))),
-				$elm$html$Html$Attributes$value(draft),
-				$elm$html$Html$Events$onInput($author$project$Types$UpdatedEditingDraft),
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('editing-input'),
+						A2(
+						$elm$html$Html$Events$stopPropagationOn,
+						'mousedown',
+						$elm$json$Json$Decode$succeed(
+							_Utils_Tuple2($author$project$Types$NoOp, true))),
+						$elm$html$Html$Attributes$value(draft),
+						$elm$html$Html$Events$onInput($author$project$Types$UpdatedEditingDraft),
+						A2(
+						$elm$html$Html$Events$stopPropagationOn,
+						'keydown',
+						A2(
+							$elm$json$Json$Decode$andThen,
+							function (key) {
+								return (key === 'Enter') ? $elm$json$Json$Decode$succeed(
+									_Utils_Tuple2($author$project$Types$SavedEditedTask, true)) : ((key === 'Escape') ? $elm$json$Json$Decode$succeed(
+									_Utils_Tuple2($author$project$Types$CanceledEdit, true)) : $elm$json$Json$Decode$fail('ignore'));
+							},
+							A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string)))
+					]),
+				_List_Nil),
 				A2(
-				$elm$html$Html$Events$stopPropagationOn,
-				'keydown',
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick($author$project$Types$SavedEditedTask),
+						$elm$html$Html$Attributes$class('save-btn'),
+						$elm$html$Html$Attributes$disabled(
+						!$author$project$NonEmptyString$isValid(draft))
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Save')
+					])),
 				A2(
-					$elm$json$Json$Decode$andThen,
-					function (key) {
-						return (key === 'Enter') ? $elm$json$Json$Decode$succeed(
-							_Utils_Tuple2($author$project$Types$SavedEditedTask, true)) : ((key === 'Escape') ? $elm$json$Json$Decode$succeed(
-							_Utils_Tuple2($author$project$Types$CanceledEdit, true)) : $elm$json$Json$Decode$fail('ignore'));
-					},
-					A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string)))
-			]),
-		_List_Nil);
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick($author$project$Types$CanceledEdit),
+						$elm$html$Html$Attributes$class('cancel-btn')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Cancel')
+					]))
+			]));
 };
 var $author$project$Types$StartedEditingTask = F2(
 	function (a, b) {
@@ -5806,31 +5843,49 @@ var $author$project$Main$viewTask = F2(
 	});
 var $author$project$Main$viewTodo = F2(
 	function (model, todo) {
+		var isEditingThis = function () {
+			var _v1 = model.editing;
+			if (_v1.$ === 'EditingTask') {
+				var id = _v1.a.id;
+				return A2($author$project$Main$todoHasId, id, todo);
+			} else {
+				return false;
+			}
+		}();
 		return A2(
 			$elm$html$Html$li,
 			_List_fromArray(
 				[
 					$elm$html$Html$Attributes$class('flex align-items-center gap-1')
 				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$input,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$type_('checkbox'),
-							$elm$html$Html$Attributes$checked(
-							_Utils_eq(todo.status, $author$project$Types$Completed)),
-							$elm$html$Html$Events$onCheck(
-							function (_v0) {
-								return $author$project$Types$ToggledStatus(todo.id);
-							}),
-							$elm$html$Html$Attributes$class('cursor-pointer user-select-none')
-						]),
-					_List_Nil),
-					A2($author$project$Main$viewTask, model, todo),
-					$author$project$Main$viewDeleteButton(todo)
-				]));
+			_Utils_ap(
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$input,
+						_Utils_ap(
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$type_('checkbox'),
+									$elm$html$Html$Attributes$checked(
+									_Utils_eq(todo.status, $author$project$Types$Completed)),
+									$elm$html$Html$Events$onCheck(
+									function (_v0) {
+										return $author$project$Types$ToggledStatus(todo.id);
+									}),
+									$elm$html$Html$Attributes$class('cursor-pointer user-select-none')
+								]),
+							isEditingThis ? _List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'visibility', 'hidden')
+								]) : _List_Nil),
+						_List_Nil),
+						A2($author$project$Main$viewTask, model, todo)
+					]),
+				isEditingThis ? _List_Nil : _List_fromArray(
+					[
+						$author$project$Main$viewDeleteButton(todo)
+					])));
 	});
 var $author$project$Main$viewTodos = function (model) {
 	return A2(

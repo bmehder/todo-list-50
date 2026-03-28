@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Filter exposing (allFilters, applyFilter, filterToString)
 import Html exposing (Html, button, div, form, input, label, li, menu, span, text, ul)
-import Html.Attributes exposing (checked, class, disabled, placeholder, type_, value)
+import Html.Attributes exposing (checked, class, disabled, id, placeholder, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput, onSubmit, preventDefaultOn, stopPropagationOn)
 import Json.Decode as Decode
 import NonEmptyString
@@ -43,14 +43,10 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         ToggledStatus id ->
-            { model
-                | todos = toggleStatusById id model.todos
-            }
+            { model | todos = toggleStatusById id model.todos }
 
         ToggledImportant id ->
-            { model
-                | todos = toggleImportantById id model.todos
-            }
+            { model | todos = toggleImportantById id model.todos }
 
         AskedToDelete id ->
             { model | pendingDelete = Just id }
@@ -295,17 +291,39 @@ viewTodos model =
 
 viewTodo : Model -> Todo -> Html Msg
 viewTodo model todo =
+    let
+        isEditingThis =
+            case model.editing of
+                EditingTask { id } ->
+                    todoHasId id todo
+
+                NotEditing ->
+                    False
+    in
     li [ class "flex align-items-center gap-1" ]
-        [ input
-            [ type_ "checkbox"
-            , checked (todo.status == Completed)
-            , onCheck (\_ -> ToggledStatus todo.id)
-            , class "cursor-pointer user-select-none"
-            ]
+        ([ input
+            ([ type_ "checkbox"
+             , checked (todo.status == Completed)
+             , onCheck (\_ -> ToggledStatus todo.id)
+             , class "cursor-pointer user-select-none"
+             ]
+                ++ (if isEditingThis then
+                        [ Html.Attributes.style "visibility" "hidden" ]
+
+                    else
+                        []
+                   )
+            )
             []
-        , viewTask model todo
-        , viewDeleteButton todo
-        ]
+         , viewTask model todo
+         ]
+            ++ (if isEditingThis then
+                    []
+
+                else
+                    [ viewDeleteButton todo ]
+               )
+        )
 
 
 viewTask : Model -> Todo -> Html Msg
@@ -324,26 +342,40 @@ viewTask model todo =
 
 viewEditing : String -> Html Msg
 viewEditing draft =
-    input
-        [ stopPropagationOn "mousedown" (Decode.succeed ( NoOp, True ))
-        , value draft
-        , onInput UpdatedEditingDraft
-        , stopPropagationOn "keydown"
-            (Decode.field "key" Decode.string
-                |> Decode.andThen
-                    (\key ->
-                        if key == "Enter" then
-                            Decode.succeed ( SavedEditedTask, True )
+    div [ class "flex align-items-center gap-1" ]
+        [ input
+            [ Html.Attributes.id "editing-input"
+            , stopPropagationOn "mousedown" (Decode.succeed ( NoOp, True ))
+            , value draft
+            , onInput UpdatedEditingDraft
+            , stopPropagationOn "keydown"
+                (Decode.field "key" Decode.string
+                    |> Decode.andThen
+                        (\key ->
+                            if key == "Enter" then
+                                Decode.succeed ( SavedEditedTask, True )
 
-                        else if key == "Escape" then
-                            Decode.succeed ( CanceledEdit, True )
+                            else if key == "Escape" then
+                                Decode.succeed ( CanceledEdit, True )
 
-                        else
-                            Decode.fail "ignore"
-                    )
-            )
+                            else
+                                Decode.fail "ignore"
+                        )
+                )
+            ]
+            []
+        , button
+            [ onClick SavedEditedTask
+            , class "save-btn"
+            , disabled (not <| NonEmptyString.isValid draft)
+            ]
+            [ text "Save" ]
+        , button
+            [ onClick CanceledEdit
+            , class "cancel-btn"
+            ]
+            [ text "Cancel" ]
         ]
-        []
 
 
 viewTaskStatus : Todo -> Html Msg

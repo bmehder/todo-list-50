@@ -4,7 +4,7 @@ This project is a Todo application built in Elm with a custom, app-agnostic Time
 
 It demonstrates a powerful architectural idea:
 
-> An app can stay pure and simple, while additional behavior (like time travel) is layered on top.
+> An app can remain pure and simple, while additional behavior (like time travel) is layered on top as reusable wrappers.
 
 ---
 
@@ -21,7 +21,7 @@ This contains all of the domain logic:
 - `update : Msg -> Model -> Model` — how state changes
 - `view : Model -> Html Msg` — how the UI is rendered
 
-👉 This part has **no knowledge of time travel** and represents a standard Elm application.
+👉 This part has **no knowledge of time travel** and represents a standard Elm-style application using a pure update function.
 
 ---
 
@@ -107,7 +107,7 @@ Developers provide the application configuration:
 
 It returns a fully working Elm program with time travel enabled.
 
-The debugger visibility is controlled via flags passed from `index.html`, allowing it to be enabled or disabled at runtime without changing Elm code.
+The debugger visibility is controlled via flags passed from `index.html` at initialization time, allowing it to be enabled or disabled without changing Elm code.
 
 ```html
 <div id="todo-app"></div>
@@ -160,10 +160,26 @@ Each one enhances the app without changing it.
 
 ---
 
+## ⚠️ Current Limitation
+
+The wrapped application must use a pure update function:
+
+    update : Msg -> Model -> Model
+
+Side effects (Cmd) are not currently supported by the TimeTravel module.
+
+This keeps the debugger simple and predictable, but means features like
+focus management or HTTP requests would require extending the wrapper.
+
+---
+
 # 🎮 User Interactions
 
 - Checkbox → Toggle complete
 - Click task text → Start editing a task
+- Enter → Save changes
+- Escape → Cancel editing
+- Save / Cancel buttons provide explicit control
 - Shift + Click → Toggle important
 
 ---
