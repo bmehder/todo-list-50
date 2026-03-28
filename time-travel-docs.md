@@ -263,6 +263,86 @@ TimeTravel works by:
 - storing every state transition
 - allowing navigation through those states
 
+
 All while preserving the simplicity and purity of Elm.
 
 This approach demonstrates how powerful composition can be in functional programming, especially when combined with immutable data structures and explicit state transitions.
+
+---
+
+## Export / Import & Replay
+
+The TimeTravel system can be extended to support exporting and importing timelines. This allows you to persist sessions, share debugging states, or replay user interactions.
+
+### Export
+
+The timeline can be serialized into JSON by extracting each frame's message into a structured format:
+
+```json
+[
+  { "index": 0, "type": "ToggledStatus", "id": "2" },
+  { "index": 1, "type": "SetFilter", "id": null }
+]
+```
+
+This format intentionally separates:
+
+- `type`: the message constructor
+- `id`: optional payload data
+
+This makes the export both human-readable and machine-decodable.
+
+---
+
+### Import
+
+Importing reverses the process:
+
+1. Decode JSON into a list of message descriptors
+2. Convert each descriptor into a real `Msg`
+3. Replay messages starting from the initial model
+
+Conceptually:
+
+```elm
+List.foldl
+    (\msg (prevModel, frames) ->
+        let
+            nextModel =
+                update msg prevModel
+        in
+        ( nextModel
+        , { msg = msg, prev = prevModel, next = nextModel } :: frames
+        )
+    )
+    ( initModel, [] )
+    messages
+```
+
+This ensures that the timeline is reconstructed using the same logic as the original application.
+
+---
+
+### Replay vs Snapshot
+
+There are two possible approaches to time travel:
+
+| Approach   | Description                          | Tradeoff                |
+|-----------|--------------------------------------|-------------------------|
+| Snapshot  | Store full models                    | Larger memory usage     |
+| Replay    | Recompute from messages (current)    | Requires deterministic updates |
+
+This implementation uses **replay**, which guarantees correctness as long as your `update` function is pure.
+
+---
+
+### Why This Matters
+
+This upgrade transforms TimeTravel from a debugging aid into a **deterministic replay system**:
+
+- Reproduce bugs from user sessions
+- Share timelines between developers
+- Persist state transitions
+- Build advanced debugging tools
+
+This is the same core idea used in systems like Redux DevTools, but implemented in a purely functional, Elm-native way.

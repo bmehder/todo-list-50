@@ -109,6 +109,7 @@ Developers provide the application configuration:
 , view = view
 , msgToDebug = todoMsgToDebug
 , modelToString = modelToPrettyString
+, decodeMsg = decodeMsg
 }
 ```
 
@@ -197,6 +198,8 @@ focus management or HTTP requests would require extending the wrapper.
 - See each message (Msg) that caused a transition
 - Inspect model changes (with diffing)
 - View previous and next states
+- Export timeline as JSON
+- Import timeline and replay state transitions
 
 ---
 
@@ -217,7 +220,6 @@ Instead, behavior is layered on top in a clean, functional way.
 - Add model diffs between states
 - Highlight changed fields
 - Persist history to localStorage
-- Export/import timelines
 
 ---
 
@@ -228,3 +230,77 @@ This approach keeps Elm code:
 - Extensible
 
 And opens the door to building reusable architectural tools.
+
+---
+
+# 🔄 Export / Import & Replay
+
+This project now supports exporting and importing timelines, turning the debugger into a deterministic replay engine.
+
+## Export
+
+Clicking "Export Timeline" generates JSON like:
+
+```json
+[
+  { "index": 0, "type": "ToggledStatus", "id": "2" },
+  { "index": 1, "type": "SetFilter All", "id": null }
+]
+```
+
+This format is:
+
+- Human-readable
+- Easy to copy/paste
+- Sufficient to reconstruct application behavior
+
+---
+
+## Import
+
+You can paste JSON back into the app and click "Import Timeline".
+
+The system will:
+
+1. Decode JSON
+2. Reconstruct real `Msg` values
+3. Replay them from the initial model
+
+---
+
+## Replay Engine
+
+Instead of storing snapshots, the app rebuilds state using the update function:
+
+```elm
+List.foldl
+    (\msg (prevModel, frames) ->
+        let
+            nextModel =
+                update msg prevModel
+        in
+        ( nextModel
+        , { msg = msg, prev = prevModel, next = nextModel } :: frames
+        )
+    )
+    ( initModel, [] )
+    messages
+```
+
+This ensures:
+
+- Accurate reproduction of behavior
+- No hidden state
+- Deterministic debugging
+
+---
+
+## Why This Matters
+
+This turns the debugger into a powerful tool:
+
+- Reproduce bugs from real sessions
+- Share timelines between developers
+- Verify behavior deterministically
+
+This is conceptually similar to Redux DevTools, but implemented in pure Elm.

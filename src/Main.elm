@@ -496,6 +496,51 @@ viewTodosCount model =
 -- PROGRAM
 -------------------------------------------------------------------------------
 
+decodeMsg : { index : Int, type_ : String, id : Maybe String } -> Maybe Msg
+decodeMsg item =
+    let
+        parseId =
+            item.id
+                |> Maybe.andThen String.toInt
+    in
+    case item.type_ of
+        "NoOp" ->
+            Just NoOp
+
+        "SavedEditedTodoText" ->
+            Just SavedEditedTodoText
+
+        "ToggledStatus" ->
+            parseId
+                |> Maybe.andThen NonNegative.fromInt
+                |> Maybe.map ToggledStatus
+
+        "ToggledImportant" ->
+            parseId
+                |> Maybe.andThen NonNegative.fromInt
+                |> Maybe.map ToggledImportant
+
+        "AskedToDelete" ->
+            parseId
+                |> Maybe.andThen NonNegative.fromInt
+                |> Maybe.map AskedToDelete
+
+        "ConfirmedDelete" ->
+            parseId
+                |> Maybe.andThen NonNegative.fromInt
+                |> Maybe.map ConfirmedDelete
+
+        "SetFilter ActiveAndImportantOnly" ->
+            Just (SetFilter ActiveOrImportantOnly)
+
+        "SetFilter CompletedOnly" ->
+            Just (SetFilter CompletedOnly)
+
+        "SetFilter All" ->
+            Just (SetFilter All)
+
+        _ ->
+            Nothing
 
 main : Program TimeTravel.Flags (TimeTravel.TimeTravel Msg Model) (TimeTravel.Msg Msg)
 main =
@@ -505,4 +550,5 @@ main =
         , view = view
         , msgToDebug = TimeTravelConfig.todoMsgToDebug
         , modelToString = TimeTravelConfig.modelToPrettyString
+        , decodeMsg = decodeMsg
         }
