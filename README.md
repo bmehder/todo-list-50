@@ -243,8 +243,8 @@ Clicking "Export Timeline" generates JSON like:
 
 ```json
 [
-  { "index": 0, "type": "ToggledStatus", "id": "2" },
-  { "index": 1, "type": "SetFilter All", "id": null }
+  { "index": 0, "label": "ToggledStatus", "id": "2" },
+  { "index": 1, "label": "SetFilter All", "id": null }
 ]
 ```
 
@@ -252,6 +252,7 @@ This format is:
 
 - Human-readable
 - Easy to copy/paste
+- Uses a `label` field (derived from `msgToDebug`) for decoding
 - Sufficient to reconstruct application behavior
 
 ---
@@ -263,7 +264,7 @@ You can paste JSON back into the app and click "Import Timeline".
 The system will:
 
 1. Decode JSON
-2. Reconstruct real `Msg` values
+2. Reconstruct real `Msg` values from labels
 3. Replay them from the initial model
 
 ---
@@ -292,6 +293,17 @@ This ensures:
 - Accurate reproduction of behavior
 - No hidden state
 - Deterministic debugging
+
+---
+
+### Decoding Strategy
+
+Not all messages need to be fully decoded for replay to work.
+
+- Some messages (like `NoOp`) can be ignored
+- Others must be decoded to preserve state transitions
+
+Replay remains correct as long as all **state-changing messages** are included.
 
 ---
 

@@ -497,86 +497,6 @@ viewTodosCount model =
 -------------------------------------------------------------------------------
 
 
-decodeMsg : { index : Int, type_ : String, id : Maybe String } -> Maybe Msg
-decodeMsg item =
-    let
-        parseId =
-            item.id
-                |> Maybe.andThen String.toInt
-    in
-    case item.type_ of
-        "NoOp" ->
-            Just NoOp
-
-        "SavedEditedTodoText" ->
-            Just SavedEditedTodoText
-        "CanceledEdit" ->
-            Just CanceledEdit
-
-        "ToggledStatus" ->
-            parseId
-                |> Maybe.andThen NonNegative.fromInt
-                |> Maybe.map ToggledStatus
-
-        "ToggledImportant" ->
-            parseId
-                |> Maybe.andThen NonNegative.fromInt
-                |> Maybe.map ToggledImportant
-
-        "AskedToDelete" ->
-            parseId
-                |> Maybe.andThen NonNegative.fromInt
-                |> Maybe.map AskedToDelete
-
-        "ConfirmedDelete" ->
-            parseId
-                |> Maybe.andThen NonNegative.fromInt
-                |> Maybe.map ConfirmedDelete
-        "CanceledDelete" ->
-            Just CanceledDelete
-
-        "SetFilter ActiveAndImportantOnly" ->
-            Just (SetFilter ActiveOrImportantOnly)
-
-        "SetFilter CompletedOnly" ->
-            Just (SetFilter CompletedOnly)
-
-        "SetFilter All" ->
-            Just (SetFilter All)
-
-        "SetFilter Important" ->
-            Just (SetFilter ImportantOnly)
-
-        "SetFilter ImportantOnly" ->
-            Just (SetFilter ImportantOnly)
-
-        "CreatedTodo" ->
-            Just CreatedTodo
-
-        typeStr ->
-            if String.startsWith "UpdatedDraft (typing) " typeStr then
-                typeStr
-                    |> String.dropLeft (String.length "UpdatedDraft (typing) \"")
-                    |> String.dropRight 1
-                    |> Just
-                    |> Maybe.map UpdatedDraft
-
-            else if String.startsWith "UpdatedEditingDraft (editing) " typeStr then
-                typeStr
-                    |> String.dropLeft (String.length "UpdatedEditingDraft (editing) \"")
-                    |> String.dropRight 1
-                    |> Just
-                    |> Maybe.map UpdatedEditingDraft
-
-            else if String.startsWith "StartedEditingTodoText " typeStr then
-                parseId
-                    |> Maybe.andThen NonNegative.fromInt
-                    |> Maybe.map (\idVal -> StartedEditingTodoText idVal "")
-
-            else
-                Nothing
-
-
 main : Program TimeTravel.Flags (TimeTravel.TimeTravel Msg Model) (TimeTravel.Msg Msg)
 main =
     TimeTravel.withTimeTravel
@@ -585,5 +505,5 @@ main =
         , view = view
         , msgToDebug = TimeTravelConfig.todoMsgToDebug
         , modelToString = TimeTravelConfig.modelToPrettyString
-        , decodeMsg = decodeMsg
+        , decodeMsg = TimeTravelConfig.decodeMsg
         }

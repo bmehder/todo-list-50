@@ -280,14 +280,14 @@ The timeline can be serialized into JSON by extracting each frame's message into
 
 ```json
 [
-  { "index": 0, "type": "ToggledStatus", "id": "2" },
-  { "index": 1, "type": "SetFilter", "id": null }
+  { "index": 0, "label": "ToggledStatus", "id": "2" },
+  { "index": 1, "label": "SetFilter CompletedOnly", "id": null }
 ]
 ```
 
 This format intentionally separates:
 
-- `type`: the message constructor
+- `label`: a human-readable message label (used for decoding)
 - `id`: optional payload data
 
 This makes the export both human-readable and machine-decodable.
@@ -320,6 +320,37 @@ List.foldl
 ```
 
 This ensures that the timeline is reconstructed using the same logic as the original application.
+
+---
+
+### Decoding Strategy
+
+Not all messages need to be fully decoded for replay to work correctly.
+
+Some messages are "state-independent" (e.g., `NoOp`) and can safely be ignored.
+Others are "state-dependent" and must be decoded to reconstruct the correct state.
+
+For example:
+
+- `CreatedTodo` depends on the current `draft`
+- `SavedEditedTodoText` depends on an active editing state
+
+This means:
+
+- Some messages may decode to `Nothing`
+- Replay remains correct as long as all **state-changing messages** are preserved
+
+---
+
+### Deterministic Replay Requirements
+
+Replay assumes that:
+
+- `update` is pure
+- messages are applied in order
+- all required messages for state transitions are decoded
+
+If these conditions hold, replay will reconstruct the exact same model as the original session.
 
 ---
 

@@ -24,7 +24,7 @@ type alias AppConfig msg model =
     , view : model -> Html msg
     , msgToDebug : msg -> DebugInfo
     , modelToString : model -> String
-    , decodeMsg : { index : Int, type_ : String, id : Maybe String } -> Maybe msg
+    , decodeMsg : { index : Int, label : String, id : Maybe String } -> Maybe msg
     }
 
 
@@ -92,11 +92,35 @@ init visible model =
         }
 
 
+rebuildTimeline :
+    model
+    -> (msg -> model -> model)
+    -> List msg
+    -> ( model, List (Frame msg model) )
+rebuildTimeline initModel updateModel msgs =
+    List.foldl
+        (\msg ( prevModel, frames ) ->
+            let
+                nextModel =
+                    updateModel msg prevModel
+
+                frame =
+                    { msg = msg
+                    , prev = prevModel
+                    , next = nextModel
+                    }
+            in
+            ( nextModel, frame :: frames )
+        )
+        ( initModel, [] )
+        msgs
+
+
 update :
     model
     -> (msg -> model -> model)
     -> (msg -> DebugInfo)
-    -> ({ index : Int, type_ : String, id : Maybe String } -> Maybe msg)
+    -> ({ index : Int, label : String, id : Maybe String } -> Maybe msg)
     -> Msg msg
     -> TimeTravel msg model
     -> TimeTravel msg model
@@ -149,14 +173,14 @@ update initModel updateModel msgToDebug decodeMsg timeTravelMsg (TimeTravel app)
                                                 msgToDebug frame.msg
                                         in
                                         { index = i
-                                        , type_ = info.label
+                                        , label = info.label
                                         , id = info.id
                                         }
                                     )
 
                         initial =
                             { index = -1
-                            , type_ = "InitialModel"
+                            , label = "InitialModel"
                             , id = Nothing
                             }
                     in
@@ -181,8 +205,12 @@ update initModel updateModel msgToDebug decodeMsg timeTravelMsg (TimeTravel app)
                                             "\"id\": null"
                             in
                             "{"
-                                ++ "\"index\": " ++ String.fromInt item.index ++ ", "
-                                ++ "\"type\": \"" ++ escape item.type_ ++ "\", "
+                                ++ "\"index\": "
+                                ++ String.fromInt item.index
+                                ++ ", "
+                                ++ "\"type\": \""
+                                ++ escape item.label
+                                ++ "\", "
                                 ++ idPart
                                 ++ "}"
                     in
@@ -203,13 +231,13 @@ update initModel updateModel msgToDebug decodeMsg timeTravelMsg (TimeTravel app)
 
         ImportTimeline ->
             let
-                decoder : Decoder (List { index : Int, type_ : String, id : Maybe String })
+                decoder : Decoder (List { index : Int, label : String, id : Maybe String })
                 decoder =
                     Decode.list
                         (Decode.map3
                             (\i l id ->
                                 { index = i
-                                , type_ = l
+                                , label = l
                                 , id = id
                                 }
                             )
@@ -224,40 +252,15 @@ update initModel updateModel msgToDebug decodeMsg timeTravelMsg (TimeTravel app)
             case result of
                 Ok items ->
                     let
-                        _ =
-                            Debug.log "Import OK (count)" (List.length items)
-
-                        _ =
-                            Debug.log "Decoded messages"
-                                (items |> List.map decodeMsg)
-
                         framesRebuilt =
                             let
-                                msgs =
+                                decodedMsgs =
                                     items
                                         |> List.filter (\item -> item.index >= 0)
                                         |> List.sortBy .index
                                         |> List.filterMap decodeMsg
-
-                                _ =
-                                    Debug.log "Replay msgs" msgs
                             in
-                            msgs
-                                |> List.foldl
-                                    (\msg (prevModel, frames) ->
-                                        let
-                                            nextModel =
-                                                updateModel msg prevModel
-
-                                            frame =
-                                                { msg = msg
-                                                , prev = prevModel
-                                                , next = nextModel
-                                                }
-                                        in
-                                        ( nextModel, frame :: frames )
-                                    )
-                                    ( initModel, [] )
+                            rebuildTimeline initModel updateModel decodedMsgs
 
                         newTimeline =
                             case framesRebuilt of
@@ -269,11 +272,7 @@ update initModel updateModel msgToDebug decodeMsg timeTravelMsg (TimeTravel app)
                     in
                     TimeTravel { app | timeline = newTimeline }
 
-                Err err ->
-                    let
-                        _ =
-                            Debug.log "Import error" err
-                    in
+                Err _ ->
                     TimeTravel app
 
         AppMsg msg ->
@@ -342,20 +341,22 @@ view config (TimeTravel app) =
                     , button [ onClick Next, disabled (List.isEmpty app.timeline.future) ] [ text "Next" ]
                     ]
                 , viewHistory config.msgToDebug config.modelToString app.timeline
-                , case app.exportText of
-                    Just txt ->
-                        Html.textarea [ class "width-100 min-height-10", id "export" ] [ text txt ]
-
-                    Nothing ->
-                        text ""
+                , Html.textarea
+                    [ class "width-100 min-height-10"
+                    , id "export"
+                    , Html.Attributes.placeholder "Click 'Export Timeline' to generate JSON"
+                    ]
+                    [ text (Maybe.withDefault "" app.exportText) ]
                 , Html.textarea
                     [ class "width-100 min-height-10"
                     , id "import"
                     , onInput ImportTextChanged
+                    , Html.Attributes.placeholder "Paste timeline JSON here and click Import"
                     ]
                     []
                 , button [ onClick ImportTimeline ] [ text "Import Timeline" ]
                 ]
+
           else
             text ""
         ]
@@ -393,7 +394,7 @@ viewHistory msgToDebug modelToString timeline =
                     )
                 ]
     in
-    div []
+    div [class "flow"]
         (history
             ++ [ initial
                , button [ onClick ExportTimeline ] [ text "Export Timeline" ]

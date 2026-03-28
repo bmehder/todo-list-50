@@ -1,12 +1,13 @@
 module TimeTravelConfig exposing
-    ( modelToPrettyString
+    ( decodeMsg
+    , modelToPrettyString
     , todoMsgToDebug
     )
 
 import NonEmptyString
 import NonNegative
 import TimeTravel
-import Types exposing (Editing(..), Filter(..), Id, Model, Status(..), Todo, Msg(..))
+import Types exposing (Editing(..), Filter(..), Id, Model, Msg(..), Status(..), Todo)
 
 
 
@@ -189,3 +190,82 @@ todoMsgToDebug msg =
             { label = "NoOp (ignored UI event)"
             , id = Nothing
             }
+
+
+decodeMsg : { index : Int, label : String, id : Maybe String } -> Maybe Msg
+decodeMsg item =
+    let
+        parseId =
+            item.id
+                |> Maybe.andThen String.toInt
+    in
+    case item.label of
+        "NoOp (ignored UI event)" ->
+            Just NoOp
+
+        "SavedEditedTodoText" ->
+            Just SavedEditedTodoText
+
+        "CanceledEdit" ->
+            Just CanceledEdit
+
+        "ToggledStatus" ->
+            parseId
+                |> Maybe.andThen NonNegative.fromInt
+                |> Maybe.map ToggledStatus
+
+        "ToggledImportant" ->
+            parseId
+                |> Maybe.andThen NonNegative.fromInt
+                |> Maybe.map ToggledImportant
+
+        "AskedToDelete" ->
+            parseId
+                |> Maybe.andThen NonNegative.fromInt
+                |> Maybe.map AskedToDelete
+
+        "ConfirmedDelete" ->
+            parseId
+                |> Maybe.andThen NonNegative.fromInt
+                |> Maybe.map ConfirmedDelete
+
+        "CanceledDelete" ->
+            Just CanceledDelete
+
+        "SetFilter ActiveAndImportantOnly" ->
+            Just (SetFilter ActiveOrImportantOnly)
+
+        "SetFilter CompletedOnly" ->
+            Just (SetFilter CompletedOnly)
+
+        "SetFilter All" ->
+            Just (SetFilter All)
+
+        "SetFilter ImportantOnly" ->
+            Just (SetFilter ImportantOnly)
+
+        "CreatedTodo" ->
+            Just CreatedTodo
+
+        labelStr ->
+            if String.startsWith "UpdatedDraft (typing) " labelStr then
+                labelStr
+                    |> String.dropLeft (String.length "UpdatedDraft (typing) \"")
+                    |> String.dropRight 1
+                    |> UpdatedDraft
+                    |> Just
+
+            else if String.startsWith "UpdatedEditingDraft (editing) " labelStr then
+                labelStr
+                    |> String.dropLeft (String.length "UpdatedEditingDraft (editing) \"")
+                    |> String.dropRight 1
+                    |> Just
+                    |> Maybe.map UpdatedEditingDraft
+
+            else if String.startsWith "StartedEditingTodoText " labelStr then
+                parseId
+                    |> Maybe.andThen NonNegative.fromInt
+                    |> Maybe.map (\idVal -> StartedEditingTodoText idVal "")
+
+            else
+                Nothing

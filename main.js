@@ -4938,11 +4938,11 @@ var $elm$core$Maybe$map = F2(
 	});
 var $elm$core$String$startsWith = _String_startsWith;
 var $elm$core$String$toInt = _String_toInt;
-var $author$project$Main$decodeMsg = function (item) {
+var $author$project$TimeTravelConfig$decodeMsg = function (item) {
 	var parseId = A2($elm$core$Maybe$andThen, $elm$core$String$toInt, item.id);
-	var _v0 = item.type_;
+	var _v0 = item.label;
 	switch (_v0) {
-		case 'NoOp':
+		case 'NoOp (ignored UI event)':
 			return $elm$core$Maybe$Just($author$project$Types$NoOp);
 		case 'SavedEditedTodoText':
 			return $elm$core$Maybe$Just($author$project$Types$SavedEditedTodoText);
@@ -4979,27 +4979,22 @@ var $author$project$Main$decodeMsg = function (item) {
 		case 'SetFilter All':
 			return $elm$core$Maybe$Just(
 				$author$project$Types$SetFilter($author$project$Types$All));
-		case 'SetFilter Important':
-			return $elm$core$Maybe$Just(
-				$author$project$Types$SetFilter($author$project$Types$ImportantOnly));
 		case 'SetFilter ImportantOnly':
 			return $elm$core$Maybe$Just(
 				$author$project$Types$SetFilter($author$project$Types$ImportantOnly));
 		case 'CreatedTodo':
 			return $elm$core$Maybe$Just($author$project$Types$CreatedTodo);
 		default:
-			var typeStr = _v0;
-			return A2($elm$core$String$startsWith, 'UpdatedDraft (typing) ', typeStr) ? A2(
-				$elm$core$Maybe$map,
-				$author$project$Types$UpdatedDraft,
-				$elm$core$Maybe$Just(
+			var labelStr = _v0;
+			return A2($elm$core$String$startsWith, 'UpdatedDraft (typing) ', labelStr) ? $elm$core$Maybe$Just(
+				$author$project$Types$UpdatedDraft(
 					A2(
 						$elm$core$String$dropRight,
 						1,
 						A2(
 							$elm$core$String$dropLeft,
 							$elm$core$String$length('UpdatedDraft (typing) \"'),
-							typeStr)))) : (A2($elm$core$String$startsWith, 'UpdatedEditingDraft (editing) ', typeStr) ? A2(
+							labelStr)))) : (A2($elm$core$String$startsWith, 'UpdatedEditingDraft (editing) ', labelStr) ? A2(
 				$elm$core$Maybe$map,
 				$author$project$Types$UpdatedEditingDraft,
 				$elm$core$Maybe$Just(
@@ -5009,7 +5004,7 @@ var $author$project$Main$decodeMsg = function (item) {
 						A2(
 							$elm$core$String$dropLeft,
 							$elm$core$String$length('UpdatedEditingDraft (editing) \"'),
-							typeStr)))) : (A2($elm$core$String$startsWith, 'StartedEditingTodoText ', typeStr) ? A2(
+							labelStr)))) : (A2($elm$core$String$startsWith, 'StartedEditingTodoText ', labelStr) ? A2(
 				$elm$core$Maybe$map,
 				function (idVal) {
 					return A2($author$project$Types$StartedEditingTodoText, idVal, '');
@@ -6402,6 +6397,23 @@ var $elm$json$Json$Decode$nullable = function (decoder) {
 				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
 			]));
 };
+var $author$project$TimeTravel$rebuildTimeline = F3(
+	function (initModel, updateModel, msgs) {
+		return A3(
+			$elm$core$List$foldl,
+			F2(
+				function (msg, _v0) {
+					var prevModel = _v0.a;
+					var frames = _v0.b;
+					var nextModel = A2(updateModel, msg, prevModel);
+					var frame = {msg: msg, next: nextModel, prev: prevModel};
+					return _Utils_Tuple2(
+						nextModel,
+						A2($elm$core$List$cons, frame, frames));
+				}),
+			_Utils_Tuple2(initModel, _List_Nil),
+			msgs);
+	});
 var $elm$core$String$replace = F3(
 	function (before, after, string) {
 		return A2(
@@ -6453,13 +6465,13 @@ var $author$project$TimeTravel$update = F6(
 			case 'ExportTimeline':
 				var timeline = app.timeline;
 				var messages = function () {
-					var initial = {id: $elm$core$Maybe$Nothing, index: -1, type_: 'InitialModel'};
+					var initial = {id: $elm$core$Maybe$Nothing, index: -1, label: 'InitialModel'};
 					var historyMessages = A2(
 						$elm$core$List$indexedMap,
 						F2(
 							function (i, frame) {
 								var info = msgToDebug(frame.msg);
-								return {id: info.id, index: i, type_: info.label};
+								return {id: info.id, index: i, label: info.label};
 							}),
 						$elm$core$List$reverse(timeline.past));
 					return _Utils_ap(
@@ -6485,7 +6497,7 @@ var $author$project$TimeTravel$update = F6(
 								return '\"id\": null';
 							}
 						}();
-						return '{' + ('\"index\": ' + ($elm$core$String$fromInt(item.index) + (', ' + ('\"type\": \"' + (escape(item.type_) + ('\", ' + (idPart + '}')))))));
+						return '{' + ('\"index\": ' + ($elm$core$String$fromInt(item.index) + (', ' + ('\"type\": \"' + (escape(item.label) + ('\", ' + (idPart + '}')))))));
 					};
 					return '[' + (A2(
 						$elm$core$String$join,
@@ -6511,7 +6523,7 @@ var $author$project$TimeTravel$update = F6(
 						$elm$json$Json$Decode$map3,
 						F3(
 							function (i, l, id) {
-								return {id: id, index: i, type_: l};
+								return {id: id, index: i, label: l};
 							}),
 						A2($elm$json$Json$Decode$field, 'index', $elm$json$Json$Decode$int),
 						A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string),
@@ -6523,7 +6535,7 @@ var $author$project$TimeTravel$update = F6(
 				if (result.$ === 'Ok') {
 					var items = result.a;
 					var framesRebuilt = function () {
-						var msgs = A2(
+						var decodedMsgs = A2(
 							$elm$core$List$filterMap,
 							decodeMsg,
 							A2(
@@ -6537,42 +6549,18 @@ var $author$project$TimeTravel$update = F6(
 										return item.index >= 0;
 									},
 									items)));
-						var _v10 = A2($elm$core$Debug$log, 'Replay msgs', msgs);
-						return A3(
-							$elm$core$List$foldl,
-							F2(
-								function (msg, _v11) {
-									var prevModel = _v11.a;
-									var frames = _v11.b;
-									var nextModel = A2(updateModel, msg, prevModel);
-									var frame = {msg: msg, next: nextModel, prev: prevModel};
-									return _Utils_Tuple2(
-										nextModel,
-										A2($elm$core$List$cons, frame, frames));
-								}),
-							_Utils_Tuple2(initModel, _List_Nil),
-							msgs);
+						return A3($author$project$TimeTravel$rebuildTimeline, initModel, updateModel, decodedMsgs);
 					}();
 					var newTimeline = function () {
 						var finalModel = framesRebuilt.a;
 						var frames = framesRebuilt.b;
 						return {future: _List_Nil, past: frames, present: finalModel};
 					}();
-					var _v7 = A2(
-						$elm$core$Debug$log,
-						'Import OK (count)',
-						$elm$core$List$length(items));
-					var _v8 = A2(
-						$elm$core$Debug$log,
-						'Decoded messages',
-						A2($elm$core$List$map, decodeMsg, items));
 					return $author$project$TimeTravel$TimeTravel(
 						_Utils_update(
 							app,
 							{timeline: newTimeline}));
 				} else {
-					var err = result.a;
-					var _v12 = A2($elm$core$Debug$log, 'Import error', err);
 					return $author$project$TimeTravel$TimeTravel(app);
 				}
 			default:
@@ -6989,7 +6977,10 @@ var $author$project$TimeTravel$viewHistory = F3(
 			timeline.past);
 		return A2(
 			$elm$html$Html$div,
-			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('flow')
+				]),
 			_Utils_ap(
 				history,
 				_List_fromArray(
@@ -7006,6 +6997,15 @@ var $author$project$TimeTravel$viewHistory = F3(
 								$elm$html$Html$text('Export Timeline')
 							]))
 					])));
+	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
 	});
 var $author$project$TimeTravel$view = F2(
 	function (config, _v0) {
@@ -7071,32 +7071,27 @@ var $author$project$TimeTravel$view = F2(
 										]))
 								])),
 							A3($author$project$TimeTravel$viewHistory, config.msgToDebug, config.modelToString, app.timeline),
-							function () {
-							var _v1 = app.exportText;
-							if (_v1.$ === 'Just') {
-								var txt = _v1.a;
-								return A2(
-									$elm$html$Html$textarea,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('width-100 min-height-10'),
-											$elm$html$Html$Attributes$id('export')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text(txt)
-										]));
-							} else {
-								return $elm$html$Html$text('');
-							}
-						}(),
+							A2(
+							$elm$html$Html$textarea,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('width-100 min-height-10'),
+									$elm$html$Html$Attributes$id('export'),
+									$elm$html$Html$Attributes$placeholder('Click \'Export Timeline\' to generate JSON')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									A2($elm$core$Maybe$withDefault, '', app.exportText))
+								])),
 							A2(
 							$elm$html$Html$textarea,
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$class('width-100 min-height-10'),
 									$elm$html$Html$Attributes$id('import'),
-									$elm$html$Html$Events$onInput($author$project$TimeTravel$ImportTextChanged)
+									$elm$html$Html$Events$onInput($author$project$TimeTravel$ImportTextChanged),
+									$elm$html$Html$Attributes$placeholder('Paste timeline JSON here and click Import')
 								]),
 							_List_Nil),
 							A2(
@@ -7138,7 +7133,7 @@ var $author$project$TimeTravel$withTimeTravel = function (config) {
 		});
 };
 var $author$project$Main$main = $author$project$TimeTravel$withTimeTravel(
-	{decodeMsg: $author$project$Main$decodeMsg, init: $author$project$Main$initModel, modelToString: $author$project$TimeTravelConfig$modelToPrettyString, msgToDebug: $author$project$TimeTravelConfig$todoMsgToDebug, update: $author$project$Main$update, view: $author$project$Main$view});
+	{decodeMsg: $author$project$TimeTravelConfig$decodeMsg, init: $author$project$Main$initModel, modelToString: $author$project$TimeTravelConfig$modelToPrettyString, msgToDebug: $author$project$TimeTravelConfig$todoMsgToDebug, update: $author$project$Main$update, view: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	A2(
 		$elm$json$Json$Decode$andThen,
