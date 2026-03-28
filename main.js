@@ -5076,36 +5076,40 @@ var $author$project$TimeTravelConfig$todoMsgToDebug = function (msg) {
 		case 'ToggledStatus':
 			var id = msg.a;
 			return {
-				id: $elm$core$Maybe$Nothing,
-				label: 'ToggledStatus ' + $elm$core$String$fromInt(
-					$author$project$NonNegative$toInt(id))
+				id: $elm$core$Maybe$Just(
+					$elm$core$String$fromInt(
+						$author$project$NonNegative$toInt(id))),
+				label: 'ToggledStatus'
 			};
 		case 'ToggledImportant':
 			var id = msg.a;
 			return {
-				id: $elm$core$Maybe$Nothing,
-				label: 'ToggledImportant ' + $elm$core$String$fromInt(
-					$author$project$NonNegative$toInt(id))
+				id: $elm$core$Maybe$Just(
+					$elm$core$String$fromInt(
+						$author$project$NonNegative$toInt(id))),
+				label: 'ToggledImportant'
 			};
 		case 'AskedToDelete':
 			var id = msg.a;
 			return {
-				id: $elm$core$Maybe$Nothing,
-				label: 'AskedToDelete ' + $elm$core$String$fromInt(
-					$author$project$NonNegative$toInt(id))
+				id: $elm$core$Maybe$Just(
+					$elm$core$String$fromInt(
+						$author$project$NonNegative$toInt(id))),
+				label: 'AskedToDelete'
 			};
 		case 'ConfirmedDelete':
 			var id = msg.a;
 			return {
-				id: $elm$core$Maybe$Nothing,
-				label: 'ConfirmedDelete ' + $elm$core$String$fromInt(
-					$author$project$NonNegative$toInt(id))
+				id: $elm$core$Maybe$Just(
+					$elm$core$String$fromInt(
+						$author$project$NonNegative$toInt(id))),
+				label: 'ConfirmedDelete'
 			};
 		case 'CanceledDelete':
 			return {id: $elm$core$Maybe$Nothing, label: 'CanceledDelete'};
 		case 'UpdatedDraft':
 			var str = msg.a;
-			return {id: $elm$core$Maybe$Nothing, label: 'UpdatedDraft \"' + (str + '\"')};
+			return {id: $elm$core$Maybe$Nothing, label: 'UpdatedDraft (typing) \"' + (str + '\"')};
 		case 'SetFilter':
 			var filter = msg.a;
 			var filterLabel = function () {
@@ -5127,19 +5131,20 @@ var $author$project$TimeTravelConfig$todoMsgToDebug = function (msg) {
 			var id = msg.a;
 			var draft = msg.b;
 			return {
-				id: $elm$core$Maybe$Nothing,
-				label: 'StartedEditingTask ' + ($elm$core$String$fromInt(
-					$author$project$NonNegative$toInt(id)) + (' \"' + (draft + '\"')))
+				id: $elm$core$Maybe$Just(
+					$elm$core$String$fromInt(
+						$author$project$NonNegative$toInt(id))),
+				label: 'StartedEditingTask \"' + (draft + '\"')
 			};
 		case 'UpdatedEditingDraft':
 			var str = msg.a;
-			return {id: $elm$core$Maybe$Nothing, label: 'UpdatedEditingDraft \"' + (str + '\"')};
+			return {id: $elm$core$Maybe$Nothing, label: 'UpdatedEditingDraft (editing) \"' + (str + '\"')};
 		case 'SavedEditedTask':
 			return {id: $elm$core$Maybe$Nothing, label: 'SavedEditedTask'};
 		case 'CanceledEdit':
 			return {id: $elm$core$Maybe$Nothing, label: 'CanceledEdit'};
 		default:
-			return {id: $elm$core$Maybe$Nothing, label: 'NoOp'};
+			return {id: $elm$core$Maybe$Nothing, label: 'NoOp (ignored UI event)'};
 	}
 };
 var $author$project$Types$EditingTask = function (a) {

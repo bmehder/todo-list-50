@@ -110,23 +110,23 @@ todoMsgToDebug : Msg -> TimeTravel.DebugInfo
 todoMsgToDebug msg =
     case msg of
         ToggledStatus id ->
-            { label = "ToggledStatus " ++ String.fromInt (NonNegative.toInt id)
-            , id = Nothing
+            { label = "ToggledStatus"
+            , id = Just (String.fromInt (NonNegative.toInt id))
             }
 
         ToggledImportant id ->
-            { label = "ToggledImportant " ++ String.fromInt (NonNegative.toInt id)
-            , id = Nothing
+            { label = "ToggledImportant"
+            , id = Just (String.fromInt (NonNegative.toInt id))
             }
 
         AskedToDelete id ->
-            { label = "AskedToDelete " ++ String.fromInt (NonNegative.toInt id)
-            , id = Nothing
+            { label = "AskedToDelete"
+            , id = Just (String.fromInt (NonNegative.toInt id))
             }
 
         ConfirmedDelete id ->
-            { label = "ConfirmedDelete " ++ String.fromInt (NonNegative.toInt id)
-            , id = Nothing
+            { label = "ConfirmedDelete"
+            , id = Just (String.fromInt (NonNegative.toInt id))
             }
 
         CanceledDelete ->
@@ -135,7 +135,7 @@ todoMsgToDebug msg =
             }
 
         UpdatedDraft str ->
-            { label = "UpdatedDraft \"" ++ str ++ "\""
+            { label = "UpdatedDraft (typing) \"" ++ str ++ "\""
             , id = Nothing
             }
 
@@ -166,16 +166,12 @@ todoMsgToDebug msg =
 
         StartedEditingTask id draft ->
             { label =
-                "StartedEditingTask "
-                    ++ String.fromInt (NonNegative.toInt id)
-                    ++ " \""
-                    ++ draft
-                    ++ "\""
-            , id = Nothing
+                "StartedEditingTask \"" ++ draft ++ "\""
+            , id = Just (String.fromInt (NonNegative.toInt id))
             }
 
         UpdatedEditingDraft str ->
-            { label = "UpdatedEditingDraft \"" ++ str ++ "\""
+            { label = "UpdatedEditingDraft (editing) \"" ++ str ++ "\""
             , id = Nothing
             }
 
@@ -190,6 +186,6 @@ todoMsgToDebug msg =
             }
 
         NoOp ->
-            { label = "NoOp"
+            { label = "NoOp (ignored UI event)"
             , id = Nothing
             }
