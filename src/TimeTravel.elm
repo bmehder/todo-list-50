@@ -14,8 +14,11 @@ module TimeTravel exposing
 import Browser
 import Html exposing (Html, button, details, div, h2, summary, text, textarea)
 import Html.Attributes exposing (attribute, class, disabled, id, name, placeholder)
-import Html.Events exposing (onClick, onInput)
+import Html.Events exposing (onClick, onInput, onCheck)
 import Json.Decode as Decode
+import Html exposing (input)
+import Html.Attributes exposing (type_)
+import Html.Attributes exposing (checked)
 
 
 
@@ -52,6 +55,7 @@ type Msg msg
     | ExportTimeline
     | ImportTextChanged String
     | ImportTimeline
+    | ToggleVisibility Bool
 
 
 type alias Frame msg model =
@@ -142,6 +146,9 @@ update config timeTravelMsg (TimeTravel app) =
         AppMsg msg ->
             applyAppMsg updateModel msg (TimeTravel app)
 
+        ToggleVisibility isVisible ->
+            TimeTravel { app | visibility = isVisible }
+
 
 view :
     Config msg model
@@ -151,10 +158,27 @@ view config (TimeTravel app) =
     div [ class "flow" ]
         [ config.viewModel app.timeline.present
             |> Html.map AppMsg
+        , div [ class "flex gap-1 align-items-center" ]
+            [ input
+                [ type_ "checkbox"
+                , checked app.visibility
+                , onCheck ToggleVisibility
+                , id "toggle-debugger"
+                ]
+                []
+            , Html.label
+                [ Html.Attributes.for "toggle-debugger" ]
+                [ text
+                    (if app.visibility then
+                        "Hide Time Travel Debugger"
+                     else
+                        "Show Time Travel Debugger"
+                    )
+                ]
+            ]
         , if app.visibility then
             div [ class "flow" ]
-                [ h2 [] [ text "Time Travel Debugger" ]
-                , div [ class "flex gap-1" ]
+                [ div [ class "flex gap-1" ]
                     [ button [ onClick Prev, disabled (List.isEmpty app.timeline.past) ] [ text "Prev" ]
                     , button [ onClick Next, disabled (List.isEmpty app.timeline.future) ] [ text "Next" ]
                     ]

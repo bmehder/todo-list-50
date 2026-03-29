@@ -145,8 +145,8 @@ nextId todos =
 
 
 todoHasId : Id -> Todo -> Bool
-todoHasId id todo =
-    id == todo.id
+todoHasId id =
+    .id >> (==) id
 
 
 toggleStatus : Todo -> Todo

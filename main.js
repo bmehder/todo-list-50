@@ -5403,10 +5403,14 @@ var $elm$core$List$filter = F2(
 			list);
 	});
 var $elm$core$Basics$not = _Basics_not;
-var $author$project$Main$todoHasId = F2(
-	function (id, todo) {
-		return _Utils_eq(id, todo.id);
-	});
+var $author$project$Main$todoHasId = function (id) {
+	return A2(
+		$elm$core$Basics$composeR,
+		function ($) {
+			return $.id;
+		},
+		$elm$core$Basics$eq(id));
+};
 var $author$project$Main$deleteTodoById = function (id) {
 	return $elm$core$List$filter(
 		A2(
@@ -6644,13 +6648,19 @@ var $author$project$TimeTravel$update = F3(
 					decodeMsg,
 					app.importText,
 					$author$project$TimeTravel$TimeTravel(app));
-			default:
+			case 'AppMsg':
 				var msg = timeTravelMsg.a;
 				return A3(
 					$author$project$TimeTravel$applyAppMsg,
 					updateModel,
 					msg,
 					$author$project$TimeTravel$TimeTravel(app));
+			default:
+				var isVisible = timeTravelMsg.a;
+				return $author$project$TimeTravel$TimeTravel(
+					_Utils_update(
+						app,
+						{visibility: isVisible}));
 		}
 	});
 var $author$project$TimeTravel$AppMsg = function (a) {
@@ -6663,8 +6673,11 @@ var $author$project$TimeTravel$ImportTextChanged = function (a) {
 var $author$project$TimeTravel$ImportTimeline = {$: 'ImportTimeline'};
 var $author$project$TimeTravel$Next = {$: 'Next'};
 var $author$project$TimeTravel$Prev = {$: 'Prev'};
+var $author$project$TimeTravel$ToggleVisibility = function (a) {
+	return {$: 'ToggleVisibility', a: a};
+};
 var $elm$html$Html$details = _VirtualDom_node('details');
-var $elm$html$Html$h2 = _VirtualDom_node('h2');
+var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
 var $elm$core$List$isEmpty = function (xs) {
 	if (!xs.b) {
 		return true;
@@ -6672,6 +6685,7 @@ var $elm$core$List$isEmpty = function (xs) {
 		return false;
 	}
 };
+var $elm$html$Html$label = _VirtualDom_node('label');
 var $elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
 var $elm$html$Html$map = $elm$virtual_dom$VirtualDom$map;
 var $elm$html$Html$summary = _VirtualDom_node('summary');
@@ -7092,6 +7106,36 @@ var $author$project$TimeTravel$view = F2(
 					$elm$html$Html$map,
 					$author$project$TimeTravel$AppMsg,
 					config.viewModel(app.timeline.present)),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('flex gap-1 align-items-center')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$input,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$type_('checkbox'),
+									$elm$html$Html$Attributes$checked(app.visibility),
+									$elm$html$Html$Events$onCheck($author$project$TimeTravel$ToggleVisibility),
+									$elm$html$Html$Attributes$id('toggle-debugger')
+								]),
+							_List_Nil),
+							A2(
+							$elm$html$Html$label,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$for('toggle-debugger')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									app.visibility ? 'Hide Time Travel Debugger' : 'Show Time Travel Debugger')
+								]))
+						])),
 					app.visibility ? A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -7100,13 +7144,6 @@ var $author$project$TimeTravel$view = F2(
 						]),
 					_List_fromArray(
 						[
-							A2(
-							$elm$html$Html$h2,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Time Travel Debugger')
-								])),
 							A2(
 							$elm$html$Html$div,
 							_List_fromArray(
