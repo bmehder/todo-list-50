@@ -7063,7 +7063,10 @@ var $author$project$TimeTravel$viewHistory = F3(
 				[
 					$elm$html$Html$Attributes$class('flow')
 				]),
-			A2($elm$core$List$cons, initial, history));
+			_Utils_ap(
+				history,
+				_List_fromArray(
+					[initial])));
 	});
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {

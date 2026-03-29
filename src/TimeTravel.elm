@@ -482,7 +482,7 @@ viewHistory msgToDebug modelToString timeline =
                 ]
     in
     div [ class "flow" ]
-        (initial :: history)
+        (history ++ [ initial ])
 
 
 viewFrame : (msg -> DebugInfo) -> (model -> String) -> Int -> Bool -> Frame msg model -> Html (Msg msg)
