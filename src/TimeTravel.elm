@@ -547,6 +547,7 @@ viewFrame msgToDebug modelToString index isOpen frame =
 -- UTILITIES
 -- =========================================
 
+
 normalizeLine : String -> String
 normalizeLine line =
     let
@@ -555,6 +556,7 @@ normalizeLine line =
     in
     if String.endsWith "," trimmed then
         String.dropRight 1 trimmed
+
     else
         trimmed
 
@@ -596,7 +598,7 @@ diffLines before after =
 
           else
             [ Html.div [ class "opacity-50 padding-top-1" ]
-                (text "Removed:"
+                (text "Before:"
                     :: List.map renderRemoved removedLines
                 )
             ]

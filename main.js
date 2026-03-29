@@ -5066,8 +5066,8 @@ var $author$project$Main$idFromIntUnsafe = function (n) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 128, column: 13},
-				end: {line: 128, column: 23}
+				start: {line: 130, column: 13},
+				end: {line: 130, column: 23}
 			})('Invalid Id literal');
 	}
 };
@@ -5092,8 +5092,8 @@ var $author$project$Main$todoTextFromStringUnsafe = function (str) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 118, column: 13},
-				end: {line: 118, column: 23}
+				start: {line: 120, column: 13},
+				end: {line: 120, column: 23}
 			})('Invalid TodoText literal');
 	}
 };
@@ -6797,7 +6797,7 @@ var $author$project$TimeTravel$diffLines = F2(
 							]),
 						A2(
 							$elm$core$List$cons,
-							$elm$html$Html$text('Removed:'),
+							$elm$html$Html$text('Before:'),
 							A2($elm$core$List$map, renderRemoved, removedLines)))
 					])
 				]));
