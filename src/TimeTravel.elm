@@ -12,13 +12,10 @@ module TimeTravel exposing
     )
 
 import Browser
-import Html exposing (Html, button, details, div, h2, summary, text, textarea)
-import Html.Attributes exposing (attribute, class, disabled, id, name, placeholder)
-import Html.Events exposing (onClick, onInput, onCheck)
+import Html exposing (Html, button, details, div, input, summary, text, textarea)
+import Html.Attributes exposing (attribute, checked, class, disabled, id, name, placeholder, type_)
+import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode as Decode
-import Html exposing (input)
-import Html.Attributes exposing (type_)
-import Html.Attributes exposing (checked)
 
 
 
@@ -171,6 +168,7 @@ view config (TimeTravel app) =
                 [ text
                     (if app.visibility then
                         "Hide Time Travel Debugger"
+
                      else
                         "Show Time Travel Debugger"
                     )
@@ -550,32 +548,6 @@ viewFrame msgToDebug modelToString index isOpen frame =
 -- =========================================
 
 
-normalizeLine : String -> String
-normalizeLine line =
-    let
-        trimmed =
-            String.trim line
-    in
-    if String.endsWith "," trimmed then
-        trimmed
-            |> String.dropRight 1
-            |> String.trimRight
-
-    else
-        trimmed
-
-
-renderDiffLine : String -> String -> List (Html msg)
-renderDiffLine before after =
-    if normalizeLine before == normalizeLine after then
-        [ Html.div [] [ text ("  " ++ after) ] ]
-
-    else
-        [ Html.div [ class "text-danger" ] [ text ("- " ++ before) ]
-        , Html.div [ class "text-success" ] [ text ("+ " ++ after) ]
-        ]
-
-
 diffLines : String -> String -> List (Html msg)
 diffLines before after =
     let
@@ -585,24 +557,32 @@ diffLines before after =
         afterLines =
             String.lines after
 
-        commonLength =
-            Basics.min (List.length beforeLines) (List.length afterLines)
+        isSame line =
+            List.member line beforeLines
 
-        paired =
-            List.map2 Tuple.pair
-                (List.take commonLength beforeLines)
-                (List.take commonLength afterLines)
+        removedLines =
+            beforeLines
+                |> List.filter (\line -> not (List.member line afterLines))
 
-        diffs =
-            paired
-                |> List.concatMap (\( b, a ) -> renderDiffLine b a)
+        renderAfterLine line =
+            if isSame line then
+                Html.div [] [ text ("  " ++ line) ]
 
-        extraBefore =
-            List.drop commonLength beforeLines
-                |> List.map (\line -> Html.div [ class "text-danger" ] [ text ("- " ++ line) ])
+            else
+                Html.div [ class "text-success" ] [ text ("+ " ++ line) ]
 
-        extraAfter =
-            List.drop commonLength afterLines
-                |> List.map (\line -> Html.div [ class "text-success" ] [ text ("+ " ++ line) ])
+        renderRemoved line =
+            Html.div [ class "text-danger" ] [ text ("- " ++ line) ]
     in
-    diffs ++ extraBefore ++ extraAfter
+    List.concat
+        [ afterLines |> List.map renderAfterLine
+        , if List.isEmpty removedLines then
+            []
+
+          else
+            [ Html.div [ class "opacity-50 padding-top-1" ]
+                (text "Removed:"
+                    :: List.map renderRemoved removedLines
+                )
+            ]
+        ]

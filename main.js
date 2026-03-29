@@ -6704,63 +6704,40 @@ var $elm$core$List$append = F2(
 var $elm$core$List$concat = function (lists) {
 	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
 };
-var $elm$core$List$concatMap = F2(
-	function (f, list) {
-		return $elm$core$List$concat(
-			A2($elm$core$List$map, f, list));
-	});
-var $elm$core$List$drop = F2(
-	function (n, list) {
-		drop:
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
 		while (true) {
-			if (n <= 0) {
-				return list;
+			if (!list.b) {
+				return false;
 			} else {
-				if (!list.b) {
-					return list;
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
 				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
+					var $temp$isOkay = isOkay,
 						$temp$list = xs;
-					n = $temp$n;
+					isOkay = $temp$isOkay;
 					list = $temp$list;
-					continue drop;
+					continue any;
 				}
 			}
 		}
 	});
-var $elm$core$Basics$min = F2(
-	function (x, y) {
-		return (_Utils_cmp(x, y) < 0) ? x : y;
+var $elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			$elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
 	});
-var $elm$core$Tuple$pair = F2(
-	function (a, b) {
-		return _Utils_Tuple2(a, b);
-	});
-var $elm$core$String$endsWith = _String_endsWith;
-var $elm$core$String$trimRight = _String_trimRight;
-var $author$project$TimeTravel$normalizeLine = function (line) {
-	var trimmed = $elm$core$String$trim(line);
-	return A2($elm$core$String$endsWith, ',', trimmed) ? $elm$core$String$trimRight(
-		A2($elm$core$String$dropRight, 1, trimmed)) : trimmed;
-};
-var $author$project$TimeTravel$renderDiffLine = F2(
+var $author$project$TimeTravel$diffLines = F2(
 	function (before, after) {
-		return _Utils_eq(
-			$author$project$TimeTravel$normalizeLine(before),
-			$author$project$TimeTravel$normalizeLine(after)) ? _List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('  ' + after)
-					]))
-			]) : _List_fromArray(
-			[
-				A2(
+		var renderRemoved = function (line) {
+			return A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
@@ -6768,9 +6745,21 @@ var $author$project$TimeTravel$renderDiffLine = F2(
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('- ' + before)
-					])),
-				A2(
+						$elm$html$Html$text('- ' + line)
+					]));
+		};
+		var beforeLines = $elm$core$String$lines(before);
+		var isSame = function (line) {
+			return A2($elm$core$List$member, line, beforeLines);
+		};
+		var renderAfterLine = function (line) {
+			return isSame(line) ? A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('  ' + line)
+					])) : A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
@@ -6778,190 +6767,34 @@ var $author$project$TimeTravel$renderDiffLine = F2(
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('+ ' + after)
-					]))
-			]);
-	});
-var $elm$core$List$takeReverse = F3(
-	function (n, list, kept) {
-		takeReverse:
-		while (true) {
-			if (n <= 0) {
-				return kept;
-			} else {
-				if (!list.b) {
-					return kept;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs,
-						$temp$kept = A2($elm$core$List$cons, x, kept);
-					n = $temp$n;
-					list = $temp$list;
-					kept = $temp$kept;
-					continue takeReverse;
-				}
-			}
-		}
-	});
-var $elm$core$List$takeTailRec = F2(
-	function (n, list) {
-		return $elm$core$List$reverse(
-			A3($elm$core$List$takeReverse, n, list, _List_Nil));
-	});
-var $elm$core$List$takeFast = F3(
-	function (ctr, n, list) {
-		if (n <= 0) {
-			return _List_Nil;
-		} else {
-			var _v0 = _Utils_Tuple2(n, list);
-			_v0$1:
-			while (true) {
-				_v0$5:
-				while (true) {
-					if (!_v0.b.b) {
-						return list;
-					} else {
-						if (_v0.b.b.b) {
-							switch (_v0.a) {
-								case 1:
-									break _v0$1;
-								case 2:
-									var _v2 = _v0.b;
-									var x = _v2.a;
-									var _v3 = _v2.b;
-									var y = _v3.a;
-									return _List_fromArray(
-										[x, y]);
-								case 3:
-									if (_v0.b.b.b.b) {
-										var _v4 = _v0.b;
-										var x = _v4.a;
-										var _v5 = _v4.b;
-										var y = _v5.a;
-										var _v6 = _v5.b;
-										var z = _v6.a;
-										return _List_fromArray(
-											[x, y, z]);
-									} else {
-										break _v0$5;
-									}
-								default:
-									if (_v0.b.b.b.b && _v0.b.b.b.b.b) {
-										var _v7 = _v0.b;
-										var x = _v7.a;
-										var _v8 = _v7.b;
-										var y = _v8.a;
-										var _v9 = _v8.b;
-										var z = _v9.a;
-										var _v10 = _v9.b;
-										var w = _v10.a;
-										var tl = _v10.b;
-										return (ctr > 1000) ? A2(
-											$elm$core$List$cons,
-											x,
-											A2(
-												$elm$core$List$cons,
-												y,
-												A2(
-													$elm$core$List$cons,
-													z,
-													A2(
-														$elm$core$List$cons,
-														w,
-														A2($elm$core$List$takeTailRec, n - 4, tl))))) : A2(
-											$elm$core$List$cons,
-											x,
-											A2(
-												$elm$core$List$cons,
-												y,
-												A2(
-													$elm$core$List$cons,
-													z,
-													A2(
-														$elm$core$List$cons,
-														w,
-														A3($elm$core$List$takeFast, ctr + 1, n - 4, tl)))));
-									} else {
-										break _v0$5;
-									}
-							}
-						} else {
-							if (_v0.a === 1) {
-								break _v0$1;
-							} else {
-								break _v0$5;
-							}
-						}
-					}
-				}
-				return list;
-			}
-			var _v1 = _v0.b;
-			var x = _v1.a;
-			return _List_fromArray(
-				[x]);
-		}
-	});
-var $elm$core$List$take = F2(
-	function (n, list) {
-		return A3($elm$core$List$takeFast, 0, n, list);
-	});
-var $author$project$TimeTravel$diffLines = F2(
-	function (before, after) {
-		var beforeLines = $elm$core$String$lines(before);
+						$elm$html$Html$text('+ ' + line)
+					]));
+		};
 		var afterLines = $elm$core$String$lines(after);
-		var commonLength = A2(
-			$elm$core$Basics$min,
-			$elm$core$List$length(beforeLines),
-			$elm$core$List$length(afterLines));
-		var extraBefore = A2(
-			$elm$core$List$map,
+		var removedLines = A2(
+			$elm$core$List$filter,
 			function (line) {
-				return A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('text-danger')
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text('- ' + line)
-						]));
+				return !A2($elm$core$List$member, line, afterLines);
 			},
-			A2($elm$core$List$drop, commonLength, beforeLines));
-		var extraAfter = A2(
-			$elm$core$List$map,
-			function (line) {
-				return A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('text-success')
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text('+ ' + line)
-						]));
-			},
-			A2($elm$core$List$drop, commonLength, afterLines));
-		var paired = A3(
-			$elm$core$List$map2,
-			$elm$core$Tuple$pair,
-			A2($elm$core$List$take, commonLength, beforeLines),
-			A2($elm$core$List$take, commonLength, afterLines));
-		var diffs = A2(
-			$elm$core$List$concatMap,
-			function (_v0) {
-				var b = _v0.a;
-				var a = _v0.b;
-				return A2($author$project$TimeTravel$renderDiffLine, b, a);
-			},
-			paired);
-		return _Utils_ap(
-			diffs,
-			_Utils_ap(extraBefore, extraAfter));
+			beforeLines);
+		return $elm$core$List$concat(
+			_List_fromArray(
+				[
+					A2($elm$core$List$map, renderAfterLine, afterLines),
+					$elm$core$List$isEmpty(removedLines) ? _List_Nil : _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('opacity-50 padding-top-1')
+							]),
+						A2(
+							$elm$core$List$cons,
+							$elm$html$Html$text('Removed:'),
+							A2($elm$core$List$map, renderRemoved, removedLines)))
+					])
+				]));
 	});
 var $author$project$TimeTravel$viewFrame = F5(
 	function (msgToDebug, modelToString, index, isOpen, frame) {
