@@ -31,7 +31,7 @@ applyFilter filterType =
             identity
 
         ActiveOrImportantOnly ->
-            List.filter (\todo -> todo.status == Active || todo.important)
+            List.filter (\todo -> todo.status == Active || (todo.important && todo.status /= Completed))
 
         CompletedOnly ->
             List.filter (.status >> (==) Completed)

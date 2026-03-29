@@ -5790,6 +5790,7 @@ var $author$project$Main$viewNewTodoForm = function (model) {
 					]))
 			]));
 };
+var $elm$core$Basics$neq = _Utils_notEqual;
 var $author$project$Filter$applyFilter = function (filterType) {
 	switch (filterType.$) {
 		case 'All':
@@ -5797,7 +5798,7 @@ var $author$project$Filter$applyFilter = function (filterType) {
 		case 'ActiveOrImportantOnly':
 			return $elm$core$List$filter(
 				function (todo) {
-					return _Utils_eq(todo.status, $author$project$Types$Active) || todo.important;
+					return _Utils_eq(todo.status, $author$project$Types$Active) || (todo.important && (!_Utils_eq(todo.status, $author$project$Types$Completed)));
 				});
 		case 'CompletedOnly':
 			return $elm$core$List$filter(
