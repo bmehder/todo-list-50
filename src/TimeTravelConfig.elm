@@ -52,7 +52,7 @@ todoToRecordString todo =
             else
                 "False"
            )
-        ++ ", todo text = \""
+        ++ ", todoText = \""
         ++ NonEmptyString.toString todo.todoText
         ++ "\" }"
 

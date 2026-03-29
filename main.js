@@ -5247,7 +5247,7 @@ var $author$project$NonEmptyString$toString = function (_v0) {
 };
 var $author$project$TimeTravelConfig$todoToRecordString = function (todo) {
 	return '    { id = ' + ($elm$core$String$fromInt(
-		$author$project$NonNegative$toInt(todo.id)) + (', status = ' + ($author$project$TimeTravelConfig$statusToString(todo.status) + (', important = ' + ((todo.important ? 'True' : 'False') + (', todo text = \"' + ($author$project$NonEmptyString$toString(todo.todoText) + '\" }')))))));
+		$author$project$NonNegative$toInt(todo.id)) + (', status = ' + ($author$project$TimeTravelConfig$statusToString(todo.status) + (', important = ' + ((todo.important ? 'True' : 'False') + (', todoText = \"' + ($author$project$NonEmptyString$toString(todo.todoText) + '\" }')))))));
 };
 var $author$project$TimeTravelConfig$modelToPrettyString = function (model) {
 	return '{\n' + ('    draft = \"' + (model.draft + ('\"\n' + ('  , filter = ' + ($author$project$TimeTravelConfig$filterToString(model.filter) + ('\n' + ('  , editing = ' + ($author$project$TimeTravelConfig$editingToString(model.editing) + ('\n' + ('  , pendingDelete = ' + ($author$project$TimeTravelConfig$pendingDeleteToString(model.pendingDelete) + ('\n' + ('  , todos = [\n' + (A2(
@@ -5944,7 +5944,7 @@ var $author$project$Main$viewEditing = function (draft) {
 				_List_fromArray(
 					[
 						$elm$html$Html$Events$onClick($author$project$Types$CanceledEdit),
-						$elm$html$Html$Attributes$class('cancel-btn')
+						$elm$html$Html$Attributes$class('delete-btn')
 					]),
 				_List_fromArray(
 					[

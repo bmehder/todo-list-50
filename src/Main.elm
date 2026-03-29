@@ -389,7 +389,7 @@ viewEditing draft =
             [ text "Save" ]
         , button
             [ onClick CanceledEdit
-            , class "cancel-btn"
+            , class "delete-btn"
             ]
             [ text "Cancel" ]
         ]
