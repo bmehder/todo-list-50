@@ -6679,6 +6679,12 @@ var $author$project$TimeTravel$ToggleVisibility = function (a) {
 };
 var $elm$html$Html$details = _VirtualDom_node('details');
 var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
+var $author$project$TimeTravel$importKeyDecoder = A2(
+	$elm$json$Json$Decode$andThen,
+	function (key) {
+		return (key === 'Enter') ? $elm$json$Json$Decode$succeed($author$project$TimeTravel$ImportTimeline) : $elm$json$Json$Decode$fail('ignore');
+	},
+	A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string));
 var $elm$core$List$isEmpty = function (xs) {
 	if (!xs.b) {
 		return true;
@@ -7093,7 +7099,8 @@ var $author$project$TimeTravel$view = F2(
 																	$elm$html$Html$Attributes$class('width-100 min-height-10'),
 																	$elm$html$Html$Attributes$id('import'),
 																	$elm$html$Html$Events$onInput($author$project$TimeTravel$ImportTextChanged),
-																	$elm$html$Html$Attributes$placeholder('Paste timeline JSON here and click Import')
+																	A2($elm$html$Html$Events$on, 'keydown', $author$project$TimeTravel$importKeyDecoder),
+																	$elm$html$Html$Attributes$placeholder('Paste timeline JSON here and press Enter to import')
 																]),
 															_List_Nil),
 															A2(

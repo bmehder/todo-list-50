@@ -14,7 +14,7 @@ module TimeTravel exposing
 import Browser
 import Html exposing (Html, button, details, div, input, summary, text, textarea)
 import Html.Attributes exposing (attribute, checked, class, disabled, id, name, placeholder, type_)
-import Html.Events exposing (onCheck, onClick, onInput)
+import Html.Events exposing (on, onCheck, onClick, onInput)
 import Json.Decode as Decode
 
 
@@ -203,7 +203,8 @@ view config (TimeTravel app) =
                                     [ class "width-100 min-height-10"
                                     , id "import"
                                     , onInput ImportTextChanged
-                                    , placeholder "Paste timeline JSON here and click Import"
+                                    , on "keydown" importKeyDecoder
+                                    , placeholder "Paste timeline JSON here and press Enter to import"
                                     ]
                                     []
                                 , button [ onClick ImportTimeline ] [ text "Import Timeline" ]
@@ -603,3 +604,17 @@ diffLines before after =
                 )
             ]
         ]
+
+
+
+importKeyDecoder : Decode.Decoder (Msg msg)
+importKeyDecoder =
+    Decode.field "key" Decode.string
+        |> Decode.andThen
+            (\key ->
+                if key == "Enter" then
+                    Decode.succeed ImportTimeline
+
+                else
+                    Decode.fail "ignore"
+            )
