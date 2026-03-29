@@ -128,7 +128,7 @@ button {
 		background-color 120ms ease,
 		transform 80ms ease;
 
-	&:hover {
+	&:hover:not(:disabled) {
 		background-color: var(--danger-600);
 	}
 
@@ -138,9 +138,9 @@ button {
 }
 
 .save-btn {
-	background-color: var(--success-600);
+	background-color: var(--success-500);
 
-	&:hover {
+	&:hover:not(:disabled) {
 		background-color: var(--success-600);
 	}
 }
