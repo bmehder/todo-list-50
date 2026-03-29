@@ -4903,6 +4903,16 @@ var $elm$core$Basics$composeR = F3(
 		return g(
 			f(x));
 	});
+var $elm$core$String$length = _String_length;
+var $elm$core$String$slice = _String_slice;
+var $elm$core$String$dropLeft = F2(
+	function (n, string) {
+		return (n < 1) ? string : A3(
+			$elm$core$String$slice,
+			n,
+			$elm$core$String$length(string),
+			string);
+	});
 var $elm$core$Basics$identity = function (x) {
 	return x;
 };
@@ -4923,16 +4933,6 @@ var $elm$core$Maybe$map = F2(
 		} else {
 			return $elm$core$Maybe$Nothing;
 		}
-	});
-var $elm$core$String$length = _String_length;
-var $elm$core$String$slice = _String_slice;
-var $elm$core$String$dropLeft = F2(
-	function (n, string) {
-		return (n < 1) ? string : A3(
-			$elm$core$String$slice,
-			n,
-			$elm$core$String$length(string),
-			string);
 	});
 var $elm$core$String$startsWith = _String_startsWith;
 var $author$project$TimeTravelConfig$matchPrefix = F3(
@@ -5015,12 +5015,23 @@ var $author$project$TimeTravelConfig$decodeMsg = function (item) {
 			var labelStr = _v0;
 			return A2(
 				$author$project$TimeTravelConfig$orElse,
-				A2($elm$core$String$startsWith, 'StartedEditingTodoText ', labelStr) ? A2(
-					$elm$core$Maybe$map,
-					function (idVal) {
-						return A2($author$project$Types$StartedEditingTodoText, idVal, '');
-					},
-					A2($elm$core$Maybe$andThen, $author$project$NonNegative$fromInt, parseId)) : $elm$core$Maybe$Nothing,
+				function () {
+					if (A2($elm$core$String$startsWith, 'StartedEditingTodoText ', labelStr)) {
+						var draft = $author$project$TimeTravelConfig$stripQuotes(
+							A2(
+								$elm$core$String$dropLeft,
+								$elm$core$String$length('StartedEditingTodoText '),
+								labelStr));
+						return A2(
+							$elm$core$Maybe$map,
+							function (idVal) {
+								return A2($author$project$Types$StartedEditingTodoText, idVal, draft);
+							},
+							A2($elm$core$Maybe$andThen, $author$project$NonNegative$fromInt, parseId));
+					} else {
+						return $elm$core$Maybe$Nothing;
+					}
+				}(),
 				A2(
 					$author$project$TimeTravelConfig$orElse,
 					A3(
@@ -6938,8 +6949,8 @@ var $author$project$TimeTravel$diffLines = F2(
 			diffs,
 			_Utils_ap(extraBefore, extraAfter));
 	});
-var $author$project$TimeTravel$viewFrame = F4(
-	function (msgToDebug, modelToString, index, frame) {
+var $author$project$TimeTravel$viewFrame = F5(
+	function (msgToDebug, modelToString, index, isOpen, frame) {
 		var info = msgToDebug(frame.msg);
 		var idText = function () {
 			var _v0 = info.id;
@@ -6953,10 +6964,13 @@ var $author$project$TimeTravel$viewFrame = F4(
 		var summaryText = 'Msg ' + ($elm$core$String$fromInt(index) + (': ' + (info.label + idText)));
 		return A2(
 			$elm$html$Html$details,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$name('frame')
-				]),
+			A2(
+				$elm$core$List$cons,
+				$elm$html$Html$Attributes$name('frame'),
+				isOpen ? _List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$attribute, 'open', '')
+					]) : _List_Nil),
 			_List_fromArray(
 				[
 					A2(
@@ -6996,10 +7010,13 @@ var $author$project$TimeTravel$viewHistory = F3(
 			}();
 			return A2(
 				$elm$html$Html$details,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$name('frame')
-					]),
+				A2(
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$name('frame'),
+					$elm$core$List$isEmpty(timeline.past) ? _List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$attribute, 'open', '')
+						]) : _List_Nil),
 				_List_fromArray(
 					[
 						A2(
@@ -7037,7 +7054,7 @@ var $author$project$TimeTravel$viewHistory = F3(
 			$elm$core$List$indexedMap,
 			F2(
 				function (i, frame) {
-					return A4($author$project$TimeTravel$viewFrame, msgToDebug, modelToString, (total - 1) - i, frame);
+					return A5($author$project$TimeTravel$viewFrame, msgToDebug, modelToString, (total - 1) - i, !i, frame);
 				}),
 			timeline.past);
 		return A2(
@@ -7046,10 +7063,7 @@ var $author$project$TimeTravel$viewHistory = F3(
 				[
 					$elm$html$Html$Attributes$class('flow')
 				]),
-			_Utils_ap(
-				history,
-				_List_fromArray(
-					[initial])));
+			A2($elm$core$List$cons, initial, history));
 	});
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
@@ -7125,7 +7139,7 @@ var $author$project$TimeTravel$view = F2(
 								])),
 							A3($author$project$TimeTravel$viewHistory, config.msgToDebug, config.modelToString, app.timeline),
 							A2(
-							$elm$html$Html$details,
+							$elm$html$Html$div,
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$class('flow')
@@ -7133,65 +7147,87 @@ var $author$project$TimeTravel$view = F2(
 							_List_fromArray(
 								[
 									A2(
-									$elm$html$Html$summary,
+									$elm$html$Html$hr,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$class('font-weight-bold')
+											$elm$html$Html$Attributes$class('opacity-30')
 										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('📦 Export / Import Timeline')
-										])),
+									_List_Nil),
 									A2(
 									$elm$html$Html$div,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$class('flow')
+											$elm$html$Html$Attributes$class('padding-top-2')
 										]),
 									_List_fromArray(
 										[
 											A2(
-											$elm$html$Html$button,
+											$elm$html$Html$details,
 											_List_fromArray(
 												[
-													$elm$html$Html$Events$onClick($author$project$TimeTravel$ExportTimeline)
+													$elm$html$Html$Attributes$class('flow')
 												]),
 											_List_fromArray(
 												[
-													$elm$html$Html$text('Export Timeline')
-												])),
-											A2(
-											$elm$html$Html$textarea,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('width-100 min-height-10'),
-													$elm$html$Html$Attributes$id('export'),
-													$elm$html$Html$Attributes$placeholder('Click \'Export Timeline\' to generate JSON')
-												]),
-											_List_fromArray(
-												[
-													$elm$html$Html$text(
-													A2($elm$core$Maybe$withDefault, '', app.exportText))
-												])),
-											A2(
-											$elm$html$Html$textarea,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('width-100 min-height-10'),
-													$elm$html$Html$Attributes$id('import'),
-													$elm$html$Html$Events$onInput($author$project$TimeTravel$ImportTextChanged),
-													$elm$html$Html$Attributes$placeholder('Paste timeline JSON here and click Import')
-												]),
-											_List_Nil),
-											A2(
-											$elm$html$Html$button,
-											_List_fromArray(
-												[
-													$elm$html$Html$Events$onClick($author$project$TimeTravel$ImportTimeline)
-												]),
-											_List_fromArray(
-												[
-													$elm$html$Html$text('Import Timeline')
+													A2(
+													$elm$html$Html$summary,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('📦 Tools: Export / Import')
+														])),
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('flow')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$button,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Events$onClick($author$project$TimeTravel$ExportTimeline)
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text('Export Timeline')
+																])),
+															A2(
+															$elm$html$Html$textarea,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$class('width-100 min-height-10'),
+																	$elm$html$Html$Attributes$id('export'),
+																	$elm$html$Html$Attributes$placeholder('Click \'Export Timeline\' to generate JSON')
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text(
+																	A2($elm$core$Maybe$withDefault, '', app.exportText))
+																])),
+															A2(
+															$elm$html$Html$textarea,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$class('width-100 min-height-10'),
+																	$elm$html$Html$Attributes$id('import'),
+																	$elm$html$Html$Events$onInput($author$project$TimeTravel$ImportTextChanged),
+																	$elm$html$Html$Attributes$placeholder('Paste timeline JSON here and click Import')
+																]),
+															_List_Nil),
+															A2(
+															$elm$html$Html$button,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Events$onClick($author$project$TimeTravel$ImportTimeline)
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text('Import Timeline')
+																]))
+														]))
 												]))
 										]))
 								]))

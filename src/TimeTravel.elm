@@ -12,12 +12,10 @@ module TimeTravel exposing
     )
 
 import Browser
-import Html exposing (Html, button, details, div, h2, summary, text)
-import Html.Attributes exposing (class, disabled, id, name)
+import Html exposing (Html, button, details, div, h2, summary, text, textarea)
+import Html.Attributes exposing (attribute, class, disabled, id, name, placeholder)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
-import Html exposing (textarea)
-import Html.Attributes exposing (placeholder)
 
 
 
@@ -160,25 +158,35 @@ view config (TimeTravel app) =
                     [ button [ onClick Prev, disabled (List.isEmpty app.timeline.past) ] [ text "Prev" ]
                     , button [ onClick Next, disabled (List.isEmpty app.timeline.future) ] [ text "Next" ]
                     ]
+
+                -- Timeline history (messages)
                 , viewHistory config.msgToDebug config.modelToString app.timeline
-                , details [class "flow"]
-                    [ summary [ class "font-weight-bold" ] [ text "📦 Export / Import Timeline" ]
-                    , div [ class "flow" ]
-                        [ button [ onClick ExportTimeline ] [ text "Export Timeline" ]
-                        , textarea
-                            [ class "width-100 min-height-10"
-                            , id "export"
-                            , placeholder "Click 'Export Timeline' to generate JSON"
+
+                -- Tools section (Export / Import)
+                , div [ class "flow" ]
+                    [ Html.hr [ class "opacity-30" ] []
+                    , div [ class "padding-top-2" ]
+                        [ details [ class "flow" ]
+                            [ summary []
+                                [ text "📦 Tools: Export / Import" ]
+                            , div [ class "flow" ]
+                                [ button [ onClick ExportTimeline ] [ text "Export Timeline" ]
+                                , textarea
+                                    [ class "width-100 min-height-10"
+                                    , id "export"
+                                    , placeholder "Click 'Export Timeline' to generate JSON"
+                                    ]
+                                    [ text (Maybe.withDefault "" app.exportText) ]
+                                , textarea
+                                    [ class "width-100 min-height-10"
+                                    , id "import"
+                                    , onInput ImportTextChanged
+                                    , placeholder "Paste timeline JSON here and click Import"
+                                    ]
+                                    []
+                                , button [ onClick ImportTimeline ] [ text "Import Timeline" ]
+                                ]
                             ]
-                            [ text (Maybe.withDefault "" app.exportText) ]
-                        , textarea
-                            [ class "width-100 min-height-10"
-                            , id "import"
-                            , onInput ImportTextChanged
-                            , placeholder "Paste timeline JSON here and click Import"
-                            ]
-                            []
-                        , button [ onClick ImportTimeline ] [ text "Import Timeline" ]
                         ]
                     ]
                 ]
@@ -444,7 +452,7 @@ viewHistory msgToDebug modelToString timeline =
             timeline.past
                 |> List.indexedMap
                     (\i frame ->
-                        viewFrame msgToDebug modelToString (total - 1 - i) frame
+                        viewFrame msgToDebug modelToString (total - 1 - i) (i == 0) frame
                     )
 
         initial =
@@ -458,7 +466,14 @@ viewHistory msgToDebug modelToString timeline =
                             frame.prev
             in
             details
-                [ name "frame" ]
+                (name "frame"
+                    :: (if List.isEmpty timeline.past then
+                            [ attribute "open" "" ]
+
+                        else
+                            []
+                       )
+                )
                 [ summary [ class "font-size-small" ] [ text "No Msg: Initial Model" ]
                 , Html.pre [ class "font-size-small" ]
                     (String.lines (modelToString initialModelValue)
@@ -467,14 +482,11 @@ viewHistory msgToDebug modelToString timeline =
                 ]
     in
     div [ class "flow" ]
-        (history
-            ++ [ initial
-               ]
-        )
+        (initial :: history)
 
 
-viewFrame : (msg -> DebugInfo) -> (model -> String) -> Int -> Frame msg model -> Html (Msg msg)
-viewFrame msgToDebug modelToString index frame =
+viewFrame : (msg -> DebugInfo) -> (model -> String) -> Int -> Bool -> Frame msg model -> Html (Msg msg)
+viewFrame msgToDebug modelToString index isOpen frame =
     let
         info =
             msgToDebug frame.msg
@@ -491,7 +503,14 @@ viewFrame msgToDebug modelToString index frame =
             "Msg " ++ String.fromInt index ++ ": " ++ info.label ++ idText
     in
     details
-        [ name "frame" ]
+        (name "frame"
+            :: (if isOpen then
+                    [ attribute "open" "" ]
+
+                else
+                    []
+               )
+        )
         [ summary [ class "font-size-small" ] [ text summaryText ]
         , Html.pre [ class "font-size-small" ]
             (diffLines

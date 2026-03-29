@@ -292,9 +292,15 @@ decodeMsg item =
                     )
                 |> orElse
                     (if String.startsWith "StartedEditingTodoText " labelStr then
+                        let
+                            draft =
+                                labelStr
+                                    |> String.dropLeft (String.length "StartedEditingTodoText ")
+                                    |> stripQuotes
+                        in
                         parseId
                             |> Maybe.andThen NonNegative.fromInt
-                            |> Maybe.map (\idVal -> StartedEditingTodoText idVal "")
+                            |> Maybe.map (\idVal -> StartedEditingTodoText idVal draft)
 
                      else
                         Nothing
