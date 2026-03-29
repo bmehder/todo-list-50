@@ -547,6 +547,17 @@ viewFrame msgToDebug modelToString index isOpen frame =
 -- UTILITIES
 -- =========================================
 
+normalizeLine : String -> String
+normalizeLine line =
+    let
+        trimmed =
+            String.trim line
+    in
+    if String.endsWith "," trimmed then
+        String.dropRight 1 trimmed
+    else
+        trimmed
+
 
 diffLines : String -> String -> List (Html msg)
 diffLines before after =
@@ -557,15 +568,19 @@ diffLines before after =
         afterLines =
             String.lines after
 
-        isSame line =
-            List.member line beforeLines
+        hasMatchingLine lines target =
+            let
+                normalizedTarget =
+                    normalizeLine target
+            in
+            List.any (\line -> normalizeLine line == normalizedTarget) lines
 
         removedLines =
             beforeLines
-                |> List.filter (\line -> not (List.member line afterLines))
+                |> List.filter (\line -> not (hasMatchingLine afterLines line))
 
         renderAfterLine line =
-            if isSame line then
+            if hasMatchingLine beforeLines line then
                 Html.div [] [ text ("  " ++ line) ]
 
             else

@@ -6693,17 +6693,6 @@ var $elm$html$Html$textarea = _VirtualDom_node('textarea');
 var $elm$core$String$lines = _String_lines;
 var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
 var $elm$html$Html$pre = _VirtualDom_node('pre');
-var $elm$core$List$append = F2(
-	function (xs, ys) {
-		if (!ys.b) {
-			return xs;
-		} else {
-			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
-		}
-	});
-var $elm$core$List$concat = function (lists) {
-	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
-};
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
@@ -6725,15 +6714,22 @@ var $elm$core$List$any = F2(
 			}
 		}
 	});
-var $elm$core$List$member = F2(
-	function (x, xs) {
-		return A2(
-			$elm$core$List$any,
-			function (a) {
-				return _Utils_eq(a, x);
-			},
-			xs);
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
+		}
 	});
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
+};
+var $elm$core$String$endsWith = _String_endsWith;
+var $author$project$TimeTravel$normalizeLine = function (line) {
+	var trimmed = $elm$core$String$trim(line);
+	return A2($elm$core$String$endsWith, ',', trimmed) ? A2($elm$core$String$dropRight, 1, trimmed) : trimmed;
+};
 var $author$project$TimeTravel$diffLines = F2(
 	function (before, after) {
 		var renderRemoved = function (line) {
@@ -6748,12 +6744,21 @@ var $author$project$TimeTravel$diffLines = F2(
 						$elm$html$Html$text('- ' + line)
 					]));
 		};
+		var hasMatchingLine = F2(
+			function (lines, target) {
+				var normalizedTarget = $author$project$TimeTravel$normalizeLine(target);
+				return A2(
+					$elm$core$List$any,
+					function (line) {
+						return _Utils_eq(
+							$author$project$TimeTravel$normalizeLine(line),
+							normalizedTarget);
+					},
+					lines);
+			});
 		var beforeLines = $elm$core$String$lines(before);
-		var isSame = function (line) {
-			return A2($elm$core$List$member, line, beforeLines);
-		};
 		var renderAfterLine = function (line) {
-			return isSame(line) ? A2(
+			return A2(hasMatchingLine, beforeLines, line) ? A2(
 				$elm$html$Html$div,
 				_List_Nil,
 				_List_fromArray(
@@ -6774,7 +6779,7 @@ var $author$project$TimeTravel$diffLines = F2(
 		var removedLines = A2(
 			$elm$core$List$filter,
 			function (line) {
-				return !A2($elm$core$List$member, line, afterLines);
+				return !A2(hasMatchingLine, afterLines, line);
 			},
 			beforeLines);
 		return $elm$core$List$concat(
