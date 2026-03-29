@@ -6397,6 +6397,7 @@ var $author$project$TimeTravel$init = F2(
 		return $author$project$TimeTravel$TimeTravel(
 			{
 				exportText: $elm$core$Maybe$Nothing,
+				importStatus: $elm$core$Maybe$Nothing,
 				importText: '',
 				timeline: {future: _List_Nil, past: _List_Nil, present: model},
 				visibility: visible
@@ -6570,10 +6571,16 @@ var $author$project$TimeTravel$applyImport = F5(
 				_Utils_update(
 					app,
 					{
+						importStatus: $elm$core$Maybe$Just('Imported ✔'),
 						timeline: {future: _List_Nil, past: frames, present: finalModel}
 					}));
 		} else {
-			return $author$project$TimeTravel$TimeTravel(app);
+			return $author$project$TimeTravel$TimeTravel(
+				_Utils_update(
+					app,
+					{
+						importStatus: $elm$core$Maybe$Just('Import failed')
+					}));
 		}
 	});
 var $author$project$TimeTravel$applyNext = function (_v0) {
@@ -6640,7 +6647,7 @@ var $author$project$TimeTravel$update = F3(
 				return $author$project$TimeTravel$TimeTravel(
 					_Utils_update(
 						app,
-						{importText: txt}));
+						{importStatus: $elm$core$Maybe$Nothing, importText: txt}));
 			case 'ImportTimeline':
 				return A5(
 					$author$project$TimeTravel$applyImport,
@@ -6677,12 +6684,23 @@ var $author$project$TimeTravel$Prev = {$: 'Prev'};
 var $author$project$TimeTravel$ToggleVisibility = function (a) {
 	return {$: 'ToggleVisibility', a: a};
 };
+var $elm$virtual_dom$VirtualDom$Custom = function (a) {
+	return {$: 'Custom', a: a};
+};
+var $elm$html$Html$Events$custom = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Custom(decoder));
+	});
 var $elm$html$Html$details = _VirtualDom_node('details');
 var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
 var $author$project$TimeTravel$importKeyDecoder = A2(
 	$elm$json$Json$Decode$andThen,
 	function (key) {
-		return (key === 'Enter') ? $elm$json$Json$Decode$succeed($author$project$TimeTravel$ImportTimeline) : $elm$json$Json$Decode$fail('ignore');
+		return (key === 'Enter') ? $elm$json$Json$Decode$succeed(
+			{message: $author$project$TimeTravel$ImportTimeline, preventDefault: true, stopPropagation: false}) : $elm$json$Json$Decode$fail('ignore');
 	},
 	A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string));
 var $elm$core$List$isEmpty = function (xs) {
@@ -7099,7 +7117,8 @@ var $author$project$TimeTravel$view = F2(
 																	$elm$html$Html$Attributes$class('width-100 min-height-10'),
 																	$elm$html$Html$Attributes$id('import'),
 																	$elm$html$Html$Events$onInput($author$project$TimeTravel$ImportTextChanged),
-																	A2($elm$html$Html$Events$on, 'keydown', $author$project$TimeTravel$importKeyDecoder),
+																	A2($elm$html$Html$Events$custom, 'keydown', $author$project$TimeTravel$importKeyDecoder),
+																	$elm$html$Html$Attributes$value(app.importText),
 																	$elm$html$Html$Attributes$placeholder('Paste timeline JSON here and press Enter to import')
 																]),
 															_List_Nil),
@@ -7112,7 +7131,25 @@ var $author$project$TimeTravel$view = F2(
 															_List_fromArray(
 																[
 																	$elm$html$Html$text('Import Timeline')
-																]))
+																])),
+															function () {
+															var _v1 = app.importStatus;
+															if (_v1.$ === 'Just') {
+																var msg = _v1.a;
+																return A2(
+																	$elm$html$Html$div,
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$Attributes$class('font-size-small opacity-70 padding-top-1')
+																		]),
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$text(msg)
+																		]));
+															} else {
+																return $elm$html$Html$text('');
+															}
+														}()
 														]))
 												]))
 										]))

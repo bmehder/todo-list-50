@@ -14,7 +14,7 @@ module TimeTravel exposing
 import Browser
 import Html exposing (Html, button, details, div, input, summary, text, textarea)
 import Html.Attributes exposing (attribute, checked, class, disabled, id, name, placeholder, type_)
-import Html.Events exposing (on, onCheck, onClick, onInput)
+import Html.Events exposing (onCheck, onClick, onInput, custom)
 import Json.Decode as Decode
 
 
@@ -75,6 +75,7 @@ type TimeTravel msg model
         , visibility : Bool
         , exportText : Maybe String
         , importText : String
+        , importStatus : Maybe String
         }
 
 
@@ -102,6 +103,7 @@ init visible model =
         , visibility = visible
         , exportText = Nothing
         , importText = ""
+        , importStatus = Nothing
         }
 
 
@@ -135,7 +137,7 @@ update config timeTravelMsg (TimeTravel app) =
             applyExport msgToDebug (TimeTravel app)
 
         ImportTextChanged txt ->
-            TimeTravel { app | importText = txt }
+            TimeTravel { app | importText = txt, importStatus = Nothing }
 
         ImportTimeline ->
             applyImport initModel updateModel decodeMsg app.importText (TimeTravel app)
@@ -203,11 +205,18 @@ view config (TimeTravel app) =
                                     [ class "width-100 min-height-10"
                                     , id "import"
                                     , onInput ImportTextChanged
-                                    , on "keydown" importKeyDecoder
+                                    , custom "keydown" importKeyDecoder
+                                    , Html.Attributes.value app.importText
                                     , placeholder "Paste timeline JSON here and press Enter to import"
                                     ]
                                     []
                                 , button [ onClick ImportTimeline ] [ text "Import Timeline" ]
+                                , case app.importStatus of
+                                    Just msg ->
+                                        div [ class "font-size-small opacity-70 padding-top-1" ] [ text msg ]
+
+                                    Nothing ->
+                                        text ""
                                 ]
                             ]
                         ]
@@ -453,10 +462,11 @@ applyImport initModel updateModel decodeMsg importText (TimeTravel app) =
                         , present = finalModel
                         , future = []
                         }
+                    , importStatus = Just "Imported ✔"
                 }
 
         Err _ ->
-            TimeTravel app
+            TimeTravel { app | importStatus = Just "Import failed" }
 
 
 
@@ -606,15 +616,17 @@ diffLines before after =
         ]
 
 
-
-importKeyDecoder : Decode.Decoder (Msg msg)
+importKeyDecoder : Decode.Decoder { message : Msg msg, stopPropagation : Bool, preventDefault : Bool }
 importKeyDecoder =
     Decode.field "key" Decode.string
         |> Decode.andThen
             (\key ->
                 if key == "Enter" then
-                    Decode.succeed ImportTimeline
-
+                    Decode.succeed
+                        { message = ImportTimeline
+                        , stopPropagation = False
+                        , preventDefault = True
+                        }
                 else
                     Decode.fail "ignore"
             )
