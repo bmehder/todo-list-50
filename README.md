@@ -128,7 +128,7 @@ The debugger visibility is controlled via flags passed from `index.html` at init
 </script>
 ```
 
-There is no UI toggle for enabling/disabling the debugger; it is controlled entirely via configuration.
+The debugger is initially controlled via flags passed from `index.html`, but can also be toggled at runtime using a checkbox in the debugger UI.
 
 ---
 

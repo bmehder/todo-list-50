@@ -77,6 +77,10 @@ type Msg msg
     = AppMsg msg
     | Prev
     | Next
+    | ExportTimeline
+    | ImportTextChanged String
+    | ImportTimeline
+    | ToggleVisibility Bool
 ```
 
 The `AppMsg` constructor wraps your application's messages so they can be intercepted and recorded alongside state transitions.
@@ -85,6 +89,7 @@ This allows TimeTravel to intercept messages and decide whether to:
 
 - delegate to your app (`AppMsg msg`)
 - manipulate history (`Prev`, `Next`)
+- handle import/export and UI visibility toggling
 
 ---
 
@@ -210,13 +215,15 @@ TimeTravel handles:
 
 ## Config vs Runtime Control
 
-The debugger visibility is controlled via runtime flags passed from JavaScript:
+The debugger visibility is controlled via flags passed from JavaScript, but can also be toggled at runtime from within the UI:
 
 ```elm
 type alias Flags =
     { visibleByDefault : Bool
     }
 ```
+
+At runtime, users can toggle visibility using a checkbox in the debugger UI.
 
 ---
 
@@ -262,6 +269,7 @@ TimeTravel works by:
 - wrapping your app’s `Model`, `Msg`, and `update`
 - storing every state transition
 - allowing navigation through those states
+- enabling export/import and deterministic replay of timelines
 
 
 All while preserving the simplicity and purity of Elm.
@@ -285,12 +293,7 @@ The timeline can be serialized into JSON by extracting each frame's message into
 ]
 ```
 
-This format intentionally separates:
-
-- `label`: a human-readable message label (used for decoding)
-- `id`: optional payload data
-
-This makes the export both human-readable and machine-decodable.
+The `index` field preserves ordering, while `label` is used for decoding messages.
 
 ---
 
@@ -327,7 +330,7 @@ This ensures that the timeline is reconstructed using the same logic as the orig
 
 Not all messages need to be fully decoded for replay to work correctly.
 
-Some messages are "state-independent" (e.g., `NoOp`) and can safely be ignored.
+Some messages are "state-independent" (e.g., `NoOp`) and may decode to `Nothing` safely.
 Others are "state-dependent" and must be decoded to reconstruct the correct state.
 
 For example:
