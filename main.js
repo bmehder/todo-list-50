@@ -4898,22 +4898,10 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $elm$core$String$length = _String_length;
-var $elm$core$String$slice = _String_slice;
-var $elm$core$String$dropLeft = F2(
-	function (n, string) {
-		return (n < 1) ? string : A3(
-			$elm$core$String$slice,
-			n,
-			$elm$core$String$length(string),
-			string);
-	});
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
-var $elm$core$String$dropRight = F2(
-	function (n, string) {
-		return (n < 1) ? string : A3($elm$core$String$slice, 0, -n, string);
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
 	});
 var $elm$core$Basics$identity = function (x) {
 	return x;
@@ -4936,7 +4924,46 @@ var $elm$core$Maybe$map = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
+var $elm$core$String$length = _String_length;
+var $elm$core$String$slice = _String_slice;
+var $elm$core$String$dropLeft = F2(
+	function (n, string) {
+		return (n < 1) ? string : A3(
+			$elm$core$String$slice,
+			n,
+			$elm$core$String$length(string),
+			string);
+	});
 var $elm$core$String$startsWith = _String_startsWith;
+var $author$project$TimeTravelConfig$matchPrefix = F3(
+	function (prefix, toMsg, str) {
+		return A2($elm$core$String$startsWith, prefix, str) ? toMsg(
+			A2(
+				$elm$core$String$dropLeft,
+				$elm$core$String$length(prefix),
+				str)) : $elm$core$Maybe$Nothing;
+	});
+var $author$project$TimeTravelConfig$orElse = F2(
+	function (first, second) {
+		if (first.$ === 'Just') {
+			return first;
+		} else {
+			return second;
+		}
+	});
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$core$String$dropRight = F2(
+	function (n, string) {
+		return (n < 1) ? string : A3($elm$core$String$slice, 0, -n, string);
+	});
+var $author$project$TimeTravelConfig$stripQuotes = function (str) {
+	return A2(
+		$elm$core$String$dropRight,
+		1,
+		A2($elm$core$String$dropLeft, 1, str));
+};
 var $elm$core$String$toInt = _String_toInt;
 var $author$project$TimeTravelConfig$decodeMsg = function (item) {
 	var parseId = A2($elm$core$Maybe$andThen, $elm$core$String$toInt, item.id);
@@ -4986,30 +5013,32 @@ var $author$project$TimeTravelConfig$decodeMsg = function (item) {
 			return $elm$core$Maybe$Just($author$project$Types$CreatedTodo);
 		default:
 			var labelStr = _v0;
-			return A2($elm$core$String$startsWith, 'UpdatedDraft (typing) ', labelStr) ? $elm$core$Maybe$Just(
-				$author$project$Types$UpdatedDraft(
-					A2(
-						$elm$core$String$dropRight,
-						1,
+			return A2(
+				$author$project$TimeTravelConfig$orElse,
+				A2($elm$core$String$startsWith, 'StartedEditingTodoText ', labelStr) ? A2(
+					$elm$core$Maybe$map,
+					function (idVal) {
+						return A2($author$project$Types$StartedEditingTodoText, idVal, '');
+					},
+					A2($elm$core$Maybe$andThen, $author$project$NonNegative$fromInt, parseId)) : $elm$core$Maybe$Nothing,
+				A2(
+					$author$project$TimeTravelConfig$orElse,
+					A3(
+						$author$project$TimeTravelConfig$matchPrefix,
+						'UpdatedEditingDraft (editing) ',
 						A2(
-							$elm$core$String$dropLeft,
-							$elm$core$String$length('UpdatedDraft (typing) \"'),
-							labelStr)))) : (A2($elm$core$String$startsWith, 'UpdatedEditingDraft (editing) ', labelStr) ? A2(
-				$elm$core$Maybe$map,
-				$author$project$Types$UpdatedEditingDraft,
-				$elm$core$Maybe$Just(
-					A2(
-						$elm$core$String$dropRight,
-						1,
+							$elm$core$Basics$composeR,
+							$author$project$TimeTravelConfig$stripQuotes,
+							A2($elm$core$Basics$composeR, $author$project$Types$UpdatedEditingDraft, $elm$core$Maybe$Just)),
+						labelStr),
+					A3(
+						$author$project$TimeTravelConfig$matchPrefix,
+						'UpdatedDraft (typing) ',
 						A2(
-							$elm$core$String$dropLeft,
-							$elm$core$String$length('UpdatedEditingDraft (editing) \"'),
-							labelStr)))) : (A2($elm$core$String$startsWith, 'StartedEditingTodoText ', labelStr) ? A2(
-				$elm$core$Maybe$map,
-				function (idVal) {
-					return A2($author$project$Types$StartedEditingTodoText, idVal, '');
-				},
-				A2($elm$core$Maybe$andThen, $author$project$NonNegative$fromInt, parseId)) : $elm$core$Maybe$Nothing));
+							$elm$core$Basics$composeR,
+							$author$project$TimeTravelConfig$stripQuotes,
+							A2($elm$core$Basics$composeR, $author$project$Types$UpdatedDraft, $elm$core$Maybe$Just)),
+						labelStr)));
 	}
 };
 var $elm$json$Json$Decode$field = _Json_decodeField;
@@ -5295,11 +5324,6 @@ var $author$project$TimeTravelConfig$todoMsgToDebug = function (msg) {
 var $author$project$Types$EditingTodoText = function (a) {
 	return {$: 'EditingTodoText', a: a};
 };
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
 var $elm$core$List$maximum = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -5555,6 +5579,7 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$html$Html$div = _VirtualDom_node('div');
+var $elm$html$Html$hr = _VirtualDom_node('hr');
 var $author$project$Filter$allFilters = _List_fromArray(
 	[$author$project$Types$All, $author$project$Types$ActiveOrImportantOnly, $author$project$Types$CompletedOnly, $author$project$Types$ImportantOnly]);
 var $elm$html$Html$menu = _VirtualDom_node('menu');
@@ -5750,8 +5775,8 @@ var $author$project$Main$viewNewTodoForm = function (model) {
 					]))
 			]));
 };
-var $author$project$Filter$applyFilter = function (filter) {
-	switch (filter.$) {
+var $author$project$Filter$applyFilter = function (filterType) {
+	switch (filterType.$) {
 		case 'All':
 			return $elm$core$Basics$identity;
 		case 'ActiveOrImportantOnly':
@@ -6062,7 +6087,7 @@ var $author$project$Main$viewTodos = function (model) {
 			$author$project$Main$viewTodo(model),
 			A2($author$project$Filter$applyFilter, model.filter, model.todos)));
 };
-var $author$project$Text$pluralize = F3(
+var $author$project$LabelText$pluralize = F3(
 	function (singular, plural, count) {
 		if (count === 1) {
 			return singular;
@@ -6070,22 +6095,22 @@ var $author$project$Text$pluralize = F3(
 			return plural;
 		}
 	});
-var $author$project$Text$completedLabel = A2($author$project$Text$pluralize, ' item completed', ' items completed');
-var $author$project$Text$importantLabel = A2($author$project$Text$pluralize, ' important item', ' important items');
-var $author$project$Text$itemsLabel = A2($author$project$Text$pluralize, ' item', ' items');
-var $author$project$Text$remainingLabel = A2($author$project$Text$pluralize, ' item remaining', ' items remaining');
+var $author$project$LabelText$completedLabel = A2($author$project$LabelText$pluralize, ' item completed', ' items completed');
+var $author$project$LabelText$importantLabel = A2($author$project$LabelText$pluralize, ' important item', ' important items');
+var $author$project$LabelText$itemsLabel = A2($author$project$LabelText$pluralize, ' item', ' items');
+var $author$project$LabelText$remainingLabel = A2($author$project$LabelText$pluralize, ' item remaining', ' items remaining');
 var $author$project$Main$viewTodosCount = function (model) {
 	var labelForFilter = function () {
 		var _v0 = model.filter;
 		switch (_v0.$) {
 			case 'All':
-				return $author$project$Text$itemsLabel;
+				return $author$project$LabelText$itemsLabel;
 			case 'ActiveOrImportantOnly':
-				return $author$project$Text$remainingLabel;
+				return $author$project$LabelText$remainingLabel;
 			case 'CompletedOnly':
-				return $author$project$Text$completedLabel;
+				return $author$project$LabelText$completedLabel;
 			default:
-				return $author$project$Text$importantLabel;
+				return $author$project$LabelText$importantLabel;
 		}
 	}();
 	var count = $elm$core$List$length(
@@ -6132,7 +6157,8 @@ var $author$project$Main$view = function (model) {
 				$author$project$Main$viewNewTodoForm(model),
 				$author$project$Main$viewFilterButtons(model),
 				$author$project$Main$viewTodos(model),
-				$author$project$Main$viewTodosCount(model)
+				$author$project$Main$viewTodosCount(model),
+				A2($elm$html$Html$hr, _List_Nil, _List_Nil)
 			]));
 };
 var $elm$browser$Browser$External = function (a) {
@@ -6364,6 +6390,80 @@ var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $author$project$TimeTravel$applyAppMsg = F3(
+	function (updateModel, msg, _v0) {
+		var app = _v0.a;
+		var timeline = app.timeline;
+		var newModel = A2(updateModel, msg, timeline.present);
+		var frame = {msg: msg, next: newModel, prev: timeline.present};
+		var newTimeline = {
+			future: _List_Nil,
+			past: A2($elm$core$List$cons, frame, timeline.past),
+			present: newModel
+		};
+		return $author$project$TimeTravel$TimeTravel(
+			_Utils_update(
+				app,
+				{timeline: newTimeline}));
+	});
+var $elm$core$String$replace = F3(
+	function (before, after, string) {
+		return A2(
+			$elm$core$String$join,
+			after,
+			A2($elm$core$String$split, before, string));
+	});
+var $author$project$TimeTravel$applyExport = F2(
+	function (msgToDebug, _v0) {
+		var app = _v0.a;
+		var timeline = app.timeline;
+		var messages = function () {
+			var initial = {id: $elm$core$Maybe$Nothing, index: -1, label: 'InitialModel'};
+			var historyMessages = A2(
+				$elm$core$List$indexedMap,
+				F2(
+					function (i, frame) {
+						var info = msgToDebug(frame.msg);
+						return {id: info.id, index: i, label: info.label};
+					}),
+				$elm$core$List$reverse(timeline.past));
+			return _Utils_ap(
+				historyMessages,
+				_List_fromArray(
+					[initial]));
+		}();
+		var jsonString = function () {
+			var escape = function (str) {
+				return A3(
+					$elm$core$String$replace,
+					'\"',
+					'\\\"',
+					A3($elm$core$String$replace, '\\', '\\\\', str));
+			};
+			var encodeItem = function (item) {
+				var idPart = function () {
+					var _v1 = item.id;
+					if (_v1.$ === 'Just') {
+						var id = _v1.a;
+						return '\"id\": \"' + (escape(id) + '\"');
+					} else {
+						return '\"id\": null';
+					}
+				}();
+				return '{' + ('\"index\": ' + ($elm$core$String$fromInt(item.index) + (', ' + ('\"type\": \"' + (escape(item.label) + ('\"' + (', ' + (idPart + '}'))))))));
+			};
+			return '[' + (A2(
+				$elm$core$String$join,
+				', ',
+				A2($elm$core$List$map, encodeItem, messages)) + ']');
+		}();
+		return $author$project$TimeTravel$TimeTravel(
+			_Utils_update(
+				app,
+				{
+					exportText: $elm$core$Maybe$Just(jsonString)
+				}));
+	});
 var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$core$List$maybeCons = F3(
 	function (f, mx, xs) {
@@ -6385,7 +6485,6 @@ var $elm$core$List$filterMap = F2(
 	});
 var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$json$Json$Decode$list = _Json_decodeList;
-var $elm$core$Debug$log = _Debug_log;
 var $elm$json$Json$Decode$map3 = _Json_map3;
 var $elm$json$Json$Decode$null = _Json_decodeNull;
 var $elm$json$Json$Decode$oneOf = _Json_oneOf;
@@ -6414,103 +6513,112 @@ var $author$project$TimeTravel$rebuildTimeline = F3(
 			_Utils_Tuple2(initModel, _List_Nil),
 			msgs);
 	});
-var $elm$core$String$replace = F3(
-	function (before, after, string) {
-		return A2(
-			$elm$core$String$join,
-			after,
-			A2($elm$core$String$split, before, string));
-	});
 var $elm$core$List$sortBy = _List_sortBy;
-var $author$project$TimeTravel$update = F6(
-	function (initModel, updateModel, msgToDebug, decodeMsg, timeTravelMsg, _v0) {
+var $author$project$TimeTravel$applyImport = F5(
+	function (initModel, updateModel, decodeMsg, importText, _v0) {
 		var app = _v0.a;
+		var decoder = $elm$json$Json$Decode$list(
+			A4(
+				$elm$json$Json$Decode$map3,
+				F3(
+					function (i, l, id) {
+						return {id: id, index: i, label: l};
+					}),
+				A2($elm$json$Json$Decode$field, 'index', $elm$json$Json$Decode$int),
+				A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string),
+				A2(
+					$elm$json$Json$Decode$field,
+					'id',
+					$elm$json$Json$Decode$nullable($elm$json$Json$Decode$string))));
+		var _v1 = A2($elm$json$Json$Decode$decodeString, decoder, importText);
+		if (_v1.$ === 'Ok') {
+			var items = _v1.a;
+			var decodedMsgs = A2(
+				$elm$core$List$filterMap,
+				decodeMsg,
+				A2(
+					$elm$core$List$sortBy,
+					function ($) {
+						return $.index;
+					},
+					A2(
+						$elm$core$List$filter,
+						function (item) {
+							return item.index >= 0;
+						},
+						items)));
+			var _v2 = A3($author$project$TimeTravel$rebuildTimeline, initModel, updateModel, decodedMsgs);
+			var finalModel = _v2.a;
+			var frames = _v2.b;
+			return $author$project$TimeTravel$TimeTravel(
+				_Utils_update(
+					app,
+					{
+						timeline: {future: _List_Nil, past: frames, present: finalModel}
+					}));
+		} else {
+			return $author$project$TimeTravel$TimeTravel(app);
+		}
+	});
+var $author$project$TimeTravel$applyNext = function (_v0) {
+	var app = _v0.a;
+	var _v1 = app.timeline.future;
+	if (!_v1.b) {
+		return $author$project$TimeTravel$TimeTravel(app);
+	} else {
+		var frame = _v1.a;
+		var rest = _v1.b;
+		return $author$project$TimeTravel$TimeTravel(
+			_Utils_update(
+				app,
+				{
+					timeline: {
+						future: rest,
+						past: A2($elm$core$List$cons, frame, app.timeline.past),
+						present: frame.next
+					}
+				}));
+	}
+};
+var $author$project$TimeTravel$applyPrev = function (_v0) {
+	var app = _v0.a;
+	var _v1 = app.timeline.past;
+	if (!_v1.b) {
+		return $author$project$TimeTravel$TimeTravel(app);
+	} else {
+		var frame = _v1.a;
+		var rest = _v1.b;
+		return $author$project$TimeTravel$TimeTravel(
+			_Utils_update(
+				app,
+				{
+					timeline: {
+						future: A2($elm$core$List$cons, frame, app.timeline.future),
+						past: rest,
+						present: frame.prev
+					}
+				}));
+	}
+};
+var $author$project$TimeTravel$update = F3(
+	function (config, timeTravelMsg, _v0) {
+		var app = _v0.a;
+		var updateModel = config.update;
+		var msgToDebug = config.msgToDebug;
+		var initModel = config.init;
+		var decodeMsg = config.decodeMsg;
 		switch (timeTravelMsg.$) {
 			case 'Prev':
-				var _v2 = app.timeline.past;
-				if (!_v2.b) {
-					return $author$project$TimeTravel$TimeTravel(app);
-				} else {
-					var frame = _v2.a;
-					var rest = _v2.b;
-					return $author$project$TimeTravel$TimeTravel(
-						_Utils_update(
-							app,
-							{
-								timeline: {
-									future: A2($elm$core$List$cons, frame, app.timeline.future),
-									past: rest,
-									present: frame.prev
-								}
-							}));
-				}
+				return $author$project$TimeTravel$applyPrev(
+					$author$project$TimeTravel$TimeTravel(app));
 			case 'Next':
-				var _v3 = app.timeline.future;
-				if (!_v3.b) {
-					return $author$project$TimeTravel$TimeTravel(app);
-				} else {
-					var frame = _v3.a;
-					var rest = _v3.b;
-					return $author$project$TimeTravel$TimeTravel(
-						_Utils_update(
-							app,
-							{
-								timeline: {
-									future: rest,
-									past: A2($elm$core$List$cons, frame, app.timeline.past),
-									present: frame.next
-								}
-							}));
-				}
+				return $author$project$TimeTravel$applyNext(
+					$author$project$TimeTravel$TimeTravel(app));
 			case 'ExportTimeline':
-				var timeline = app.timeline;
-				var messages = function () {
-					var initial = {id: $elm$core$Maybe$Nothing, index: -1, label: 'InitialModel'};
-					var historyMessages = A2(
-						$elm$core$List$indexedMap,
-						F2(
-							function (i, frame) {
-								var info = msgToDebug(frame.msg);
-								return {id: info.id, index: i, label: info.label};
-							}),
-						$elm$core$List$reverse(timeline.past));
-					return _Utils_ap(
-						historyMessages,
-						_List_fromArray(
-							[initial]));
-				}();
-				var jsonString = function () {
-					var escape = function (str) {
-						return A3(
-							$elm$core$String$replace,
-							'\"',
-							'\\\"',
-							A3($elm$core$String$replace, '\\', '\\\\', str));
-					};
-					var encodeItem = function (item) {
-						var idPart = function () {
-							var _v5 = item.id;
-							if (_v5.$ === 'Just') {
-								var id = _v5.a;
-								return '\"id\": \"' + (escape(id) + '\"');
-							} else {
-								return '\"id\": null';
-							}
-						}();
-						return '{' + ('\"index\": ' + ($elm$core$String$fromInt(item.index) + (', ' + ('\"type\": \"' + (escape(item.label) + ('\", ' + (idPart + '}')))))));
-					};
-					return '[' + (A2(
-						$elm$core$String$join,
-						', ',
-						A2($elm$core$List$map, encodeItem, messages)) + ']');
-				}();
-				var _v4 = A2($elm$core$Debug$log, 'Export Timeline (JSON)', jsonString);
-				return $author$project$TimeTravel$TimeTravel(
-					_Utils_update(
-						app,
-						{
-							exportText: $elm$core$Maybe$Just(jsonString)
-						}));
+				return A2(
+					$author$project$TimeTravel$applyExport,
+					msgToDebug,
+					$author$project$TimeTravel$TimeTravel(app));
 			case 'ImportTextChanged':
 				var txt = timeTravelMsg.a;
 				return $author$project$TimeTravel$TimeTravel(
@@ -6518,76 +6626,33 @@ var $author$project$TimeTravel$update = F6(
 						app,
 						{importText: txt}));
 			case 'ImportTimeline':
-				var decoder = $elm$json$Json$Decode$list(
-					A4(
-						$elm$json$Json$Decode$map3,
-						F3(
-							function (i, l, id) {
-								return {id: id, index: i, label: l};
-							}),
-						A2($elm$json$Json$Decode$field, 'index', $elm$json$Json$Decode$int),
-						A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string),
-						A2(
-							$elm$json$Json$Decode$field,
-							'id',
-							$elm$json$Json$Decode$nullable($elm$json$Json$Decode$string))));
-				var result = A2($elm$json$Json$Decode$decodeString, decoder, app.importText);
-				if (result.$ === 'Ok') {
-					var items = result.a;
-					var framesRebuilt = function () {
-						var decodedMsgs = A2(
-							$elm$core$List$filterMap,
-							decodeMsg,
-							A2(
-								$elm$core$List$sortBy,
-								function ($) {
-									return $.index;
-								},
-								A2(
-									$elm$core$List$filter,
-									function (item) {
-										return item.index >= 0;
-									},
-									items)));
-						return A3($author$project$TimeTravel$rebuildTimeline, initModel, updateModel, decodedMsgs);
-					}();
-					var newTimeline = function () {
-						var finalModel = framesRebuilt.a;
-						var frames = framesRebuilt.b;
-						return {future: _List_Nil, past: frames, present: finalModel};
-					}();
-					return $author$project$TimeTravel$TimeTravel(
-						_Utils_update(
-							app,
-							{timeline: newTimeline}));
-				} else {
-					return $author$project$TimeTravel$TimeTravel(app);
-				}
+				return A5(
+					$author$project$TimeTravel$applyImport,
+					initModel,
+					updateModel,
+					decodeMsg,
+					app.importText,
+					$author$project$TimeTravel$TimeTravel(app));
 			default:
 				var msg = timeTravelMsg.a;
-				var timeline = app.timeline;
-				var newModel = A2(updateModel, msg, timeline.present);
-				var frame = {msg: msg, next: newModel, prev: timeline.present};
-				var newTimeline = {
-					future: _List_Nil,
-					past: A2($elm$core$List$cons, frame, timeline.past),
-					present: newModel
-				};
-				return $author$project$TimeTravel$TimeTravel(
-					_Utils_update(
-						app,
-						{timeline: newTimeline}));
+				return A3(
+					$author$project$TimeTravel$applyAppMsg,
+					updateModel,
+					msg,
+					$author$project$TimeTravel$TimeTravel(app));
 		}
 	});
 var $author$project$TimeTravel$AppMsg = function (a) {
 	return {$: 'AppMsg', a: a};
 };
+var $author$project$TimeTravel$ExportTimeline = {$: 'ExportTimeline'};
 var $author$project$TimeTravel$ImportTextChanged = function (a) {
 	return {$: 'ImportTextChanged', a: a};
 };
 var $author$project$TimeTravel$ImportTimeline = {$: 'ImportTimeline'};
 var $author$project$TimeTravel$Next = {$: 'Next'};
 var $author$project$TimeTravel$Prev = {$: 'Prev'};
+var $elm$html$Html$details = _VirtualDom_node('details');
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $elm$core$List$isEmpty = function (xs) {
 	if (!xs.b) {
@@ -6598,13 +6663,11 @@ var $elm$core$List$isEmpty = function (xs) {
 };
 var $elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
 var $elm$html$Html$map = $elm$virtual_dom$VirtualDom$map;
+var $elm$html$Html$summary = _VirtualDom_node('summary');
 var $elm$html$Html$textarea = _VirtualDom_node('textarea');
-var $author$project$TimeTravel$ExportTimeline = {$: 'ExportTimeline'};
-var $elm$html$Html$details = _VirtualDom_node('details');
 var $elm$core$String$lines = _String_lines;
 var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
 var $elm$html$Html$pre = _VirtualDom_node('pre');
-var $elm$html$Html$summary = _VirtualDom_node('summary');
 var $elm$core$List$append = F2(
 	function (xs, ys) {
 		if (!ys.b) {
@@ -6642,7 +6705,6 @@ var $elm$core$List$drop = F2(
 			}
 		}
 	});
-var $elm$core$String$endsWith = _String_endsWith;
 var $elm$core$Basics$min = F2(
 	function (x, y) {
 		return (_Utils_cmp(x, y) < 0) ? x : y;
@@ -6650,6 +6712,50 @@ var $elm$core$Basics$min = F2(
 var $elm$core$Tuple$pair = F2(
 	function (a, b) {
 		return _Utils_Tuple2(a, b);
+	});
+var $elm$core$String$endsWith = _String_endsWith;
+var $elm$core$String$trimRight = _String_trimRight;
+var $author$project$TimeTravel$normalizeLine = function (line) {
+	var trimmed = $elm$core$String$trim(line);
+	return A2($elm$core$String$endsWith, ',', trimmed) ? $elm$core$String$trimRight(
+		A2($elm$core$String$dropRight, 1, trimmed)) : trimmed;
+};
+var $author$project$TimeTravel$renderDiffLine = F2(
+	function (before, after) {
+		return _Utils_eq(
+			$author$project$TimeTravel$normalizeLine(before),
+			$author$project$TimeTravel$normalizeLine(after)) ? _List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('  ' + after)
+					]))
+			]) : _List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('text-danger')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('- ' + before)
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('text-success')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('+ ' + after)
+					]))
+			]);
 	});
 var $elm$core$List$takeReverse = F3(
 	function (n, list, kept) {
@@ -6777,7 +6883,6 @@ var $elm$core$List$take = F2(
 	function (n, list) {
 		return A3($elm$core$List$takeFast, 0, n, list);
 	});
-var $elm$core$String$trimRight = _String_trimRight;
 var $author$project$TimeTravel$diffLines = F2(
 	function (before, after) {
 		var beforeLines = $elm$core$String$lines(before);
@@ -6826,47 +6931,7 @@ var $author$project$TimeTravel$diffLines = F2(
 			function (_v0) {
 				var b = _v0.a;
 				var a = _v0.b;
-				var normalize = function (line) {
-					return function (l) {
-						return A2($elm$core$String$endsWith, ',', l) ? $elm$core$String$trimRight(
-							A2($elm$core$String$dropRight, 1, l)) : l;
-					}(
-						$elm$core$String$trim(line));
-				};
-				return _Utils_eq(
-					normalize(b),
-					normalize(a)) ? _List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$elm$html$Html$text('  ' + a)
-							]))
-					]) : _List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('text-danger')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('- ' + b)
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('text-success')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('+ ' + a)
-							]))
-					]);
+				return A2($author$project$TimeTravel$renderDiffLine, b, a);
 			},
 			paired);
 		return _Utils_ap(
@@ -6984,19 +7049,7 @@ var $author$project$TimeTravel$viewHistory = F3(
 			_Utils_ap(
 				history,
 				_List_fromArray(
-					[
-						initial,
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$TimeTravel$ExportTimeline)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Export Timeline')
-							]))
-					])));
+					[initial])));
 	});
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
@@ -7072,37 +7125,75 @@ var $author$project$TimeTravel$view = F2(
 								])),
 							A3($author$project$TimeTravel$viewHistory, config.msgToDebug, config.modelToString, app.timeline),
 							A2(
-							$elm$html$Html$textarea,
+							$elm$html$Html$details,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('width-100 min-height-10'),
-									$elm$html$Html$Attributes$id('export'),
-									$elm$html$Html$Attributes$placeholder('Click \'Export Timeline\' to generate JSON')
+									$elm$html$Html$Attributes$class('flow')
 								]),
 							_List_fromArray(
 								[
-									$elm$html$Html$text(
-									A2($elm$core$Maybe$withDefault, '', app.exportText))
-								])),
-							A2(
-							$elm$html$Html$textarea,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('width-100 min-height-10'),
-									$elm$html$Html$Attributes$id('import'),
-									$elm$html$Html$Events$onInput($author$project$TimeTravel$ImportTextChanged),
-									$elm$html$Html$Attributes$placeholder('Paste timeline JSON here and click Import')
-								]),
-							_List_Nil),
-							A2(
-							$elm$html$Html$button,
-							_List_fromArray(
-								[
-									$elm$html$Html$Events$onClick($author$project$TimeTravel$ImportTimeline)
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Import Timeline')
+									A2(
+									$elm$html$Html$summary,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('font-weight-bold')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('📦 Export / Import Timeline')
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('flow')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$button,
+											_List_fromArray(
+												[
+													$elm$html$Html$Events$onClick($author$project$TimeTravel$ExportTimeline)
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Export Timeline')
+												])),
+											A2(
+											$elm$html$Html$textarea,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('width-100 min-height-10'),
+													$elm$html$Html$Attributes$id('export'),
+													$elm$html$Html$Attributes$placeholder('Click \'Export Timeline\' to generate JSON')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text(
+													A2($elm$core$Maybe$withDefault, '', app.exportText))
+												])),
+											A2(
+											$elm$html$Html$textarea,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('width-100 min-height-10'),
+													$elm$html$Html$Attributes$id('import'),
+													$elm$html$Html$Events$onInput($author$project$TimeTravel$ImportTextChanged),
+													$elm$html$Html$Attributes$placeholder('Paste timeline JSON here and click Import')
+												]),
+											_List_Nil),
+											A2(
+											$elm$html$Html$button,
+											_List_fromArray(
+												[
+													$elm$html$Html$Events$onClick($author$project$TimeTravel$ImportTimeline)
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Import Timeline')
+												]))
+										]))
 								]))
 						])) : $elm$html$Html$text('')
 				]));
@@ -7121,7 +7212,7 @@ var $author$project$TimeTravel$withTimeTravel = function (config) {
 			update: F2(
 				function (msg, model) {
 					return _Utils_Tuple2(
-						A6($author$project$TimeTravel$update, config.init, config.update, config.msgToDebug, config.decodeMsg, msg, model),
+						A3($author$project$TimeTravel$update, config, msg, model),
 						$elm$core$Platform$Cmd$none);
 				}),
 			view: function (model) {

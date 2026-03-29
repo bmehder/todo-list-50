@@ -1,13 +1,13 @@
 module Main exposing (main)
 
 import Filter exposing (allFilters, applyFilter, filterToString)
-import Html exposing (Html, button, div, form, input, label, li, menu, span, text, ul)
+import Html exposing (Html, button, div, form, hr, input, label, li, menu, span, text, ul)
 import Html.Attributes exposing (attribute, checked, class, disabled, id, placeholder, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput, onSubmit, preventDefaultOn, stopPropagationOn)
 import Json.Decode as Decode
+import LabelText exposing (completedLabel, importantLabel, itemsLabel, remainingLabel)
 import NonEmptyString
 import NonNegative
-import Text exposing (completedLabel, importantLabel, itemsLabel, remainingLabel)
 import TimeTravel
 import TimeTravelConfig
 import Types exposing (..)
@@ -225,6 +225,7 @@ view model =
         , viewFilterButtons model
         , viewTodos model
         , viewTodosCount model
+        , hr [] []
         ]
 
 

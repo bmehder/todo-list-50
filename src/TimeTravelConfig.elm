@@ -42,7 +42,7 @@ modelToPrettyString model =
 todoToRecordString : Todo -> String
 todoToRecordString todo =
     "    { id = "
-        ++ String.fromInt (NonNegative.toInt todo.id)
+        ++ (NonNegative.toInt todo.id |> String.fromInt)
         ++ ", status = "
         ++ statusToString todo.status
         ++ ", important = "
@@ -91,7 +91,7 @@ editingToString editing =
 
         EditingTodoText { id, draft } ->
             "EditingTodoText (id: "
-                ++ String.fromInt (NonNegative.toInt id)
+                ++ (NonNegative.toInt id |> String.fromInt)
                 ++ ", draft: \""
                 ++ draft
                 ++ "\")"
@@ -104,7 +104,7 @@ pendingDeleteToString maybeId =
             "Nothing"
 
         Just id ->
-            "Just " ++ String.fromInt (NonNegative.toInt id)
+            "Just " ++ (NonNegative.toInt id |> String.fromInt)
 
 
 todoMsgToDebug : Msg -> TimeTravel.DebugInfo
@@ -112,22 +112,22 @@ todoMsgToDebug msg =
     case msg of
         ToggledStatus id ->
             { label = "ToggledStatus"
-            , id = Just (String.fromInt (NonNegative.toInt id))
+            , id = Just (NonNegative.toInt id |> String.fromInt)
             }
 
         ToggledImportant id ->
             { label = "ToggledImportant"
-            , id = Just (String.fromInt (NonNegative.toInt id))
+            , id = Just (NonNegative.toInt id |> String.fromInt)
             }
 
         AskedToDelete id ->
             { label = "AskedToDelete"
-            , id = Just (String.fromInt (NonNegative.toInt id))
+            , id = Just (NonNegative.toInt id |> String.fromInt)
             }
 
         ConfirmedDelete id ->
             { label = "ConfirmedDelete"
-            , id = Just (String.fromInt (NonNegative.toInt id))
+            , id = Just (NonNegative.toInt id |> String.fromInt)
             }
 
         CanceledDelete ->
@@ -168,7 +168,7 @@ todoMsgToDebug msg =
         StartedEditingTodoText id draft ->
             { label =
                 "StartedEditingTodoText \"" ++ draft ++ "\""
-            , id = Just (String.fromInt (NonNegative.toInt id))
+            , id = Just (NonNegative.toInt id |> String.fromInt)
             }
 
         UpdatedEditingDraft str ->
@@ -190,6 +190,34 @@ todoMsgToDebug msg =
             { label = "NoOp (ignored UI event)"
             , id = Nothing
             }
+
+
+matchPrefix : String -> (String -> Maybe msg) -> String -> Maybe msg
+matchPrefix prefix toMsg str =
+    if String.startsWith prefix str then
+        str
+            |> String.dropLeft (String.length prefix)
+            |> toMsg
+
+    else
+        Nothing
+
+
+stripQuotes : String -> String
+stripQuotes str =
+    str
+        |> String.dropLeft 1
+        |> String.dropRight 1
+
+
+orElse : Maybe a -> Maybe a -> Maybe a
+orElse first second =
+    case first of
+        Just _ ->
+            first
+
+        Nothing ->
+            second
 
 
 decodeMsg : { index : Int, label : String, id : Maybe String } -> Maybe Msg
@@ -248,24 +276,26 @@ decodeMsg item =
             Just CreatedTodo
 
         labelStr ->
-            if String.startsWith "UpdatedDraft (typing) " labelStr then
+            matchPrefix "UpdatedDraft (typing) "
+                (stripQuotes
+                    >> UpdatedDraft
+                    >> Just
+                )
                 labelStr
-                    |> String.dropLeft (String.length "UpdatedDraft (typing) \"")
-                    |> String.dropRight 1
-                    |> UpdatedDraft
-                    |> Just
+                |> orElse
+                    (matchPrefix "UpdatedEditingDraft (editing) "
+                        (stripQuotes
+                            >> UpdatedEditingDraft
+                            >> Just
+                        )
+                        labelStr
+                    )
+                |> orElse
+                    (if String.startsWith "StartedEditingTodoText " labelStr then
+                        parseId
+                            |> Maybe.andThen NonNegative.fromInt
+                            |> Maybe.map (\idVal -> StartedEditingTodoText idVal "")
 
-            else if String.startsWith "UpdatedEditingDraft (editing) " labelStr then
-                labelStr
-                    |> String.dropLeft (String.length "UpdatedEditingDraft (editing) \"")
-                    |> String.dropRight 1
-                    |> Just
-                    |> Maybe.map UpdatedEditingDraft
-
-            else if String.startsWith "StartedEditingTodoText " labelStr then
-                parseId
-                    |> Maybe.andThen NonNegative.fromInt
-                    |> Maybe.map (\idVal -> StartedEditingTodoText idVal "")
-
-            else
-                Nothing
+                     else
+                        Nothing
+                    )

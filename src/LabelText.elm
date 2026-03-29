@@ -1,4 +1,4 @@
-module Text exposing
+module LabelText exposing
     ( itemsLabel
     , remainingLabel
     , completedLabel

@@ -1,8 +1,4 @@
-module Filter exposing
-    ( allFilters
-    , applyFilter
-    , filterToString
-    )
+module Filter exposing (..)
 
 import Types exposing (Filter(..), Status(..), Todo)
 
@@ -29,8 +25,8 @@ filterToString filter =
 
 
 applyFilter : Filter -> List Todo -> List Todo
-applyFilter filter =
-    case filter of
+applyFilter filterType =
+    case filterType of
         All ->
             identity
 

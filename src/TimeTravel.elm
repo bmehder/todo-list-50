@@ -15,7 +15,15 @@ import Browser
 import Html exposing (Html, button, details, div, h2, summary, text)
 import Html.Attributes exposing (class, disabled, id, name)
 import Html.Events exposing (onClick, onInput)
-import Json.Decode as Decode exposing (Decoder)
+import Json.Decode as Decode
+import Html exposing (textarea)
+import Html.Attributes exposing (placeholder)
+
+
+
+-- =========================================
+-- TYPES
+-- =========================================
 
 
 type alias AppConfig msg model =
@@ -78,6 +86,12 @@ type alias Config msg model =
     }
 
 
+
+-- =========================================
+-- PUBLIC API
+-- =========================================
+
+
 init : Bool -> model -> TimeTravel msg model
 init visible model =
     TimeTravel
@@ -90,6 +104,121 @@ init visible model =
         , exportText = Nothing
         , importText = ""
         }
+
+
+update :
+    AppConfig msg model
+    -> Msg msg
+    -> TimeTravel msg model
+    -> TimeTravel msg model
+update config timeTravelMsg (TimeTravel app) =
+    let
+        initModel =
+            config.init
+
+        updateModel =
+            config.update
+
+        msgToDebug =
+            config.msgToDebug
+
+        decodeMsg =
+            config.decodeMsg
+    in
+    case timeTravelMsg of
+        Prev ->
+            applyPrev (TimeTravel app)
+
+        Next ->
+            applyNext (TimeTravel app)
+
+        ExportTimeline ->
+            applyExport msgToDebug (TimeTravel app)
+
+        ImportTextChanged txt ->
+            TimeTravel { app | importText = txt }
+
+        ImportTimeline ->
+            applyImport initModel updateModel decodeMsg app.importText (TimeTravel app)
+
+        AppMsg msg ->
+            applyAppMsg updateModel msg (TimeTravel app)
+
+
+view :
+    Config msg model
+    -> TimeTravel msg model
+    -> Html (Msg msg)
+view config (TimeTravel app) =
+    div [ class "flow" ]
+        [ config.viewModel app.timeline.present
+            |> Html.map AppMsg
+        , if app.visibility then
+            div [ class "flow" ]
+                [ h2 [] [ text "Time Travel Debugger" ]
+                , div [ class "flex gap-1" ]
+                    [ button [ onClick Prev, disabled (List.isEmpty app.timeline.past) ] [ text "Prev" ]
+                    , button [ onClick Next, disabled (List.isEmpty app.timeline.future) ] [ text "Next" ]
+                    ]
+                , viewHistory config.msgToDebug config.modelToString app.timeline
+                , details [class "flow"]
+                    [ summary [ class "font-weight-bold" ] [ text "📦 Export / Import Timeline" ]
+                    , div [ class "flow" ]
+                        [ button [ onClick ExportTimeline ] [ text "Export Timeline" ]
+                        , textarea
+                            [ class "width-100 min-height-10"
+                            , id "export"
+                            , placeholder "Click 'Export Timeline' to generate JSON"
+                            ]
+                            [ text (Maybe.withDefault "" app.exportText) ]
+                        , textarea
+                            [ class "width-100 min-height-10"
+                            , id "import"
+                            , onInput ImportTextChanged
+                            , placeholder "Paste timeline JSON here and click Import"
+                            ]
+                            []
+                        , button [ onClick ImportTimeline ] [ text "Import Timeline" ]
+                        ]
+                    ]
+                ]
+
+          else
+            text ""
+        ]
+
+
+withTimeTravel :
+    AppConfig msg model
+    -> Program Flags (TimeTravel msg model) (Msg msg)
+withTimeTravel config =
+    Browser.element
+        { init =
+            \flags ->
+                ( init flags.visibleByDefault config.init
+                , Cmd.none
+                )
+        , update =
+            \msg model ->
+                ( update config msg model
+                , Cmd.none
+                )
+        , view =
+            \model ->
+                view
+                    { viewModel = config.view
+                    , msgToDebug = config.msgToDebug
+                    , modelToString = config.modelToString
+                    }
+                    model
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+
+-- =========================================
+-- UPDATE ENGINE
+-- =========================================
 
 
 rebuildTimeline :
@@ -116,250 +245,193 @@ rebuildTimeline initModel updateModel msgs =
         msgs
 
 
-update :
-    model
-    -> (msg -> model -> model)
-    -> (msg -> DebugInfo)
-    -> ({ index : Int, label : String, id : Maybe String } -> Maybe msg)
-    -> Msg msg
+applyPrev : TimeTravel msg model -> TimeTravel msg model
+applyPrev (TimeTravel app) =
+    case app.timeline.past of
+        [] ->
+            TimeTravel app
+
+        frame :: rest ->
+            TimeTravel
+                { app
+                    | timeline =
+                        { past = rest
+                        , present = frame.prev
+                        , future = frame :: app.timeline.future
+                        }
+                }
+
+
+applyNext : TimeTravel msg model -> TimeTravel msg model
+applyNext (TimeTravel app) =
+    case app.timeline.future of
+        [] ->
+            TimeTravel app
+
+        frame :: rest ->
+            TimeTravel
+                { app
+                    | timeline =
+                        { past = frame :: app.timeline.past
+                        , present = frame.next
+                        , future = rest
+                        }
+                }
+
+
+applyAppMsg :
+    (msg -> model -> model)
+    -> msg
     -> TimeTravel msg model
     -> TimeTravel msg model
-update initModel updateModel msgToDebug decodeMsg timeTravelMsg (TimeTravel app) =
-    case timeTravelMsg of
-        Prev ->
-            case app.timeline.past of
-                [] ->
-                    TimeTravel app
+applyAppMsg updateModel msg (TimeTravel app) =
+    let
+        timeline =
+            app.timeline
 
-                frame :: rest ->
-                    TimeTravel
-                        { app
-                            | timeline =
-                                { past = rest
-                                , present = frame.prev
-                                , future = frame :: app.timeline.future
-                                }
-                        }
+        newModel =
+            updateModel msg timeline.present
 
-        Next ->
-            case app.timeline.future of
-                [] ->
-                    TimeTravel app
+        frame =
+            { msg = msg
+            , prev = timeline.present
+            , next = newModel
+            }
 
-                frame :: rest ->
-                    TimeTravel
-                        { app
-                            | timeline =
-                                { past = frame :: app.timeline.past
-                                , present = frame.next
-                                , future = rest
-                                }
-                        }
+        newTimeline =
+            { past = frame :: timeline.past
+            , present = newModel
+            , future = []
+            }
+    in
+    TimeTravel { app | timeline = newTimeline }
 
-        ExportTimeline ->
+
+applyExport :
+    (msg -> DebugInfo)
+    -> TimeTravel msg model
+    -> TimeTravel msg model
+applyExport msgToDebug (TimeTravel app) =
+    let
+        timeline =
+            app.timeline
+
+        messages =
             let
-                timeline =
-                    app.timeline
-
-                messages =
-                    let
-                        historyMessages =
-                            timeline.past
-                                |> List.reverse
-                                |> List.indexedMap
-                                    (\i frame ->
-                                        let
-                                            info =
-                                                msgToDebug frame.msg
-                                        in
-                                        { index = i
-                                        , label = info.label
-                                        , id = info.id
-                                        }
-                                    )
-
-                        initial =
-                            { index = -1
-                            , label = "InitialModel"
-                            , id = Nothing
-                            }
-                    in
-                    historyMessages ++ [ initial ]
-
-                jsonString =
-                    let
-                        escape : String -> String
-                        escape str =
-                            str
-                                |> String.replace "\\" "\\\\"
-                                |> String.replace "\"" "\\\""
-
-                        encodeItem item =
-                            let
-                                idPart =
-                                    case item.id of
-                                        Just id ->
-                                            "\"id\": \"" ++ escape id ++ "\""
-
-                                        Nothing ->
-                                            "\"id\": null"
-                            in
-                            "{"
-                                ++ "\"index\": "
-                                ++ String.fromInt item.index
-                                ++ ", "
-                                ++ "\"type\": \""
-                                ++ escape item.label
-                                ++ "\", "
-                                ++ idPart
-                                ++ "}"
-                    in
-                    "["
-                        ++ (messages
-                                |> List.map encodeItem
-                                |> String.join ", "
-                           )
-                        ++ "]"
-
-                _ =
-                    Debug.log "Export Timeline (JSON)" jsonString
-            in
-            TimeTravel { app | exportText = Just jsonString }
-
-        ImportTextChanged txt ->
-            TimeTravel { app | importText = txt }
-
-        ImportTimeline ->
-            let
-                decoder : Decoder (List { index : Int, label : String, id : Maybe String })
-                decoder =
-                    Decode.list
-                        (Decode.map3
-                            (\i l id ->
+                historyMessages =
+                    timeline.past
+                        |> List.reverse
+                        |> List.indexedMap
+                            (\i frame ->
+                                let
+                                    info =
+                                        msgToDebug frame.msg
+                                in
                                 { index = i
-                                , label = l
-                                , id = id
+                                , label = info.label
+                                , id = info.id
                                 }
                             )
-                            (Decode.field "index" Decode.int)
-                            (Decode.field "type" Decode.string)
-                            (Decode.field "id" (Decode.nullable Decode.string))
-                        )
 
-                result =
-                    Decode.decodeString decoder app.importText
+                initial =
+                    { index = -1
+                    , label = "InitialModel"
+                    , id = Nothing
+                    }
             in
-            case result of
-                Ok items ->
-                    let
-                        framesRebuilt =
-                            let
-                                decodedMsgs =
-                                    items
-                                        |> List.filter (\item -> item.index >= 0)
-                                        |> List.sortBy .index
-                                        |> List.filterMap decodeMsg
-                            in
-                            rebuildTimeline initModel updateModel decodedMsgs
+            historyMessages ++ [ initial ]
 
-                        newTimeline =
-                            case framesRebuilt of
-                                ( finalModel, frames ) ->
-                                    { past = frames
-                                    , present = finalModel
-                                    , future = []
-                                    }
-                    in
-                    TimeTravel { app | timeline = newTimeline }
-
-                Err _ ->
-                    TimeTravel app
-
-        AppMsg msg ->
+        jsonString =
             let
-                timeline =
-                    app.timeline
+                escape : String -> String
+                escape str =
+                    str
+                        |> String.replace "\\" "\\\\"
+                        |> String.replace "\"" "\\\""
 
-                newModel =
-                    updateModel msg timeline.present
+                encodeItem item =
+                    let
+                        idPart =
+                            case item.id of
+                                Just id ->
+                                    "\"id\": \"" ++ escape id ++ "\""
 
-                frame =
-                    { msg = msg
-                    , prev = timeline.present
-                    , next = newModel
-                    }
-
-                newTimeline =
-                    { past = frame :: timeline.past
-                    , present = newModel
-                    , future = []
-                    }
+                                Nothing ->
+                                    "\"id\": null"
+                    in
+                    "{"
+                        ++ "\"index\": "
+                        ++ String.fromInt item.index
+                        ++ ", "
+                        ++ "\"type\": \""
+                        ++ escape item.label
+                        ++ "\""
+                        ++ ", "
+                        ++ idPart
+                        ++ "}"
             in
-            TimeTravel { app | timeline = newTimeline }
+            "["
+                ++ (messages
+                        |> List.map encodeItem
+                        |> String.join ", "
+                   )
+                ++ "]"
+    in
+    TimeTravel { app | exportText = Just jsonString }
 
 
-withTimeTravel :
-    AppConfig msg model
-    -> Program Flags (TimeTravel msg model) (Msg msg)
-withTimeTravel config =
-    Browser.element
-        { init =
-            \flags ->
-                ( init flags.visibleByDefault config.init
-                , Cmd.none
-                )
-        , update =
-            \msg model ->
-                ( update config.init config.update config.msgToDebug config.decodeMsg msg model
-                , Cmd.none
-                )
-        , view =
-            \model ->
-                view
-                    { viewModel = config.view
-                    , msgToDebug = config.msgToDebug
-                    , modelToString = config.modelToString
-                    }
-                    model
-        , subscriptions = \_ -> Sub.none
-        }
-
-
-view :
-    Config msg model
+applyImport :
+    model
+    -> (msg -> model -> model)
+    -> ({ index : Int, label : String, id : Maybe String } -> Maybe msg)
+    -> String
     -> TimeTravel msg model
-    -> Html (Msg msg)
-view config (TimeTravel app) =
-    div [ class "flow" ]
-        [ config.viewModel app.timeline.present
-            |> Html.map AppMsg
-        , if app.visibility then
-            div [ class "flow" ]
-                [ h2 [] [ text "Time Travel Debugger" ]
-                , div [ class "flex gap-1" ]
-                    [ button [ onClick Prev, disabled (List.isEmpty app.timeline.past) ] [ text "Prev" ]
-                    , button [ onClick Next, disabled (List.isEmpty app.timeline.future) ] [ text "Next" ]
-                    ]
-                , viewHistory config.msgToDebug config.modelToString app.timeline
-                , Html.textarea
-                    [ class "width-100 min-height-10"
-                    , id "export"
-                    , Html.Attributes.placeholder "Click 'Export Timeline' to generate JSON"
-                    ]
-                    [ text (Maybe.withDefault "" app.exportText) ]
-                , Html.textarea
-                    [ class "width-100 min-height-10"
-                    , id "import"
-                    , onInput ImportTextChanged
-                    , Html.Attributes.placeholder "Paste timeline JSON here and click Import"
-                    ]
-                    []
-                , button [ onClick ImportTimeline ] [ text "Import Timeline" ]
-                ]
+    -> TimeTravel msg model
+applyImport initModel updateModel decodeMsg importText (TimeTravel app) =
+    let
+        decoder =
+            Decode.list
+                (Decode.map3
+                    (\i l id ->
+                        { index = i
+                        , label = l
+                        , id = id
+                        }
+                    )
+                    (Decode.field "index" Decode.int)
+                    (Decode.field "type" Decode.string)
+                    (Decode.field "id" (Decode.nullable Decode.string))
+                )
+    in
+    case Decode.decodeString decoder importText of
+        Ok items ->
+            let
+                decodedMsgs =
+                    items
+                        |> List.filter (\item -> item.index >= 0)
+                        |> List.sortBy .index
+                        |> List.filterMap decodeMsg
 
-          else
-            text ""
-        ]
+                ( finalModel, frames ) =
+                    rebuildTimeline initModel updateModel decodedMsgs
+            in
+            TimeTravel
+                { app
+                    | timeline =
+                        { past = frames
+                        , present = finalModel
+                        , future = []
+                        }
+                }
+
+        Err _ ->
+            TimeTravel app
+
+
+
+-- =========================================
+-- VIEW HELPERS
+-- =========================================
 
 
 viewHistory : (msg -> DebugInfo) -> (model -> String) -> Timeline msg model -> Html (Msg msg)
@@ -394,10 +466,9 @@ viewHistory msgToDebug modelToString timeline =
                     )
                 ]
     in
-    div [class "flow"]
+    div [ class "flow" ]
         (history
             ++ [ initial
-               , button [ onClick ExportTimeline ] [ text "Export Timeline" ]
                ]
         )
 
@@ -430,6 +501,38 @@ viewFrame msgToDebug modelToString index frame =
         ]
 
 
+
+-- =========================================
+-- UTILITIES
+-- =========================================
+
+
+normalizeLine : String -> String
+normalizeLine line =
+    let
+        trimmed =
+            String.trim line
+    in
+    if String.endsWith "," trimmed then
+        trimmed
+            |> String.dropRight 1
+            |> String.trimRight
+
+    else
+        trimmed
+
+
+renderDiffLine : String -> String -> List (Html msg)
+renderDiffLine before after =
+    if normalizeLine before == normalizeLine after then
+        [ Html.div [] [ text ("  " ++ after) ] ]
+
+    else
+        [ Html.div [ class "text-danger" ] [ text ("- " ++ before) ]
+        , Html.div [ class "text-success" ] [ text ("+ " ++ after) ]
+        ]
+
+
 diffLines : String -> String -> List (Html msg)
 diffLines before after =
     let
@@ -449,28 +552,7 @@ diffLines before after =
 
         diffs =
             paired
-                |> List.concatMap
-                    (\( b, a ) ->
-                        let
-                            normalize line =
-                                line
-                                    |> String.trim
-                                    |> (\l ->
-                                            if String.endsWith "," l then
-                                                String.dropRight 1 l |> String.trimRight
-
-                                            else
-                                                l
-                                       )
-                        in
-                        if normalize b == normalize a then
-                            [ Html.div [] [ text ("  " ++ a) ] ]
-
-                        else
-                            [ Html.div [ class "text-danger" ] [ text ("- " ++ b) ]
-                            , Html.div [ class "text-success" ] [ text ("+ " ++ a) ]
-                            ]
-                    )
+                |> List.concatMap (\( b, a ) -> renderDiffLine b a)
 
         extraBefore =
             List.drop commonLength beforeLines
