@@ -32,11 +32,13 @@ This module wraps an application and adds:
 - History tracking
 - Prev / Next navigation
 - Debug UI
+- Export / import timeline replay
+- Runtime debugger visibility toggle
 
 It introduces:
 
-- `TimeTravel msg model`
-- `Msg msg` (internal messages like Prev, Next, and wrapped application messages via `AppMsg`)
+- `TimeTravel msg model` — a wrapper around your model that stores timeline and debugger state
+- `Msg msg` — an internal message type that wraps your app messages (`AppMsg msg`) and adds debugger controls like `Prev`, `Next`, and import/export actions
 
 ---
 
@@ -107,7 +109,7 @@ Developers provide the application configuration:
 { init = initModel
 , update = update
 , view = view
-, msgToDebug = todoMsgToDebug
+, msgToDebug = msgToDebugInfo
 , modelToString = modelToPrettyString
 , decodeMsg = decodeMsg
 }
@@ -196,10 +198,13 @@ focus management or HTTP requests would require extending the wrapper.
 
 - Step through history (Prev / Next)
 - See each message (Msg) that caused a transition
-- Inspect model changes (with diffing)
+- Inspect model changes with inline diffing and grouped previous-state lines
 - View previous and next states
 - Export timeline as JSON
 - Import timeline and replay state transitions
+- Press Enter inside the import textarea to trigger import
+- Show inline import status feedback
+- Toggle debugger visibility from the UI
 
 ---
 
@@ -217,9 +222,9 @@ Instead, behavior is layered on top in a clean, functional way.
 
 # 🚀 Future Ideas
 
-- Add model diffs between states
-- Highlight changed fields
-- Persist history to localStorage
+- Highlight changed fields more precisely
+- Persist history or app state to localStorage
+- Explore additional reusable wrappers around the core app
 
 ---
 
@@ -259,7 +264,7 @@ This format is:
 
 ## Import
 
-You can paste JSON back into the app and click "Import Timeline".
+You can paste JSON back into the app and click "Import Timeline", or press Enter while focused in the import textarea.
 
 The system will:
 
@@ -300,7 +305,7 @@ This ensures:
 
 Not all messages need to be fully decoded for replay to work.
 
-- Some messages (like `NoOp`) can be ignored
+- Some messages (like `NoOp`) may safely decode to `Nothing`
 - Others must be decoded to preserve state transitions
 
 Replay remains correct as long as all **state-changing messages** are included.
