@@ -6477,7 +6477,7 @@ var $author$project$TimeTravel$applyExport = F2(
 						return '\"id\": null';
 					}
 				}();
-				return '{' + ('\"index\": ' + ($elm$core$String$fromInt(item.index) + (', ' + ('\"type\": \"' + (escape(item.label) + ('\"' + (', ' + (idPart + '}'))))))));
+				return '{' + ('\"index\": ' + ($elm$core$String$fromInt(item.index) + (', ' + ('\"label\": \"' + (escape(item.label) + ('\"' + (', ' + (idPart + '}'))))))));
 			};
 			return '[' + (A2(
 				$elm$core$String$join,
@@ -6552,7 +6552,7 @@ var $author$project$TimeTravel$applyImport = F5(
 						return {id: id, index: i, label: l};
 					}),
 				A2($elm$json$Json$Decode$field, 'index', $elm$json$Json$Decode$int),
-				A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string),
+				A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
 				A2(
 					$elm$json$Json$Decode$field,
 					'id',

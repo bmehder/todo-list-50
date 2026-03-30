@@ -431,7 +431,7 @@ applyExport msgToDebug (TimeTravel app) =
                         ++ "\"index\": "
                         ++ String.fromInt item.index
                         ++ ", "
-                        ++ "\"type\": \""
+                        ++ "\"label\": \""
                         ++ escape item.label
                         ++ "\""
                         ++ ", "
@@ -467,7 +467,7 @@ applyImport initModel updateModel decodeMsg importText (TimeTravel app) =
                         }
                     )
                     (Decode.field "index" Decode.int)
-                    (Decode.field "type" Decode.string)
+                    (Decode.field "label" Decode.string)
                     (Decode.field "id" (Decode.nullable Decode.string))
                 )
     in
