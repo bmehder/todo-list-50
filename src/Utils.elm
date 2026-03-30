@@ -1,7 +1,7 @@
-module Utils exposing (applyIf)
+module Utils exposing (when)
 
-applyIf : (a -> Bool) -> (a -> a) -> a -> a
-applyIf predicate fn value =
+when : (a -> Bool) -> (a -> a) -> a -> a
+when predicate fn value =
     if predicate value then
         fn value
     else

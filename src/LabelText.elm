@@ -1,18 +1,9 @@
 module LabelText exposing
-    ( itemsLabel
-    , remainingLabel
-    , completedLabel
+    ( completedLabel
     , importantLabel
+    , itemsLabel
+    , remainingLabel
     )
-
-pluralize : String -> String -> Int -> String
-pluralize singular plural count =
-    case count of
-        1 ->
-            singular
-
-        _ ->
-            plural
 
 
 itemsLabel : Int -> String
@@ -33,3 +24,13 @@ completedLabel =
 importantLabel : Int -> String
 importantLabel =
     pluralize " important item" " important items"
+
+
+pluralize : String -> String -> Int -> String
+pluralize singular plural count =
+    case count of
+        1 ->
+            singular
+
+        _ ->
+            plural

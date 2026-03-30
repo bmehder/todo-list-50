@@ -4,10 +4,18 @@ module TimeTravelConfig exposing
     , msgToDebugInfo
     )
 
+
 import NonEmptyString
-import NonNegative
+import NonNegativeInt
 import TimeTravel
 import Types exposing (Editing(..), Filter(..), Id, Model, Msg(..), Status(..), Todo)
+
+
+type alias TimelineItem =
+    { index : Int
+    , label : String
+    , id : Maybe String
+    }
 
 
 
@@ -44,22 +52,22 @@ msgToDebugInfo msg =
     case msg of
         ToggledStatus id ->
             { label = "ToggledStatus"
-            , id = Just (NonNegative.toInt id |> String.fromInt)
+            , id = Just (NonNegativeInt.toInt id |> String.fromInt)
             }
 
         ToggledImportant id ->
             { label = "ToggledImportant"
-            , id = Just (NonNegative.toInt id |> String.fromInt)
+            , id = Just (NonNegativeInt.toInt id |> String.fromInt)
             }
 
         AskedToDelete id ->
             { label = "AskedToDelete"
-            , id = Just (NonNegative.toInt id |> String.fromInt)
+            , id = Just (NonNegativeInt.toInt id |> String.fromInt)
             }
 
         ConfirmedDelete id ->
             { label = "ConfirmedDelete"
-            , id = Just (NonNegative.toInt id |> String.fromInt)
+            , id = Just (NonNegativeInt.toInt id |> String.fromInt)
             }
 
         CanceledDelete ->
@@ -100,7 +108,7 @@ msgToDebugInfo msg =
         StartedEditingTodoText id draft ->
             { label =
                 "StartedEditingTodoText \"" ++ draft ++ "\""
-            , id = Just (NonNegative.toInt id |> String.fromInt)
+            , id = Just (NonNegativeInt.toInt id |> String.fromInt)
             }
 
         UpdatedEditingDraft str ->
@@ -124,7 +132,7 @@ msgToDebugInfo msg =
             }
 
 
-decodeMsg : { index : Int, label : String, id : Maybe String } -> Maybe Msg
+decodeMsg : TimelineItem -> Maybe Msg
 decodeMsg item =
     decodeExact item
         |> orElse (decodeWithId item)
@@ -136,7 +144,7 @@ decodeMsg item =
 -------------------------------------------------------------------------------
 
 
-decodeExact : { index : Int, label : String, id : Maybe String } -> Maybe Msg
+decodeExact : TimelineItem -> Maybe Msg
 decodeExact item =
     case item.label of
         "NoOp (ignored UI event)" ->
@@ -170,7 +178,7 @@ decodeExact item =
             Nothing
 
 
-decodeWithId : { index : Int, label : String, id : Maybe String } -> Maybe Msg
+decodeWithId : TimelineItem -> Maybe Msg
 decodeWithId item =
     case item.label of
         "ToggledStatus" ->
@@ -189,7 +197,7 @@ decodeWithId item =
             Nothing
 
 
-decodePattern : { index : Int, label : String, id : Maybe String } -> Maybe Msg
+decodePattern : TimelineItem -> Maybe Msg
 decodePattern item =
     let
         labelStr =
@@ -200,7 +208,7 @@ decodePattern item =
         |> orElse (decodeStartedEditing item)
 
 
-decodeStartedEditing : { index : Int, label : String, id : Maybe String } -> Maybe Msg
+decodeStartedEditing : TimelineItem -> Maybe Msg
 decodeStartedEditing item =
     if String.startsWith "StartedEditingTodoText " item.label then
         let
@@ -215,11 +223,11 @@ decodeStartedEditing item =
         Nothing
 
 
-withId : Maybe String -> (NonNegative.NonNegative -> Msg) -> Maybe Msg
+withId : Maybe String -> (NonNegativeInt.NonNegativeInt -> Msg) -> Maybe Msg
 withId maybeId toMsg =
     maybeId
         |> Maybe.andThen String.toInt
-        |> Maybe.andThen NonNegative.fromInt
+        |> Maybe.andThen NonNegativeInt.fromInt
         |> Maybe.map toMsg
 
 
@@ -246,7 +254,7 @@ match prefix toMsg str =
 todoToRecordString : Todo -> String
 todoToRecordString todo =
     "    { id = "
-        ++ (NonNegative.toInt todo.id |> String.fromInt)
+        ++ (NonNegativeInt.toInt todo.id |> String.fromInt)
         ++ ", status = "
         ++ statusToString todo.status
         ++ ", important = "
@@ -295,7 +303,7 @@ editingToString editing =
 
         EditingTodoText { id, draft } ->
             "EditingTodoText (id: "
-                ++ (NonNegative.toInt id |> String.fromInt)
+                ++ (NonNegativeInt.toInt id |> String.fromInt)
                 ++ ", draft: \""
                 ++ draft
                 ++ "\")"
@@ -308,7 +316,7 @@ pendingDeleteToString maybeId =
             "Nothing"
 
         Just id ->
-            "Just " ++ (NonNegative.toInt id |> String.fromInt)
+            "Just " ++ (NonNegativeInt.toInt id |> String.fromInt)
 
 
 matchPrefix : String -> (String -> Maybe msg) -> String -> Maybe msg

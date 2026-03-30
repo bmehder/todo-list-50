@@ -4942,13 +4942,13 @@ var $elm$core$Maybe$andThen = F2(
 var $elm$core$Basics$identity = function (x) {
 	return x;
 };
-var $author$project$NonNegative$NonNegative = function (a) {
-	return {$: 'NonNegative', a: a};
+var $author$project$NonNegativeInt$NonNegativeInt = function (a) {
+	return {$: 'NonNegativeInt', a: a};
 };
 var $elm$core$Basics$ge = _Utils_ge;
-var $author$project$NonNegative$fromInt = function (n) {
+var $author$project$NonNegativeInt$fromInt = function (n) {
 	return (n >= 0) ? $elm$core$Maybe$Just(
-		$author$project$NonNegative$NonNegative(n)) : $elm$core$Maybe$Nothing;
+		$author$project$NonNegativeInt$NonNegativeInt(n)) : $elm$core$Maybe$Nothing;
 };
 var $elm$core$Maybe$map = F2(
 	function (f, maybe) {
@@ -4968,7 +4968,7 @@ var $author$project$TimeTravelConfig$withId = F2(
 			toMsg,
 			A2(
 				$elm$core$Maybe$andThen,
-				$author$project$NonNegative$fromInt,
+				$author$project$NonNegativeInt$fromInt,
 				A2($elm$core$Maybe$andThen, $elm$core$String$toInt, maybeId)));
 	});
 var $author$project$TimeTravelConfig$decodeStartedEditing = function (item) {
@@ -5072,7 +5072,7 @@ var $author$project$Types$Completed = {$: 'Completed'};
 var $author$project$Types$NotEditing = {$: 'NotEditing'};
 var $elm$core$Debug$todo = _Debug_todo;
 var $author$project$Main$idFromIntUnsafe = function (n) {
-	var _v0 = $author$project$NonNegative$fromInt(n);
+	var _v0 = $author$project$NonNegativeInt$fromInt(n);
 	if (_v0.$ === 'Just') {
 		var id = _v0.a;
 		return id;
@@ -5144,7 +5144,7 @@ var $author$project$Main$initModel = {
 		}
 		])
 };
-var $author$project$NonNegative$toInt = function (_v0) {
+var $author$project$NonNegativeInt$toInt = function (_v0) {
 	var n = _v0.a;
 	return n;
 };
@@ -5155,7 +5155,7 @@ var $author$project$TimeTravelConfig$editingToString = function (editing) {
 		var id = editing.a.id;
 		var draft = editing.a.draft;
 		return 'EditingTodoText (id: ' + ($elm$core$String$fromInt(
-			$author$project$NonNegative$toInt(id)) + (', draft: \"' + (draft + '\")')));
+			$author$project$NonNegativeInt$toInt(id)) + (', draft: \"' + (draft + '\")')));
 	}
 };
 var $author$project$TimeTravelConfig$filterToString = function (filter) {
@@ -5245,7 +5245,7 @@ var $author$project$TimeTravelConfig$pendingDeleteToString = function (maybeId) 
 	} else {
 		var id = maybeId.a;
 		return 'Just ' + $elm$core$String$fromInt(
-			$author$project$NonNegative$toInt(id));
+			$author$project$NonNegativeInt$toInt(id));
 	}
 };
 var $author$project$TimeTravelConfig$statusToString = function (status) {
@@ -5261,7 +5261,7 @@ var $author$project$NonEmptyString$toString = function (_v0) {
 };
 var $author$project$TimeTravelConfig$todoToRecordString = function (todo) {
 	return '    { id = ' + ($elm$core$String$fromInt(
-		$author$project$NonNegative$toInt(todo.id)) + (', status = ' + ($author$project$TimeTravelConfig$statusToString(todo.status) + (', important = ' + ((todo.important ? 'True' : 'False') + (', todoText = \"' + ($author$project$NonEmptyString$toString(todo.todoText) + '\" }')))))));
+		$author$project$NonNegativeInt$toInt(todo.id)) + (', status = ' + ($author$project$TimeTravelConfig$statusToString(todo.status) + (', important = ' + ((todo.important ? 'True' : 'False') + (', todoText = \"' + ($author$project$NonEmptyString$toString(todo.todoText) + '\" }')))))));
 };
 var $author$project$TimeTravelConfig$modelToPrettyString = function (model) {
 	return '{\n' + ('    draft = \"' + (model.draft + ('\"\n' + ('  , filter = ' + ($author$project$TimeTravelConfig$filterToString(model.filter) + ('\n' + ('  , editing = ' + ($author$project$TimeTravelConfig$editingToString(model.editing) + ('\n' + ('  , pendingDelete = ' + ($author$project$TimeTravelConfig$pendingDeleteToString(model.pendingDelete) + ('\n' + ('  , todos = [\n' + (A2(
@@ -5276,7 +5276,7 @@ var $author$project$TimeTravelConfig$msgToDebugInfo = function (msg) {
 			return {
 				id: $elm$core$Maybe$Just(
 					$elm$core$String$fromInt(
-						$author$project$NonNegative$toInt(id))),
+						$author$project$NonNegativeInt$toInt(id))),
 				label: 'ToggledStatus'
 			};
 		case 'ToggledImportant':
@@ -5284,7 +5284,7 @@ var $author$project$TimeTravelConfig$msgToDebugInfo = function (msg) {
 			return {
 				id: $elm$core$Maybe$Just(
 					$elm$core$String$fromInt(
-						$author$project$NonNegative$toInt(id))),
+						$author$project$NonNegativeInt$toInt(id))),
 				label: 'ToggledImportant'
 			};
 		case 'AskedToDelete':
@@ -5292,7 +5292,7 @@ var $author$project$TimeTravelConfig$msgToDebugInfo = function (msg) {
 			return {
 				id: $elm$core$Maybe$Just(
 					$elm$core$String$fromInt(
-						$author$project$NonNegative$toInt(id))),
+						$author$project$NonNegativeInt$toInt(id))),
 				label: 'AskedToDelete'
 			};
 		case 'ConfirmedDelete':
@@ -5300,7 +5300,7 @@ var $author$project$TimeTravelConfig$msgToDebugInfo = function (msg) {
 			return {
 				id: $elm$core$Maybe$Just(
 					$elm$core$String$fromInt(
-						$author$project$NonNegative$toInt(id))),
+						$author$project$NonNegativeInt$toInt(id))),
 				label: 'ConfirmedDelete'
 			};
 		case 'CanceledDelete':
@@ -5331,7 +5331,7 @@ var $author$project$TimeTravelConfig$msgToDebugInfo = function (msg) {
 			return {
 				id: $elm$core$Maybe$Just(
 					$elm$core$String$fromInt(
-						$author$project$NonNegative$toInt(id))),
+						$author$project$NonNegativeInt$toInt(id))),
 				label: 'StartedEditingTodoText \"' + (draft + '\"')
 			};
 		case 'UpdatedEditingDraft':
@@ -5368,7 +5368,7 @@ var $author$project$Main$nextId = function (todos) {
 				function ($) {
 					return $.id;
 				},
-				$author$project$NonNegative$toInt),
+				$author$project$NonNegativeInt$toInt),
 			todos));
 	if (maybeMaxId.$ === 'Just') {
 		var maxId = maybeMaxId.a;
@@ -5432,21 +5432,21 @@ var $author$project$Main$deleteTodoById = function (id) {
 			$elm$core$Basics$not,
 			$author$project$Main$todoHasId(id)));
 };
-var $author$project$Utils$applyIf = F3(
-	function (predicate, fn, value) {
-		return predicate(value) ? fn(value) : value;
-	});
 var $author$project$Main$setTodoText = F2(
 	function (newTodoText, todo) {
 		return _Utils_update(
 			todo,
 			{todoText: newTodoText});
 	});
+var $author$project$Utils$when = F3(
+	function (predicate, fn, value) {
+		return predicate(value) ? fn(value) : value;
+	});
 var $author$project$Main$setTodoTextById = F2(
 	function (id, newTodoText) {
 		return $elm$core$List$map(
 			A2(
-				$author$project$Utils$applyIf,
+				$author$project$Utils$when,
 				$author$project$Main$todoHasId(id),
 				$author$project$Main$setTodoText(newTodoText)));
 	});
@@ -5458,7 +5458,7 @@ var $author$project$Main$toggleImportant = function (todo) {
 var $author$project$Main$toggleImportantById = function (id) {
 	return $elm$core$List$map(
 		A2(
-			$author$project$Utils$applyIf,
+			$author$project$Utils$when,
 			$author$project$Main$todoHasId(id),
 			$author$project$Main$toggleImportant));
 };
@@ -5479,7 +5479,7 @@ var $author$project$Main$toggleStatus = function (todo) {
 var $author$project$Main$toggleStatusById = function (id) {
 	return $elm$core$List$map(
 		A2(
-			$author$project$Utils$applyIf,
+			$author$project$Utils$when,
 			$author$project$Main$todoHasId(id),
 			$author$project$Main$toggleStatus));
 };
@@ -5703,14 +5703,10 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$html$Html$form = _VirtualDom_node('form');
 var $elm$html$Html$input = _VirtualDom_node('input');
-var $author$project$NonEmptyString$isValid = function (str) {
-	var _v0 = $author$project$NonEmptyString$fromString(str);
-	if (_v0.$ === 'Just') {
-		return true;
-	} else {
-		return false;
-	}
-};
+var $author$project$NonEmptyString$isValid = A2(
+	$elm$core$Basics$composeR,
+	$elm$core$String$trim,
+	A2($elm$core$Basics$composeR, $elm$core$String$isEmpty, $elm$core$Basics$not));
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
 };
@@ -6651,7 +6647,7 @@ var $author$project$TimeTravel$update = F3(
 			case 'Next':
 				return $author$project$TimeTravel$applyNext(
 					$author$project$TimeTravel$TimeTravel(app));
-			case 'ExportTimeline':
+			case 'ExportedTimeline':
 				return A2(
 					$author$project$TimeTravel$applyExport,
 					msgToDebug,
@@ -6662,7 +6658,7 @@ var $author$project$TimeTravel$update = F3(
 					_Utils_update(
 						app,
 						{importStatus: $elm$core$Maybe$Nothing, importText: txt}));
-			case 'ImportTimeline':
+			case 'ImportedTimeline':
 				return A5(
 					$author$project$TimeTravel$applyImport,
 					initModel,
@@ -6966,11 +6962,11 @@ var $author$project$TimeTravel$viewNav = function (timeline) {
 					]))
 			]));
 };
-var $author$project$TimeTravel$ExportTimeline = {$: 'ExportTimeline'};
+var $author$project$TimeTravel$ExportedTimeline = {$: 'ExportedTimeline'};
 var $author$project$TimeTravel$ImportTextChanged = function (a) {
 	return {$: 'ImportTextChanged', a: a};
 };
-var $author$project$TimeTravel$ImportTimeline = {$: 'ImportTimeline'};
+var $author$project$TimeTravel$ImportedTimeline = {$: 'ImportedTimeline'};
 var $elm$virtual_dom$VirtualDom$Custom = function (a) {
 	return {$: 'Custom', a: a};
 };
@@ -6985,7 +6981,7 @@ var $author$project$TimeTravel$importKeyDecoder = A2(
 	$elm$json$Json$Decode$andThen,
 	function (key) {
 		return (key === 'Enter') ? $elm$json$Json$Decode$succeed(
-			{message: $author$project$TimeTravel$ImportTimeline, preventDefault: true, stopPropagation: false}) : $elm$json$Json$Decode$fail('ignore');
+			{message: $author$project$TimeTravel$ImportedTimeline, preventDefault: true, stopPropagation: false}) : $elm$json$Json$Decode$fail('ignore');
 	},
 	A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string));
 var $elm$html$Html$textarea = _VirtualDom_node('textarea');
@@ -7049,7 +7045,7 @@ var $author$project$TimeTravel$viewTools = function (app) {
 										$elm$html$Html$button,
 										_List_fromArray(
 											[
-												$elm$html$Html$Events$onClick($author$project$TimeTravel$ExportTimeline)
+												$elm$html$Html$Events$onClick($author$project$TimeTravel$ExportedTimeline)
 											]),
 										_List_fromArray(
 											[
@@ -7084,7 +7080,7 @@ var $author$project$TimeTravel$viewTools = function (app) {
 										$elm$html$Html$button,
 										_List_fromArray(
 											[
-												$elm$html$Html$Events$onClick($author$project$TimeTravel$ImportTimeline)
+												$elm$html$Html$Events$onClick($author$project$TimeTravel$ImportedTimeline)
 											]),
 										_List_fromArray(
 											[
@@ -7128,8 +7124,8 @@ var $author$project$TimeTravel$viewDebugger = F2(
 					$author$project$TimeTravel$viewTools(app)
 				]));
 	});
-var $author$project$TimeTravel$ToggleVisibility = function (a) {
-	return {$: 'ToggleVisibility', a: a};
+var $author$project$TimeTravel$ToggledVisibility = function (a) {
+	return {$: 'ToggledVisibility', a: a};
 };
 var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
 var $elm$html$Html$label = _VirtualDom_node('label');
@@ -7148,7 +7144,7 @@ var $author$project$TimeTravel$viewToggle = function (app) {
 					[
 						$elm$html$Html$Attributes$type_('checkbox'),
 						$elm$html$Html$Attributes$checked(app.visibility),
-						$elm$html$Html$Events$onCheck($author$project$TimeTravel$ToggleVisibility),
+						$elm$html$Html$Events$onCheck($author$project$TimeTravel$ToggledVisibility),
 						$elm$html$Html$Attributes$id('toggle-debugger')
 					]),
 				_List_Nil),

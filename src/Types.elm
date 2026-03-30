@@ -1,7 +1,13 @@
 module Types exposing (..)
 
 import NonEmptyString exposing (NonEmptyString)
-import NonNegative exposing (NonNegative)
+import NonNegativeInt exposing (NonNegativeInt)
+
+
+
+-- =========================================
+-- MODEL
+-- =========================================
 
 
 type alias Model =
@@ -25,6 +31,16 @@ type alias TodoText =
     NonEmptyString
 
 
+type alias Id =
+    NonNegativeInt
+
+
+
+-- =========================================
+-- DOMAIN TYPES
+-- =========================================
+
+
 type Status
     = Active
     | Completed
@@ -45,8 +61,10 @@ type Editing
         }
 
 
-type alias Id =
-    NonNegative
+
+-- =========================================
+-- MESSAGES
+-- =========================================
 
 
 type Msg

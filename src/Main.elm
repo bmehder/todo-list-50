@@ -7,11 +7,11 @@ import Html.Events exposing (onCheck, onClick, onInput, onSubmit, preventDefault
 import Json.Decode as Decode
 import LabelText exposing (completedLabel, importantLabel, itemsLabel, remainingLabel)
 import NonEmptyString
-import NonNegative
+import NonNegativeInt
 import TimeTravel
 import TimeTravelConfig
 import Types exposing (..)
-import Utils exposing (applyIf)
+import Utils exposing (when)
 
 
 
@@ -122,7 +122,7 @@ todoTextFromStringUnsafe str =
 
 idFromIntUnsafe : Int -> Id
 idFromIntUnsafe n =
-    case NonNegative.fromInt n of
+    case NonNegativeInt.fromInt n of
         Just id ->
             id
 
@@ -135,7 +135,7 @@ nextId todos =
     let
         maybeMaxId =
             todos
-                |> List.map (.id >> NonNegative.toInt)
+                |> List.map (.id >> NonNegativeInt.toInt)
                 |> List.maximum
     in
     case maybeMaxId of
@@ -171,7 +171,7 @@ toggleImportant todo =
 
 toggleImportantById : Id -> List Todo -> List Todo
 toggleImportantById id =
-    List.map (applyIf (todoHasId id) toggleImportant)
+    List.map (when (todoHasId id) toggleImportant)
 
 
 setTodoText : TodoText -> Todo -> Todo
@@ -181,12 +181,12 @@ setTodoText newTodoText todo =
 
 toggleStatusById : Id -> List Todo -> List Todo
 toggleStatusById id =
-    List.map (applyIf (todoHasId id) toggleStatus)
+    List.map (when (todoHasId id) toggleStatus)
 
 
 setTodoTextById : Id -> TodoText -> List Todo -> List Todo
 setTodoTextById id newTodoText =
-    List.map (applyIf (todoHasId id) (setTodoText newTodoText))
+    List.map (when (todoHasId id) (setTodoText newTodoText))
 
 
 deleteTodoById : Id -> List Todo -> List Todo

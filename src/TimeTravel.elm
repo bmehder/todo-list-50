@@ -49,10 +49,10 @@ type Msg msg
     = AppMsg msg
     | Prev
     | Next
-    | ExportTimeline
+    | ExportedTimeline
     | ImportTextChanged String
-    | ImportTimeline
-    | ToggleVisibility Bool
+    | ImportedTimeline
+    | ToggledVisibility Bool
 
 
 type alias Frame msg model =
@@ -133,19 +133,19 @@ update config timeTravelMsg (TimeTravel app) =
         Next ->
             applyNext (TimeTravel app)
 
-        ExportTimeline ->
+        ExportedTimeline ->
             applyExport msgToDebug (TimeTravel app)
 
         ImportTextChanged txt ->
             TimeTravel { app | importText = txt, importStatus = Nothing }
 
-        ImportTimeline ->
+        ImportedTimeline ->
             applyImport initModel updateModel decodeMsg app.importText (TimeTravel app)
 
         AppMsg msg ->
             applyAppMsg updateModel msg (TimeTravel app)
 
-        ToggleVisibility isVisible ->
+        ToggledVisibility isVisible ->
             TimeTravel { app | visibility = isVisible }
 
 
@@ -172,7 +172,7 @@ viewToggle app =
         [ input
             [ type_ "checkbox"
             , checked app.visibility
-            , onCheck ToggleVisibility
+            , onCheck ToggledVisibility
             , id "toggle-debugger"
             ]
             []
@@ -206,7 +206,7 @@ viewTools app =
                 [ summary []
                     [ text "📦 Tools: Export / Import" ]
                 , div [ class "flow" ]
-                    [ button [ onClick ExportTimeline ] [ text "Export Timeline" ]
+                    [ button [ onClick ExportedTimeline ] [ text "Export Timeline" ]
                     , textarea
                         [ class "width-100 min-height-10"
                         , id "export"
@@ -222,7 +222,7 @@ viewTools app =
                         , placeholder "Paste timeline JSON here and press Enter to import"
                         ]
                         []
-                    , button [ onClick ImportTimeline ] [ text "Import Timeline" ]
+                    , button [ onClick ImportedTimeline ] [ text "Import Timeline" ]
                     , case app.importStatus of
                         Just msg ->
                             div [ class "font-size-small opacity-70 padding-top-1" ] [ text msg ]
@@ -651,7 +651,7 @@ importKeyDecoder =
             (\key ->
                 if key == "Enter" then
                     Decode.succeed
-                        { message = ImportTimeline
+                        { message = ImportedTimeline
                         , stopPropagation = False
                         , preventDefault = True
                         }

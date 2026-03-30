@@ -24,10 +24,5 @@ toString (NonEmptyString str) =
 
 
 isValid : String -> Bool
-isValid str =
-    case fromString str of
-        Just _ ->
-            True
-
-        Nothing ->
-            False
+isValid =
+    String.trim >> String.isEmpty >> not
