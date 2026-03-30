@@ -380,3 +380,150 @@ This upgrade transforms TimeTravel from a debugging aid into a **deterministic r
 - Build advanced debugging tools
 
 This is the same core idea used in systems like Redux DevTools, but implemented in a purely functional, Elm-native way.
+
+---
+
+## Making Your App Compatible with TimeTravel
+
+To use the TimeTravel module with your own Elm application, you need to provide a small adapter layer that describes your app in a generic way.
+
+This is done by implementing a configuration record with the following fields:
+
+```elm
+{ init : model
+, update : msg -> model -> model
+, view : model -> Html msg
+, msgToDebug : msg -> TimeTravel.DebugInfo
+, modelToString : model -> String
+, decodeMsg : { index : Int, label : String, id : Maybe String } -> Maybe msg
+}
+```
+
+### 1. `msgToDebug`
+
+This function converts your application's messages into a simple, displayable format:
+
+```elm
+msgToDebug : Msg -> TimeTravel.DebugInfo
+```
+
+You typically provide:
+
+- a `label` (string description of the message)
+- an optional `id` (useful for messages tied to specific entities)
+
+Example:
+
+```elm
+msgToDebug msg =
+    case msg of
+        ToggledStatus id ->
+            { label = "ToggledStatus", id = Just (String.fromInt (NonNegative.toInt id)) }
+
+        SetFilter filter ->
+            { label = "SetFilter " ++ filterToString filter, id = Nothing }
+```
+
+---
+
+### 2. `modelToString`
+
+This function defines how your model is displayed in the debugger:
+
+```elm
+modelToString : Model -> String
+```
+
+A simple implementation might use pretty-printing or custom formatting to make diffs readable.
+
+---
+
+### 3. `decodeMsg`
+
+This is the most important piece for replay.
+
+```elm
+decodeMsg : { index : Int, label : String, id : Maybe String } -> Maybe Msg
+```
+
+It converts a serialized message (from JSON) back into a real `Msg`.
+
+Typical patterns include:
+
+- matching exact labels
+- parsing IDs
+- extracting strings from labels
+
+Example:
+
+```elm
+decodeMsg item =
+    case item.label of
+        "CreatedTodo" ->
+            Just CreatedTodo
+
+        "ToggledStatus" ->
+            item.id
+                |> Maybe.andThen String.toInt
+                |> Maybe.map NonNegative
+                |> Maybe.map ToggledStatus
+
+        _ ->
+            Nothing
+```
+
+Not all messages need to be decoded. Only messages that affect state must be reconstructed.
+
+---
+
+### 4. Putting It All Together
+
+Once you have these functions, you can wrap your app:
+
+```elm
+main =
+    TimeTravel.withTimeTravel
+        { init = initModel
+        , update = update
+        , view = view
+        , msgToDebug = msgToDebug
+        , modelToString = modelToString
+        , decodeMsg = decodeMsg
+        }
+```
+
+---
+
+## Design Philosophy
+
+The key idea is:
+
+```text
+You describe your app — TimeTravel handles everything else
+```
+
+You are not modifying your app. You are *adapting* it to a generic interface.
+
+This keeps your application:
+
+- clean
+- testable
+- independent of the debugger
+
+While still enabling powerful features like:
+
+- time navigation
+- export/import
+- deterministic replay
+
+---
+
+## Mental Checklist
+
+When integrating TimeTravel into a new app, ask:
+
+- Can I describe each message as a string label?
+- Can I reconstruct important messages from that label?
+- Can I display my model as a readable string?
+
+If the answer is yes, your app can support TimeTravel.
