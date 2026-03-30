@@ -32,11 +32,11 @@ type alias AppConfig msg model =
     , msgToDebug : msg -> DebugInfo
     , modelToString : model -> String
     , decodeMsg :
-    { index : Int
-    , label : String
-    , payload : Maybe Decode.Value
-    }
-    -> Maybe msg
+        { index : Int
+        , label : String
+        , payload : Maybe Decode.Value
+        }
+        -> Maybe msg
     }
 
 
@@ -184,13 +184,7 @@ viewToggle app =
             []
         , Html.label
             [ Html.Attributes.for "toggle-debugger" ]
-            [ text
-                (if app.visibility then
-                    "Hide Time Travel Debugger"
-
-                 else
-                    "Show Time Travel Debugger"
-                )
+            [ text "Show Time Travel Debugger"
             ]
         ]
 
@@ -207,7 +201,7 @@ viewTools : { a | exportText : Maybe String, importText : String, importStatus :
 viewTools app =
     div [ class "flow" ]
         [ Html.hr [ class "opacity-30" ] []
-        , div [ class "padding-top-2" ]
+        , div [ ]
             [ details [ class "flow" ]
                 [ summary []
                     [ text "📦 Tools: Export / Import" ]
@@ -231,7 +225,7 @@ viewTools app =
                     , button [ onClick ImportedTimeline ] [ text "Import Timeline" ]
                     , case app.importStatus of
                         Just msg ->
-                            div [ class "font-size-small opacity-70 padding-top-1" ] [ text msg ]
+                            div [ class "font-size-small opacity-70 padding-block-1" ] [ text msg ]
 
                         Nothing ->
                             text ""
@@ -550,8 +544,10 @@ viewFrame msgToDebug modelToString index isOpen frame =
             "Msg " ++ String.fromInt index ++ ": " ++ info.label
     in
     details
-        (name "frame"
-            :: (if isOpen then
+        ([ class "padding-block-end-1 border-bottom-1"
+         , name "frame"
+         ]
+            ++ (if isOpen then
                     [ attribute "open" "" ]
 
                 else
@@ -622,7 +618,7 @@ diffLines before after =
             []
 
           else
-            [ Html.div [ class "opacity-50 padding-top-1" ]
+            [ Html.div [ class "opacity-50 padding-block-1" ]
                 (text "Before:"
                     :: List.map renderRemoved removedLines
                 )

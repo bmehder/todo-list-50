@@ -257,6 +257,14 @@ summary {
 	padding-inline-start: 1.5rem;
 }
 
+.padding-block-1 {
+	padding-block: 1rem;
+}
+
+.padding-block-end-1 {
+	padding-block-end: 1rem;
+}
+
 .text-align-center {
 	text-align: center;
 }
@@ -271,6 +279,10 @@ summary {
 
 .opacity-60 {
 	opacity: 0.6;
+}
+
+.border-bottom-1 {
+	border-bottom: 1px solid;
 }
 
 .font-size-small {
@@ -306,5 +318,29 @@ summary {
 
 	&:hover {
 		color: var(--danger-600);
+	}
+}
+
+.bg-success {
+	background-color: var(--success-500);
+
+	&:hover {
+		background-color: var(--success-600);
+	}
+}
+
+.bg-warning {
+	background-color: var(--warning-500);
+
+	&:hover {
+		background-color: var(--warning-600);
+	}
+}
+
+.bg-danger {
+	background-color: var(--danger-500);
+
+	&:hover {
+		background-color: var(--danger-600);
 	}
 }

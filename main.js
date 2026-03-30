@@ -6894,7 +6894,7 @@ var $author$project$TimeTravel$diffLines = F2(
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('opacity-50 padding-top-1')
+								$elm$html$Html$Attributes$class('opacity-50 padding-block-1')
 							]),
 						A2(
 							$elm$core$List$cons,
@@ -6909,9 +6909,12 @@ var $author$project$TimeTravel$viewFrame = F5(
 		var summaryText = 'Msg ' + ($elm$core$String$fromInt(index) + (': ' + info.label));
 		return A2(
 			$elm$html$Html$details,
-			A2(
-				$elm$core$List$cons,
-				$elm$html$Html$Attributes$name('frame'),
+			_Utils_ap(
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('padding-block-end-1 border-bottom-1'),
+						$elm$html$Html$Attributes$name('frame')
+					]),
 				isOpen ? _List_fromArray(
 					[
 						A2($elm$html$Html$Attributes$attribute, 'open', '')
@@ -7100,10 +7103,7 @@ var $author$project$TimeTravel$viewTools = function (app) {
 				_List_Nil),
 				A2(
 				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('padding-top-2')
-					]),
+				_List_Nil,
 				_List_fromArray(
 					[
 						A2(
@@ -7182,7 +7182,7 @@ var $author$project$TimeTravel$viewTools = function (app) {
 												$elm$html$Html$div,
 												_List_fromArray(
 													[
-														$elm$html$Html$Attributes$class('font-size-small opacity-70 padding-top-1')
+														$elm$html$Html$Attributes$class('font-size-small opacity-70 padding-block-1')
 													]),
 												_List_fromArray(
 													[
@@ -7244,8 +7244,7 @@ var $author$project$TimeTravel$viewToggle = function (app) {
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text(
-						app.visibility ? 'Hide Time Travel Debugger' : 'Show Time Travel Debugger')
+						$elm$html$Html$text('Show Time Travel Debugger')
 					]))
 			]));
 };
