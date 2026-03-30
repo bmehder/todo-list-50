@@ -4,8 +4,6 @@
 
 This module introduces a reusable, app-agnostic Time Travel Debugger for Elm applications. It wraps an existing Elm application—without modifying its core logic—and adds the ability to move backward and forward through state transitions.
 
-The design is intentionally minimal, composable, and aligned with Elm’s functional architecture.
-
 ---
 
 ## Core Idea
@@ -176,6 +174,8 @@ TimeTravel acts as a _functional decorator_:
 - It wraps your `update` function
 - It wraps your `view`
 - It augments your `Model`
+  
+It augments your Model by embedding it inside a richer structure that tracks history and debugger state.
 
 Without changing your original code.
 
@@ -397,18 +397,18 @@ This is done by implementing a configuration record with the following fields:
 { init : model
 , update : msg -> model -> model
 , view : model -> Html msg
-, msgToDebug : msg -> TimeTravel.DebugInfo
+, msgToDebugInfo : msg -> TimeTravel.DebugInfo
 , modelToString : model -> String
 , decodeMsg : { index : Int, label : String, id : Maybe String } -> Maybe msg
 }
 ```
 
-### 1. `msgToDebug`
+### 1. `msgToDebugInfo`
 
 This function converts your application's messages into a simple, displayable format:
 
 ```elm
-msgToDebug : Msg -> TimeTravel.DebugInfo
+msgToDebugInfo : Msg -> TimeTravel.DebugInfo
 ```
 
 You typically provide:
@@ -419,7 +419,7 @@ You typically provide:
 Example:
 
 ```elm
-msgToDebug msg =
+msgToDebugInfo msg =
     case msg of
         ToggledStatus id ->
             { label = "ToggledStatus", id = Just (String.fromInt (NonNegative.toInt id)) }
@@ -490,7 +490,7 @@ main =
         { init = initModel
         , update = update
         , view = view
-        , msgToDebug = msgToDebug
+        , msgToDebugInfo = msgToDebugInfo
         , modelToString = modelToString
         , decodeMsg = decodeMsg
         }
