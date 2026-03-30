@@ -36,6 +36,10 @@ This transformation happens through `withTimeTravel`, which acts as a structural
 
 Importantly, your original `update` and `view` functions remain unchanged. TimeTravel composes around them rather than modifying them.
 
+In practice, this means the `init`, `update`, and `view` functions you pass into `withTimeTravel`
+are the exact same functions from your application. TimeTravel does not replace them—it calls
+them internally and wraps their inputs and outputs to add history tracking and debugging features.
+
 ---
 
 ## The Timeline Model
