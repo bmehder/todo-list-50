@@ -4855,46 +4855,22 @@ var $elm$core$Result$isOk = function (result) {
 };
 var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $elm$json$Json$Decode$bool = _Json_decodeBool;
-var $author$project$Types$ActiveOrImportantOnly = {$: 'ActiveOrImportantOnly'};
-var $author$project$Types$All = {$: 'All'};
+var $author$project$Types$AskedToDelete = function (a) {
+	return {$: 'AskedToDelete', a: a};
+};
 var $author$project$Types$CanceledDelete = {$: 'CanceledDelete'};
 var $author$project$Types$CanceledEdit = {$: 'CanceledEdit'};
-var $author$project$Types$CompletedOnly = {$: 'CompletedOnly'};
+var $author$project$Types$ConfirmedDelete = function (a) {
+	return {$: 'ConfirmedDelete', a: a};
+};
 var $author$project$Types$CreatedTodo = {$: 'CreatedTodo'};
-var $author$project$Types$ImportantOnly = {$: 'ImportantOnly'};
 var $author$project$Types$NoOp = {$: 'NoOp'};
 var $author$project$Types$SavedEditedTodoText = {$: 'SavedEditedTodoText'};
-var $author$project$Types$SetFilter = function (a) {
-	return {$: 'SetFilter', a: a};
+var $author$project$Types$ToggledImportant = function (a) {
+	return {$: 'ToggledImportant', a: a};
 };
-var $author$project$TimeTravelConfig$decodeExact = function (item) {
-	var _v0 = item.label;
-	switch (_v0) {
-		case 'NoOp (ignored UI event)':
-			return $elm$core$Maybe$Just($author$project$Types$NoOp);
-		case 'SavedEditedTodoText':
-			return $elm$core$Maybe$Just($author$project$Types$SavedEditedTodoText);
-		case 'CanceledEdit':
-			return $elm$core$Maybe$Just($author$project$Types$CanceledEdit);
-		case 'CanceledDelete':
-			return $elm$core$Maybe$Just($author$project$Types$CanceledDelete);
-		case 'CreatedTodo':
-			return $elm$core$Maybe$Just($author$project$Types$CreatedTodo);
-		case 'SetFilter ActiveAndImportantOnly':
-			return $elm$core$Maybe$Just(
-				$author$project$Types$SetFilter($author$project$Types$ActiveOrImportantOnly));
-		case 'SetFilter CompletedOnly':
-			return $elm$core$Maybe$Just(
-				$author$project$Types$SetFilter($author$project$Types$CompletedOnly));
-		case 'SetFilter All':
-			return $elm$core$Maybe$Just(
-				$author$project$Types$SetFilter($author$project$Types$All));
-		case 'SetFilter ImportantOnly':
-			return $elm$core$Maybe$Just(
-				$author$project$Types$SetFilter($author$project$Types$ImportantOnly));
-		default:
-			return $elm$core$Maybe$Nothing;
-	}
+var $author$project$Types$ToggledStatus = function (a) {
+	return {$: 'ToggledStatus', a: a};
 };
 var $author$project$Types$UpdatedDraft = function (a) {
 	return {$: 'UpdatedDraft', a: a};
@@ -4902,33 +4878,8 @@ var $author$project$Types$UpdatedDraft = function (a) {
 var $author$project$Types$UpdatedEditingDraft = function (a) {
 	return {$: 'UpdatedEditingDraft', a: a};
 };
-var $author$project$Types$StartedEditingTodoText = F2(
-	function (a, b) {
-		return {$: 'StartedEditingTodoText', a: a, b: b};
-	});
-var $elm$core$String$length = _String_length;
-var $elm$core$String$slice = _String_slice;
-var $elm$core$String$dropLeft = F2(
-	function (n, string) {
-		return (n < 1) ? string : A3(
-			$elm$core$String$slice,
-			n,
-			$elm$core$String$length(string),
-			string);
-	});
-var $elm$core$String$startsWith = _String_startsWith;
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
-var $elm$core$String$dropRight = F2(
-	function (n, string) {
-		return (n < 1) ? string : A3($elm$core$String$slice, 0, -n, string);
-	});
-var $author$project$TimeTravelConfig$stripQuotes = function (str) {
-	return A2(
-		$elm$core$String$dropRight,
-		1,
-		A2($elm$core$String$dropLeft, 1, str));
+var $author$project$Types$SetFilter = function (a) {
+	return {$: 'SetFilter', a: a};
 };
 var $elm$core$Maybe$andThen = F2(
 	function (callback, maybeValue) {
@@ -4939,16 +4890,25 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $elm$core$Basics$identity = function (x) {
-	return x;
-};
-var $author$project$NonNegativeInt$NonNegativeInt = function (a) {
-	return {$: 'NonNegativeInt', a: a};
-};
-var $elm$core$Basics$ge = _Utils_ge;
-var $author$project$NonNegativeInt$fromInt = function (n) {
-	return (n >= 0) ? $elm$core$Maybe$Just(
-		$author$project$NonNegativeInt$NonNegativeInt(n)) : $elm$core$Maybe$Nothing;
+var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $author$project$Types$ActiveOrImportantOnly = {$: 'ActiveOrImportantOnly'};
+var $author$project$Types$All = {$: 'All'};
+var $author$project$Types$CompletedOnly = {$: 'CompletedOnly'};
+var $author$project$Types$ImportantOnly = {$: 'ImportantOnly'};
+var $author$project$TimeTravelConfig$filterFromTag = function (filterStr) {
+	switch (filterStr) {
+		case 'All':
+			return $elm$core$Maybe$Just($author$project$Types$All);
+		case 'ActiveOrImportantOnly':
+			return $elm$core$Maybe$Just($author$project$Types$ActiveOrImportantOnly);
+		case 'CompletedOnly':
+			return $elm$core$Maybe$Just($author$project$Types$CompletedOnly);
+		case 'ImportantOnly':
+			return $elm$core$Maybe$Just($author$project$Types$ImportantOnly);
+		default:
+			return $elm$core$Maybe$Nothing;
+	}
 };
 var $elm$core$Maybe$map = F2(
 	function (f, maybe) {
@@ -4960,113 +4920,149 @@ var $elm$core$Maybe$map = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $elm$core$String$toInt = _String_toInt;
-var $author$project$TimeTravelConfig$withId = F2(
-	function (maybeId, toMsg) {
-		return A2(
-			$elm$core$Maybe$map,
-			toMsg,
-			A2(
-				$elm$core$Maybe$andThen,
-				$author$project$NonNegativeInt$fromInt,
-				A2($elm$core$Maybe$andThen, $elm$core$String$toInt, maybeId)));
-	});
-var $author$project$TimeTravelConfig$decodeStartedEditing = function (item) {
-	if (A2($elm$core$String$startsWith, 'StartedEditingTodoText ', item.label)) {
-		var draft = $author$project$TimeTravelConfig$stripQuotes(
-			A2(
-				$elm$core$String$dropLeft,
-				$elm$core$String$length('StartedEditingTodoText '),
-				item.label));
-		return A2(
-			$author$project$TimeTravelConfig$withId,
-			item.id,
-			function (idVal) {
-				return A2($author$project$Types$StartedEditingTodoText, idVal, draft);
-			});
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$TimeTravelConfig$decodeFilterPayload = function (maybePayload) {
+	return A2(
+		$elm$core$Maybe$andThen,
+		function (payload) {
+			var _v0 = A2(
+				$elm$json$Json$Decode$decodeValue,
+				A2($elm$json$Json$Decode$field, 'filter', $elm$json$Json$Decode$string),
+				payload);
+			if (_v0.$ === 'Ok') {
+				var filterStr = _v0.a;
+				return A2(
+					$elm$core$Maybe$map,
+					$author$project$Types$SetFilter,
+					$author$project$TimeTravelConfig$filterFromTag(filterStr));
+			} else {
+				return $elm$core$Maybe$Nothing;
+			}
+		},
+		maybePayload);
+};
+var $elm$core$Basics$identity = function (x) {
+	return x;
+};
+var $author$project$NonNegativeInt$NonNegativeInt = function (a) {
+	return {$: 'NonNegativeInt', a: a};
+};
+var $elm$core$Basics$ge = _Utils_ge;
+var $author$project$NonNegativeInt$fromInt = function (n) {
+	return (n >= 0) ? $elm$core$Maybe$Just(
+		$author$project$NonNegativeInt$NonNegativeInt(n)) : $elm$core$Maybe$Nothing;
+};
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $author$project$TimeTravelConfig$decodeIdValue = function (payload) {
+	var _v0 = A2(
+		$elm$json$Json$Decode$decodeValue,
+		A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$int),
+		payload);
+	if (_v0.$ === 'Ok') {
+		var intId = _v0.a;
+		return $author$project$NonNegativeInt$fromInt(intId);
 	} else {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
+var $author$project$TimeTravelConfig$decodeIdPayload = F2(
+	function (toMsg, maybePayload) {
+		return A2(
+			$elm$core$Maybe$map,
+			toMsg,
+			A2($elm$core$Maybe$andThen, $author$project$TimeTravelConfig$decodeIdValue, maybePayload));
 	});
-var $author$project$TimeTravelConfig$matchPrefix = F3(
-	function (prefix, toMsg, str) {
-		return A2($elm$core$String$startsWith, prefix, str) ? toMsg(
-			A2(
-				$elm$core$String$dropLeft,
-				$elm$core$String$length(prefix),
-				str)) : $elm$core$Maybe$Nothing;
+var $author$project$Types$StartedEditingTodoText = F2(
+	function (a, b) {
+		return {$: 'StartedEditingTodoText', a: a, b: b};
 	});
-var $author$project$TimeTravelConfig$match = F3(
-	function (prefix, toMsg, str) {
-		return A3(
-			$author$project$TimeTravelConfig$matchPrefix,
-			prefix,
-			A2(
-				$elm$core$Basics$composeR,
-				$author$project$TimeTravelConfig$stripQuotes,
-				A2($elm$core$Basics$composeR, toMsg, $elm$core$Maybe$Just)),
-			str);
-	});
-var $author$project$TimeTravelConfig$orElse = F2(
-	function (first, second) {
-		if (first.$ === 'Just') {
-			return first;
+var $elm$json$Json$Decode$fail = _Json_fail;
+var $elm$json$Json$Decode$map = _Json_map1;
+var $author$project$TimeTravelConfig$startedEditingDecoder = A2(
+	$elm$json$Json$Decode$andThen,
+	function (intId) {
+		var _v0 = $author$project$NonNegativeInt$fromInt(intId);
+		if (_v0.$ === 'Just') {
+			var id = _v0.a;
+			return A2(
+				$elm$json$Json$Decode$map,
+				function (draft) {
+					return {draft: draft, id: id};
+				},
+				A2($elm$json$Json$Decode$field, 'draft', $elm$json$Json$Decode$string));
 		} else {
-			return second;
+			return $elm$json$Json$Decode$fail('Invalid non-negative id');
 		}
-	});
-var $author$project$TimeTravelConfig$decodePattern = function (item) {
-	var labelStr = item.label;
+	},
+	A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$int));
+var $author$project$TimeTravelConfig$decodeStartedEditingPayload = function (maybePayload) {
 	return A2(
-		$author$project$TimeTravelConfig$orElse,
-		$author$project$TimeTravelConfig$decodeStartedEditing(item),
-		A2(
-			$author$project$TimeTravelConfig$orElse,
-			A3($author$project$TimeTravelConfig$match, 'UpdatedEditingDraft (editing) ', $author$project$Types$UpdatedEditingDraft, labelStr),
-			A3($author$project$TimeTravelConfig$match, 'UpdatedDraft (typing) ', $author$project$Types$UpdatedDraft, labelStr)));
+		$elm$core$Maybe$andThen,
+		function (payload) {
+			var _v0 = A2($elm$json$Json$Decode$decodeValue, $author$project$TimeTravelConfig$startedEditingDecoder, payload);
+			if (_v0.$ === 'Ok') {
+				var id = _v0.a.id;
+				var draft = _v0.a.draft;
+				return $elm$core$Maybe$Just(
+					A2($author$project$Types$StartedEditingTodoText, id, draft));
+			} else {
+				return $elm$core$Maybe$Nothing;
+			}
+		},
+		maybePayload);
 };
-var $author$project$Types$AskedToDelete = function (a) {
-	return {$: 'AskedToDelete', a: a};
-};
-var $author$project$Types$ConfirmedDelete = function (a) {
-	return {$: 'ConfirmedDelete', a: a};
-};
-var $author$project$Types$ToggledImportant = function (a) {
-	return {$: 'ToggledImportant', a: a};
-};
-var $author$project$Types$ToggledStatus = function (a) {
-	return {$: 'ToggledStatus', a: a};
-};
-var $author$project$TimeTravelConfig$decodeWithId = function (item) {
+var $author$project$TimeTravelConfig$decodeStringValuePayload = F2(
+	function (toMsg, maybePayload) {
+		return A2(
+			$elm$core$Maybe$andThen,
+			function (payload) {
+				var _v0 = A2(
+					$elm$json$Json$Decode$decodeValue,
+					A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
+					payload);
+				if (_v0.$ === 'Ok') {
+					var value = _v0.a;
+					return $elm$core$Maybe$Just(
+						toMsg(value));
+				} else {
+					return $elm$core$Maybe$Nothing;
+				}
+			},
+			maybePayload);
+	});
+var $author$project$TimeTravelConfig$decodeMsg = function (item) {
 	var _v0 = item.label;
 	switch (_v0) {
 		case 'ToggledStatus':
-			return A2($author$project$TimeTravelConfig$withId, item.id, $author$project$Types$ToggledStatus);
+			return A2($author$project$TimeTravelConfig$decodeIdPayload, $author$project$Types$ToggledStatus, item.payload);
 		case 'ToggledImportant':
-			return A2($author$project$TimeTravelConfig$withId, item.id, $author$project$Types$ToggledImportant);
+			return A2($author$project$TimeTravelConfig$decodeIdPayload, $author$project$Types$ToggledImportant, item.payload);
 		case 'AskedToDelete':
-			return A2($author$project$TimeTravelConfig$withId, item.id, $author$project$Types$AskedToDelete);
+			return A2($author$project$TimeTravelConfig$decodeIdPayload, $author$project$Types$AskedToDelete, item.payload);
 		case 'ConfirmedDelete':
-			return A2($author$project$TimeTravelConfig$withId, item.id, $author$project$Types$ConfirmedDelete);
+			return A2($author$project$TimeTravelConfig$decodeIdPayload, $author$project$Types$ConfirmedDelete, item.payload);
+		case 'CanceledDelete':
+			return $elm$core$Maybe$Just($author$project$Types$CanceledDelete);
+		case 'UpdatedDraft':
+			return A2($author$project$TimeTravelConfig$decodeStringValuePayload, $author$project$Types$UpdatedDraft, item.payload);
+		case 'SetFilter':
+			return $author$project$TimeTravelConfig$decodeFilterPayload(item.payload);
+		case 'CreatedTodo':
+			return $elm$core$Maybe$Just($author$project$Types$CreatedTodo);
+		case 'StartedEditingTodoText':
+			return $author$project$TimeTravelConfig$decodeStartedEditingPayload(item.payload);
+		case 'UpdatedEditingDraft':
+			return A2($author$project$TimeTravelConfig$decodeStringValuePayload, $author$project$Types$UpdatedEditingDraft, item.payload);
+		case 'SavedEditedTodoText':
+			return $elm$core$Maybe$Just($author$project$Types$SavedEditedTodoText);
+		case 'CanceledEdit':
+			return $elm$core$Maybe$Just($author$project$Types$CanceledEdit);
+		case 'NoOp':
+			return $elm$core$Maybe$Just($author$project$Types$NoOp);
 		default:
 			return $elm$core$Maybe$Nothing;
 	}
 };
-var $author$project$TimeTravelConfig$decodeMsg = function (item) {
-	return A2(
-		$author$project$TimeTravelConfig$orElse,
-		$author$project$TimeTravelConfig$decodePattern(item),
-		A2(
-			$author$project$TimeTravelConfig$orElse,
-			$author$project$TimeTravelConfig$decodeWithId(item),
-			$author$project$TimeTravelConfig$decodeExact(item)));
-};
-var $elm$json$Json$Decode$field = _Json_decodeField;
 var $author$project$Types$Active = {$: 'Active'};
 var $author$project$Types$Completed = {$: 'Completed'};
 var $author$project$Types$NotEditing = {$: 'NotEditing'};
@@ -5269,86 +5265,170 @@ var $author$project$TimeTravelConfig$modelToPrettyString = function (model) {
 		',\n',
 		A2($elm$core$List$map, $author$project$TimeTravelConfig$todoToRecordString, model.todos)) + ('\n    ]\n' + '}')))))))))))))));
 };
+var $author$project$TimeTravelConfig$filterTag = function (filter) {
+	switch (filter.$) {
+		case 'All':
+			return 'All';
+		case 'ActiveOrImportantOnly':
+			return 'ActiveOrImportantOnly';
+		case 'CompletedOnly':
+			return 'CompletedOnly';
+		default:
+			return 'ImportantOnly';
+	}
+};
+var $elm$json$Json$Encode$int = _Json_wrap;
+var $elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v0, obj) {
+					var k = _v0.a;
+					var v = _v0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var $elm$json$Json$Encode$string = _Json_wrap;
 var $author$project$TimeTravelConfig$msgToDebugInfo = function (msg) {
 	switch (msg.$) {
 		case 'ToggledStatus':
 			var id = msg.a;
 			return {
-				id: $elm$core$Maybe$Just(
-					$elm$core$String$fromInt(
-						$author$project$NonNegativeInt$toInt(id))),
-				label: 'ToggledStatus'
+				label: 'ToggledStatus',
+				payload: $elm$core$Maybe$Just(
+					$elm$json$Json$Encode$object(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'id',
+								$elm$json$Json$Encode$int(
+									$author$project$NonNegativeInt$toInt(id)))
+							])))
 			};
 		case 'ToggledImportant':
 			var id = msg.a;
 			return {
-				id: $elm$core$Maybe$Just(
-					$elm$core$String$fromInt(
-						$author$project$NonNegativeInt$toInt(id))),
-				label: 'ToggledImportant'
+				label: 'ToggledImportant',
+				payload: $elm$core$Maybe$Just(
+					$elm$json$Json$Encode$object(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'id',
+								$elm$json$Json$Encode$int(
+									$author$project$NonNegativeInt$toInt(id)))
+							])))
 			};
 		case 'AskedToDelete':
 			var id = msg.a;
 			return {
-				id: $elm$core$Maybe$Just(
-					$elm$core$String$fromInt(
-						$author$project$NonNegativeInt$toInt(id))),
-				label: 'AskedToDelete'
+				label: 'AskedToDelete',
+				payload: $elm$core$Maybe$Just(
+					$elm$json$Json$Encode$object(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'id',
+								$elm$json$Json$Encode$int(
+									$author$project$NonNegativeInt$toInt(id)))
+							])))
 			};
 		case 'ConfirmedDelete':
 			var id = msg.a;
 			return {
-				id: $elm$core$Maybe$Just(
-					$elm$core$String$fromInt(
-						$author$project$NonNegativeInt$toInt(id))),
-				label: 'ConfirmedDelete'
+				label: 'ConfirmedDelete',
+				payload: $elm$core$Maybe$Just(
+					$elm$json$Json$Encode$object(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'id',
+								$elm$json$Json$Encode$int(
+									$author$project$NonNegativeInt$toInt(id)))
+							])))
 			};
 		case 'CanceledDelete':
-			return {id: $elm$core$Maybe$Nothing, label: 'CanceledDelete'};
+			return {label: 'CanceledDelete', payload: $elm$core$Maybe$Nothing};
 		case 'UpdatedDraft':
 			var str = msg.a;
-			return {id: $elm$core$Maybe$Nothing, label: 'UpdatedDraft (typing) \"' + (str + '\"')};
+			return {
+				label: 'UpdatedDraft',
+				payload: $elm$core$Maybe$Just(
+					$elm$json$Json$Encode$object(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'value',
+								$elm$json$Json$Encode$string(str))
+							])))
+			};
 		case 'SetFilter':
 			var filter = msg.a;
-			var filterLabel = function () {
-				switch (filter.$) {
-					case 'All':
-						return 'All';
-					case 'ActiveOrImportantOnly':
-						return 'ActiveAndImportantOnly';
-					case 'CompletedOnly':
-						return 'CompletedOnly';
-					default:
-						return 'ImportantOnly';
-				}
-			}();
-			return {id: $elm$core$Maybe$Nothing, label: 'SetFilter ' + filterLabel};
+			return {
+				label: 'SetFilter',
+				payload: $elm$core$Maybe$Just(
+					$elm$json$Json$Encode$object(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'filter',
+								$elm$json$Json$Encode$string(
+									$author$project$TimeTravelConfig$filterTag(filter)))
+							])))
+			};
 		case 'CreatedTodo':
-			return {id: $elm$core$Maybe$Nothing, label: 'CreatedTodo'};
+			return {label: 'CreatedTodo', payload: $elm$core$Maybe$Nothing};
 		case 'StartedEditingTodoText':
 			var id = msg.a;
 			var draft = msg.b;
 			return {
-				id: $elm$core$Maybe$Just(
-					$elm$core$String$fromInt(
-						$author$project$NonNegativeInt$toInt(id))),
-				label: 'StartedEditingTodoText \"' + (draft + '\"')
+				label: 'StartedEditingTodoText',
+				payload: $elm$core$Maybe$Just(
+					$elm$json$Json$Encode$object(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'id',
+								$elm$json$Json$Encode$int(
+									$author$project$NonNegativeInt$toInt(id))),
+								_Utils_Tuple2(
+								'draft',
+								$elm$json$Json$Encode$string(draft))
+							])))
 			};
 		case 'UpdatedEditingDraft':
 			var str = msg.a;
-			return {id: $elm$core$Maybe$Nothing, label: 'UpdatedEditingDraft (editing) \"' + (str + '\"')};
+			return {
+				label: 'UpdatedEditingDraft',
+				payload: $elm$core$Maybe$Just(
+					$elm$json$Json$Encode$object(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'value',
+								$elm$json$Json$Encode$string(str))
+							])))
+			};
 		case 'SavedEditedTodoText':
-			return {id: $elm$core$Maybe$Nothing, label: 'SavedEditedTodoText'};
+			return {label: 'SavedEditedTodoText', payload: $elm$core$Maybe$Nothing};
 		case 'CanceledEdit':
-			return {id: $elm$core$Maybe$Nothing, label: 'CanceledEdit'};
+			return {label: 'CanceledEdit', payload: $elm$core$Maybe$Nothing};
 		default:
-			return {id: $elm$core$Maybe$Nothing, label: 'NoOp (ignored UI event)'};
+			return {label: 'NoOp', payload: $elm$core$Maybe$Nothing};
 	}
 };
 var $elm$json$Json$Decode$succeed = _Json_succeed;
 var $author$project$Types$EditingTodoText = function (a) {
 	return {$: 'EditingTodoText', a: a};
 };
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
 var $elm$core$List$maximum = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -5584,7 +5664,6 @@ var $author$project$Main$update = F2(
 				return model;
 		}
 	});
-var $elm$json$Json$Decode$map = _Json_map1;
 var $elm$json$Json$Decode$map2 = _Json_map2;
 var $elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 	switch (handler.$) {
@@ -5598,7 +5677,6 @@ var $elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 			return 3;
 	}
 };
-var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -5724,7 +5802,6 @@ var $elm$json$Json$Decode$at = F2(
 	function (fields, decoder) {
 		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
 	});
-var $elm$json$Json$Decode$string = _Json_decodeString;
 var $elm$html$Html$Events$targetValue = A2(
 	$elm$json$Json$Decode$at,
 	_List_fromArray(
@@ -5899,7 +5976,6 @@ var $author$project$Main$viewDeleteButton = function (todo) {
 				$elm$html$Html$text('✕')
 			]));
 };
-var $elm$json$Json$Decode$fail = _Json_fail;
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $author$project$Main$viewEditing = function (draft) {
 	return A2(
@@ -6203,11 +6279,22 @@ var $elm$url$Url$Url = F6(
 		return {fragment: fragment, host: host, path: path, port_: port_, protocol: protocol, query: query};
 	});
 var $elm$core$String$contains = _String_contains;
+var $elm$core$String$length = _String_length;
+var $elm$core$String$slice = _String_slice;
+var $elm$core$String$dropLeft = F2(
+	function (n, string) {
+		return (n < 1) ? string : A3(
+			$elm$core$String$slice,
+			n,
+			$elm$core$String$length(string),
+			string);
+	});
 var $elm$core$String$indexes = _String_indexes;
 var $elm$core$String$left = F2(
 	function (n, string) {
 		return (n < 1) ? '' : A3($elm$core$String$slice, 0, n, string);
 	});
+var $elm$core$String$toInt = _String_toInt;
 var $elm$url$Url$chompBeforePath = F5(
 	function (protocol, path, params, frag, str) {
 		if ($elm$core$String$isEmpty(str) || A2($elm$core$String$contains, '@', str)) {
@@ -6301,6 +6388,7 @@ var $elm$url$Url$chompAfterProtocol = F2(
 			}
 		}
 	});
+var $elm$core$String$startsWith = _String_startsWith;
 var $elm$url$Url$fromString = function (str) {
 	return A2($elm$core$String$startsWith, 'http://', str) ? A2(
 		$elm$url$Url$chompAfterProtocol,
@@ -6433,25 +6521,30 @@ var $author$project$TimeTravel$applyAppMsg = F3(
 				app,
 				{timeline: newTimeline}));
 	});
-var $elm$core$String$replace = F3(
-	function (before, after, string) {
-		return A2(
-			$elm$core$String$join,
-			after,
-			A2($elm$core$String$split, before, string));
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
 	});
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
 var $author$project$TimeTravel$applyExport = F2(
 	function (msgToDebug, _v0) {
 		var app = _v0.a;
 		var timeline = app.timeline;
 		var messages = function () {
-			var initial = {id: $elm$core$Maybe$Nothing, index: -1, label: 'InitialModel'};
+			var initial = {index: -1, label: 'InitialModel', payload: $elm$core$Maybe$Nothing};
 			var historyMessages = A2(
 				$elm$core$List$indexedMap,
 				F2(
 					function (i, frame) {
 						var info = msgToDebug(frame.msg);
-						return {id: info.id, index: i, label: info.label};
+						return {index: i, label: info.label, payload: info.payload};
 					}),
 				$elm$core$List$reverse(timeline.past));
 			return _Utils_ap(
@@ -6459,31 +6552,35 @@ var $author$project$TimeTravel$applyExport = F2(
 				_List_fromArray(
 					[initial]));
 		}();
-		var jsonString = function () {
-			var escape = function (str) {
-				return A3(
-					$elm$core$String$replace,
-					'\"',
-					'\\\"',
-					A3($elm$core$String$replace, '\\', '\\\\', str));
-			};
-			var encodeItem = function (item) {
-				var idPart = function () {
-					var _v1 = item.id;
-					if (_v1.$ === 'Just') {
-						var id = _v1.a;
-						return '\"id\": \"' + (escape(id) + '\"');
-					} else {
-						return '\"id\": null';
-					}
-				}();
-				return '{' + ('\"index\": ' + ($elm$core$String$fromInt(item.index) + (', ' + ('\"label\": \"' + (escape(item.label) + ('\"' + (', ' + (idPart + '}'))))))));
-			};
-			return '[' + (A2(
-				$elm$core$String$join,
-				', ',
-				A2($elm$core$List$map, encodeItem, messages)) + ']');
-		}();
+		var encodeItem = function (item) {
+			var payloadField = function () {
+				var _v1 = item.payload;
+				if (_v1.$ === 'Just') {
+					var payload = _v1.a;
+					return _List_fromArray(
+						[
+							_Utils_Tuple2('payload', payload)
+						]);
+				} else {
+					return _List_Nil;
+				}
+			}();
+			var baseFields = _List_fromArray(
+				[
+					_Utils_Tuple2(
+					'index',
+					$elm$json$Json$Encode$int(item.index)),
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string(item.label))
+				]);
+			return $elm$json$Json$Encode$object(
+				_Utils_ap(baseFields, payloadField));
+		};
+		var jsonString = A2(
+			$elm$json$Json$Encode$encode,
+			4,
+			A2($elm$json$Json$Encode$list, encodeItem, messages));
 		return $author$project$TimeTravel$TimeTravel(
 			_Utils_update(
 				app,
@@ -6510,19 +6607,9 @@ var $elm$core$List$filterMap = F2(
 			_List_Nil,
 			xs);
 	});
-var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$json$Json$Decode$list = _Json_decodeList;
 var $elm$json$Json$Decode$map3 = _Json_map3;
-var $elm$json$Json$Decode$null = _Json_decodeNull;
 var $elm$json$Json$Decode$oneOf = _Json_oneOf;
-var $elm$json$Json$Decode$nullable = function (decoder) {
-	return $elm$json$Json$Decode$oneOf(
-		_List_fromArray(
-			[
-				$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
-				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
-			]));
-};
 var $author$project$TimeTravel$rebuildTimeline = F3(
 	function (initModel, updateModel, msgs) {
 		return A3(
@@ -6541,6 +6628,7 @@ var $author$project$TimeTravel$rebuildTimeline = F3(
 			msgs);
 	});
 var $elm$core$List$sortBy = _List_sortBy;
+var $elm$json$Json$Decode$value = _Json_decodeValue;
 var $author$project$TimeTravel$applyImport = F5(
 	function (initModel, updateModel, decodeMsg, importText, _v0) {
 		var app = _v0.a;
@@ -6548,15 +6636,20 @@ var $author$project$TimeTravel$applyImport = F5(
 			A4(
 				$elm$json$Json$Decode$map3,
 				F3(
-					function (i, l, id) {
-						return {id: id, index: i, label: l};
+					function (i, l, payload) {
+						return {index: i, label: l, payload: payload};
 					}),
 				A2($elm$json$Json$Decode$field, 'index', $elm$json$Json$Decode$int),
-				A2($elm$json$Json$Decode$field, 'label', $elm$json$Json$Decode$string),
-				A2(
-					$elm$json$Json$Decode$field,
-					'id',
-					$elm$json$Json$Decode$nullable($elm$json$Json$Decode$string))));
+				A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string),
+				$elm$json$Json$Decode$oneOf(
+					_List_fromArray(
+						[
+							A2(
+							$elm$json$Json$Decode$map,
+							$elm$core$Maybe$Just,
+							A2($elm$json$Json$Decode$field, 'payload', $elm$json$Json$Decode$value)),
+							$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
+						]))));
 		var _v1 = A2($elm$json$Json$Decode$decodeString, decoder, importText);
 		if (_v1.$ === 'Ok') {
 			var items = _v1.a;
@@ -6730,6 +6823,10 @@ var $elm$core$List$append = F2(
 var $elm$core$List$concat = function (lists) {
 	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
 };
+var $elm$core$String$dropRight = F2(
+	function (n, string) {
+		return (n < 1) ? string : A3($elm$core$String$slice, 0, -n, string);
+	});
 var $elm$core$String$endsWith = _String_endsWith;
 var $author$project$TimeTravel$normalizeLine = function (line) {
 	var trimmed = $elm$core$String$trim(line);
@@ -6809,16 +6906,7 @@ var $author$project$TimeTravel$diffLines = F2(
 var $author$project$TimeTravel$viewFrame = F5(
 	function (msgToDebug, modelToString, index, isOpen, frame) {
 		var info = msgToDebug(frame.msg);
-		var idText = function () {
-			var _v0 = info.id;
-			if (_v0.$ === 'Just') {
-				var id = _v0.a;
-				return ' ' + id;
-			} else {
-				return '';
-			}
-		}();
-		var summaryText = 'Msg ' + ($elm$core$String$fromInt(index) + (': ' + (info.label + idText)));
+		var summaryText = 'Msg ' + ($elm$core$String$fromInt(index) + (': ' + info.label));
 		return A2(
 			$elm$html$Html$details,
 			A2(

@@ -16,6 +16,7 @@ import Html exposing (Html, button, details, div, input, summary, text, textarea
 import Html.Attributes exposing (attribute, checked, class, disabled, id, name, placeholder, type_)
 import Html.Events exposing (custom, onCheck, onClick, onInput)
 import Json.Decode as Decode
+import Json.Encode as Encode
 
 
 
@@ -30,7 +31,12 @@ type alias AppConfig msg model =
     , view : model -> Html msg
     , msgToDebug : msg -> DebugInfo
     , modelToString : model -> String
-    , decodeMsg : { index : Int, label : String, id : Maybe String } -> Maybe msg
+    , decodeMsg :
+    { index : Int
+    , label : String
+    , payload : Maybe Decode.Value
+    }
+    -> Maybe msg
     }
 
 
@@ -41,7 +47,7 @@ type alias Flags =
 
 type alias DebugInfo =
     { label : String
-    , id : Maybe String
+    , payload : Maybe Encode.Value
     }
 
 
@@ -397,53 +403,37 @@ applyExport msgToDebug (TimeTravel app) =
                                 in
                                 { index = i
                                 , label = info.label
-                                , id = info.id
+                                , payload = info.payload
                                 }
                             )
 
                 initial =
                     { index = -1
                     , label = "InitialModel"
-                    , id = Nothing
+                    , payload = Nothing
                     }
             in
             historyMessages ++ [ initial ]
 
-        jsonString =
+        encodeItem item =
             let
-                escape : String -> String
-                escape str =
-                    str
-                        |> String.replace "\\" "\\\\"
-                        |> String.replace "\"" "\\\""
+                baseFields =
+                    [ ( "index", Encode.int item.index )
+                    , ( "type", Encode.string item.label )
+                    ]
 
-                encodeItem item =
-                    let
-                        idPart =
-                            case item.id of
-                                Just id ->
-                                    "\"id\": \"" ++ escape id ++ "\""
+                payloadField =
+                    case item.payload of
+                        Just payload ->
+                            [ ( "payload", payload ) ]
 
-                                Nothing ->
-                                    "\"id\": null"
-                    in
-                    "{"
-                        ++ "\"index\": "
-                        ++ String.fromInt item.index
-                        ++ ", "
-                        ++ "\"label\": \""
-                        ++ escape item.label
-                        ++ "\""
-                        ++ ", "
-                        ++ idPart
-                        ++ "}"
+                        Nothing ->
+                            []
             in
-            "["
-                ++ (messages
-                        |> List.map encodeItem
-                        |> String.join ", "
-                   )
-                ++ "]"
+            Encode.object (baseFields ++ payloadField)
+
+        jsonString =
+            Encode.encode 4 (Encode.list encodeItem messages)
     in
     TimeTravel { app | exportText = Just jsonString }
 
@@ -451,7 +441,7 @@ applyExport msgToDebug (TimeTravel app) =
 applyImport :
     model
     -> (msg -> model -> model)
-    -> ({ index : Int, label : String, id : Maybe String } -> Maybe msg)
+    -> ({ index : Int, label : String, payload : Maybe Decode.Value } -> Maybe msg)
     -> String
     -> TimeTravel msg model
     -> TimeTravel msg model
@@ -460,15 +450,19 @@ applyImport initModel updateModel decodeMsg importText (TimeTravel app) =
         decoder =
             Decode.list
                 (Decode.map3
-                    (\i l id ->
+                    (\i l payload ->
                         { index = i
                         , label = l
-                        , id = id
+                        , payload = payload
                         }
                     )
                     (Decode.field "index" Decode.int)
-                    (Decode.field "label" Decode.string)
-                    (Decode.field "id" (Decode.nullable Decode.string))
+                    (Decode.field "type" Decode.string)
+                    (Decode.oneOf
+                        [ Decode.field "payload" Decode.value |> Decode.map Just
+                        , Decode.succeed Nothing
+                        ]
+                    )
                 )
     in
     case Decode.decodeString decoder importText of
@@ -552,16 +546,8 @@ viewFrame msgToDebug modelToString index isOpen frame =
         info =
             msgToDebug frame.msg
 
-        idText =
-            case info.id of
-                Just id ->
-                    " " ++ id
-
-                Nothing ->
-                    ""
-
         summaryText =
-            "Msg " ++ String.fromInt index ++ ": " ++ info.label ++ idText
+            "Msg " ++ String.fromInt index ++ ": " ++ info.label
     in
     details
         (name "frame"

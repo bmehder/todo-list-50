@@ -4,7 +4,8 @@ module TimeTravelConfig exposing
     , msgToDebugInfo
     )
 
-
+import Json.Decode as Decode
+import Json.Encode as Encode
 import NonEmptyString
 import NonNegativeInt
 import TimeTravel
@@ -14,7 +15,7 @@ import Types exposing (Editing(..), Filter(..), Id, Model, Msg(..), Status(..), 
 type alias TimelineItem =
     { index : Int
     , label : String
-    , id : Maybe String
+    , payload : Maybe Decode.Value
     }
 
 
@@ -52,103 +53,143 @@ msgToDebugInfo msg =
     case msg of
         ToggledStatus id ->
             { label = "ToggledStatus"
-            , id = Just (NonNegativeInt.toInt id |> String.fromInt)
+            , payload =
+                Just
+                    (Encode.object
+                        [ ( "id", Encode.int (NonNegativeInt.toInt id) )
+                        ]
+                    )
             }
 
         ToggledImportant id ->
             { label = "ToggledImportant"
-            , id = Just (NonNegativeInt.toInt id |> String.fromInt)
+            , payload =
+                Just
+                    (Encode.object
+                        [ ( "id", Encode.int (NonNegativeInt.toInt id) )
+                        ]
+                    )
             }
 
         AskedToDelete id ->
             { label = "AskedToDelete"
-            , id = Just (NonNegativeInt.toInt id |> String.fromInt)
+            , payload =
+                Just
+                    (Encode.object
+                        [ ( "id", Encode.int (NonNegativeInt.toInt id) )
+                        ]
+                    )
             }
 
         ConfirmedDelete id ->
             { label = "ConfirmedDelete"
-            , id = Just (NonNegativeInt.toInt id |> String.fromInt)
+            , payload =
+                Just
+                    (Encode.object
+                        [ ( "id", Encode.int (NonNegativeInt.toInt id) )
+                        ]
+                    )
             }
 
         CanceledDelete ->
             { label = "CanceledDelete"
-            , id = Nothing
+            , payload = Nothing
             }
 
         UpdatedDraft str ->
-            { label = "UpdatedDraft (typing) \"" ++ str ++ "\""
-            , id = Nothing
+            { label = "UpdatedDraft"
+            , payload =
+                Just
+                    (Encode.object
+                        [ ( "value", Encode.string str )
+                        ]
+                    )
             }
 
         SetFilter filter ->
-            let
-                filterLabel =
-                    case filter of
-                        All ->
-                            "All"
-
-                        ActiveOrImportantOnly ->
-                            "ActiveAndImportantOnly"
-
-                        CompletedOnly ->
-                            "CompletedOnly"
-
-                        ImportantOnly ->
-                            "ImportantOnly"
-            in
-            { label = "SetFilter " ++ filterLabel
-            , id = Nothing
+            { label = "SetFilter"
+            , payload =
+                Just
+                    (Encode.object
+                        [ ( "filter", Encode.string (filterTag filter) )
+                        ]
+                    )
             }
 
         CreatedTodo ->
             { label = "CreatedTodo"
-            , id = Nothing
+            , payload = Nothing
             }
 
         StartedEditingTodoText id draft ->
-            { label =
-                "StartedEditingTodoText \"" ++ draft ++ "\""
-            , id = Just (NonNegativeInt.toInt id |> String.fromInt)
+            { label = "StartedEditingTodoText"
+            , payload =
+                Just
+                    (Encode.object
+                        [ ( "id", Encode.int (NonNegativeInt.toInt id) )
+                        , ( "draft", Encode.string draft )
+                        ]
+                    )
             }
 
         UpdatedEditingDraft str ->
-            { label = "UpdatedEditingDraft (editing) \"" ++ str ++ "\""
-            , id = Nothing
+            { label = "UpdatedEditingDraft"
+            , payload =
+                Just
+                    (Encode.object
+                        [ ( "value", Encode.string str )
+                        ]
+                    )
             }
 
         SavedEditedTodoText ->
             { label = "SavedEditedTodoText"
-            , id = Nothing
+            , payload = Nothing
             }
 
         CanceledEdit ->
             { label = "CanceledEdit"
-            , id = Nothing
+            , payload = Nothing
             }
 
         NoOp ->
-            { label = "NoOp (ignored UI event)"
-            , id = Nothing
+            { label = "NoOp"
+            , payload = Nothing
             }
 
 
 decodeMsg : TimelineItem -> Maybe Msg
 decodeMsg item =
-    decodeExact item
-        |> orElse (decodeWithId item)
-        |> orElse (decodePattern item)
-
-
-
--- DECODE HELPERS
--------------------------------------------------------------------------------
-
-
-decodeExact : TimelineItem -> Maybe Msg
-decodeExact item =
     case item.label of
-        "NoOp (ignored UI event)" ->
-            Just NoOp
+        "ToggledStatus" ->
+            decodeIdPayload ToggledStatus item.payload
+
+        "ToggledImportant" ->
+            decodeIdPayload ToggledImportant item.payload
+
+        "AskedToDelete" ->
+            decodeIdPayload AskedToDelete item.payload
+
+        "ConfirmedDelete" ->
+            decodeIdPayload ConfirmedDelete item.payload
+
+        "CanceledDelete" ->
+            Just CanceledDelete
+
+        "UpdatedDraft" ->
+            decodeStringValuePayload UpdatedDraft item.payload
+
+        "SetFilter" ->
+            decodeFilterPayload item.payload
+
+        "CreatedTodo" ->
+            Just CreatedTodo
+
+        "StartedEditingTodoText" ->
+            decodeStartedEditingPayload item.payload
+
+        "UpdatedEditingDraft" ->
+            decodeStringValuePayload UpdatedEditingDraft item.payload
 
         "SavedEditedTodoText" ->
             Just SavedEditedTodoText
@@ -156,99 +197,136 @@ decodeExact item =
         "CanceledEdit" ->
             Just CanceledEdit
 
-        "CanceledDelete" ->
-            Just CanceledDelete
-
-        "CreatedTodo" ->
-            Just CreatedTodo
-
-        "SetFilter ActiveAndImportantOnly" ->
-            Just (SetFilter ActiveOrImportantOnly)
-
-        "SetFilter CompletedOnly" ->
-            Just (SetFilter CompletedOnly)
-
-        "SetFilter All" ->
-            Just (SetFilter All)
-
-        "SetFilter ImportantOnly" ->
-            Just (SetFilter ImportantOnly)
+        "NoOp" ->
+            Just NoOp
 
         _ ->
             Nothing
 
 
-decodeWithId : TimelineItem -> Maybe Msg
-decodeWithId item =
-    case item.label of
-        "ToggledStatus" ->
-            withId item.id ToggledStatus
 
-        "ToggledImportant" ->
-            withId item.id ToggledImportant
-
-        "AskedToDelete" ->
-            withId item.id AskedToDelete
-
-        "ConfirmedDelete" ->
-            withId item.id ConfirmedDelete
-
-        _ ->
-            Nothing
+-- DECODE HELPERS
+-------------------------------------------------------------------------------
 
 
-decodePattern : TimelineItem -> Maybe Msg
-decodePattern item =
-    let
-        labelStr =
-            item.label
-    in
-    match "UpdatedDraft (typing) " UpdatedDraft labelStr
-        |> orElse (match "UpdatedEditingDraft (editing) " UpdatedEditingDraft labelStr)
-        |> orElse (decodeStartedEditing item)
-
-
-decodeStartedEditing : TimelineItem -> Maybe Msg
-decodeStartedEditing item =
-    if String.startsWith "StartedEditingTodoText " item.label then
-        let
-            draft =
-                item.label
-                    |> String.dropLeft (String.length "StartedEditingTodoText ")
-                    |> stripQuotes
-        in
-        withId item.id (\idVal -> StartedEditingTodoText idVal draft)
-
-    else
-        Nothing
-
-
-withId : Maybe String -> (NonNegativeInt.NonNegativeInt -> Msg) -> Maybe Msg
-withId maybeId toMsg =
-    maybeId
-        |> Maybe.andThen String.toInt
-        |> Maybe.andThen NonNegativeInt.fromInt
+decodeIdPayload : (NonNegativeInt.NonNegativeInt -> Msg) -> Maybe Decode.Value -> Maybe Msg
+decodeIdPayload toMsg maybePayload =
+    maybePayload
+        |> Maybe.andThen decodeIdValue
         |> Maybe.map toMsg
 
 
-orElse : Maybe a -> Maybe a -> Maybe a
-orElse first second =
-    case first of
-        Just _ ->
-            first
+decodeIdValue : Decode.Value -> Maybe NonNegativeInt.NonNegativeInt
+decodeIdValue payload =
+    case Decode.decodeValue (Decode.field "id" Decode.int) payload of
+        Ok intId ->
+            NonNegativeInt.fromInt intId
 
-        Nothing ->
-            second
+        Err _ ->
+            Nothing
 
 
-match : String -> (String -> Msg) -> String -> Maybe Msg
-match prefix toMsg str =
-    matchPrefix prefix (stripQuotes >> toMsg >> Just) str
+decodeStringValuePayload : (String -> Msg) -> Maybe Decode.Value -> Maybe Msg
+decodeStringValuePayload toMsg maybePayload =
+    maybePayload
+        |> Maybe.andThen
+            (\payload ->
+                case Decode.decodeValue (Decode.field "value" Decode.string) payload of
+                    Ok value ->
+                        Just (toMsg value)
+
+                    Err _ ->
+                        Nothing
+            )
+
+
+decodeFilterPayload : Maybe Decode.Value -> Maybe Msg
+decodeFilterPayload maybePayload =
+    maybePayload
+        |> Maybe.andThen
+            (\payload ->
+                case Decode.decodeValue (Decode.field "filter" Decode.string) payload of
+                    Ok filterStr ->
+                        filterFromTag filterStr
+                            |> Maybe.map SetFilter
+
+                    Err _ ->
+                        Nothing
+            )
+
+
+decodeStartedEditingPayload : Maybe Decode.Value -> Maybe Msg
+decodeStartedEditingPayload maybePayload =
+    maybePayload
+        |> Maybe.andThen
+            (\payload ->
+                case Decode.decodeValue startedEditingDecoder payload of
+                    Ok { id, draft } ->
+                        Just (StartedEditingTodoText id draft)
+
+                    Err _ ->
+                        Nothing
+            )
+
+
+startedEditingDecoder : Decode.Decoder { id : NonNegativeInt.NonNegativeInt, draft : String }
+startedEditingDecoder =
+    Decode.field "id" Decode.int
+        |> Decode.andThen
+            (\intId ->
+                case NonNegativeInt.fromInt intId of
+                    Just id ->
+                        Decode.map
+                            (\draft ->
+                                { id = id
+                                , draft = draft
+                                }
+                            )
+                            (Decode.field "draft" Decode.string)
+
+                    Nothing ->
+                        Decode.fail "Invalid non-negative id"
+            )
 
 
 
 -- INTERNAL HELPERS
 -------------------------------------------------------------------------------
+
+
+filterTag : Filter -> String
+filterTag filter =
+    case filter of
+        All ->
+            "All"
+
+        ActiveOrImportantOnly ->
+            "ActiveOrImportantOnly"
+
+        CompletedOnly ->
+            "CompletedOnly"
+
+        ImportantOnly ->
+            "ImportantOnly"
+
+
+filterFromTag : String -> Maybe Filter
+filterFromTag filterStr =
+    case filterStr of
+        "All" ->
+            Just All
+
+        "ActiveOrImportantOnly" ->
+            Just ActiveOrImportantOnly
+
+        "CompletedOnly" ->
+            Just CompletedOnly
+
+        "ImportantOnly" ->
+            Just ImportantOnly
+
+        _ ->
+            Nothing
 
 
 todoToRecordString : Todo -> String
@@ -317,21 +395,3 @@ pendingDeleteToString maybeId =
 
         Just id ->
             "Just " ++ (NonNegativeInt.toInt id |> String.fromInt)
-
-
-matchPrefix : String -> (String -> Maybe msg) -> String -> Maybe msg
-matchPrefix prefix toMsg str =
-    if String.startsWith prefix str then
-        str
-            |> String.dropLeft (String.length prefix)
-            |> toMsg
-
-    else
-        Nothing
-
-
-stripQuotes : String -> String
-stripQuotes str =
-    str
-        |> String.dropLeft 1
-        |> String.dropRight 1

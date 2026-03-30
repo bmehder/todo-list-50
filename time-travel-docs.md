@@ -292,12 +292,12 @@ The timeline can be serialized into JSON by extracting each frame's message into
 
 ```json
 [
-  { "index": 0, "label": "ToggledStatus", "id": "2" },
-  { "index": 1, "label": "SetFilter CompletedOnly", "id": null }
+  { "index": 0, "type": "ToggledStatus", "payload": { "id": 2 } },
+  { "index": 1, "type": "SetFilter", "payload": { "filter": "CompletedOnly" } }
 ]
 ```
 
-The `index` field preserves ordering, while `label` is used for decoding messages.
+The `index` field preserves ordering, while `type` identifies the message constructor and `payload` carries its data.
 
 ---
 
@@ -399,7 +399,7 @@ This is done by implementing a configuration record with the following fields:
 , view : model -> Html msg
 , msgToDebugInfo : msg -> TimeTravel.DebugInfo
 , modelToString : model -> String
-, decodeMsg : { index : Int, label : String, id : Maybe String } -> Maybe msg
+, decodeMsg : { index : Int, label : String, payload : Maybe Decode.Value } -> Maybe msg
 }
 ```
 
@@ -413,8 +413,8 @@ msgToDebugInfo : Msg -> TimeTravel.DebugInfo
 
 You typically provide:
 
-- a `label` (string description of the message)
-- an optional `id` (useful for messages tied to specific entities)
+- a `label` (mapped to the exported event `type`)
+- an optional `payload` (structured JSON data for the message)
 
 Example:
 
@@ -422,10 +422,24 @@ Example:
 msgToDebugInfo msg =
     case msg of
         ToggledStatus id ->
-            { label = "ToggledStatus", id = Just (String.fromInt (NonNegative.toInt id)) }
+            { label = "ToggledStatus"
+            , payload =
+                Just
+                    (Encode.object
+                        [ ( "id", Encode.int (NonNegative.toInt id) )
+                        ]
+                    )
+            }
 
         SetFilter filter ->
-            { label = "SetFilter " ++ filterToString filter, id = Nothing }
+            { label = "SetFilter"
+            , payload =
+                Just
+                    (Encode.object
+                        [ ( "filter", Encode.string (filterToString filter) )
+                        ]
+                    )
+            }
 ```
 
 ---
@@ -447,7 +461,7 @@ A simple implementation might use pretty-printing or custom formatting to make d
 This is the most important piece for replay.
 
 ```elm
-decodeMsg : { index : Int, label : String, id : Maybe String } -> Maybe Msg
+decodeMsg : { index : Int, label : String, payload : Maybe Decode.Value } -> Maybe Msg
 ```
 
 It converts a serialized message (from JSON) back into a real `Msg`.
@@ -455,8 +469,7 @@ It converts a serialized message (from JSON) back into a real `Msg`.
 Typical patterns include:
 
 - matching exact labels
-- parsing IDs
-- extracting strings from labels
+- parsing structured payloads
 
 Example:
 
@@ -467,10 +480,17 @@ decodeMsg item =
             Just CreatedTodo
 
         "ToggledStatus" ->
-            item.id
-                |> Maybe.andThen String.toInt
-                |> Maybe.map NonNegative
-                |> Maybe.map ToggledStatus
+            item.payload
+                |> Maybe.andThen
+                    (\p ->
+                        case Decode.decodeValue (Decode.field "id" Decode.int) p of
+                            Ok intId ->
+                                NonNegative.fromInt intId
+                                    |> Maybe.map ToggledStatus
+
+                            Err _ ->
+                                Nothing
+                    )
 
         _ ->
             Nothing
@@ -526,8 +546,7 @@ While still enabling powerful features like:
 
 When integrating TimeTravel into a new app, ask:
 
-- Can I describe each message as a string label?
-- Can I reconstruct important messages from that label?
-- Can I display my model as a readable string?
+- Can I describe each message as a stable `type`?
+- Can I encode/decode its data using a structured `payload`?
 
 If the answer is yes, your app can support TimeTravel.

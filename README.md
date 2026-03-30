@@ -248,8 +248,8 @@ Clicking "Export Timeline" generates JSON like:
 
 ```json
 [
-  { "index": 0, "label": "ToggledStatus", "id": "2" },
-  { "index": 1, "label": "SetFilter All", "id": null }
+  { "index": 0, "type": "ToggledStatus", "payload": { "id": 2 } },
+  { "index": 1, "type": "SetFilter", "payload": { "filter": "All" } }
 ]
 ```
 
@@ -257,8 +257,9 @@ This format is:
 
 - Human-readable
 - Easy to copy/paste
-- Uses a `label` field (derived from `msgToDebug`) for decoding
-- Sufficient to reconstruct application behavior
+- Uses a `type` field to identify the message (Elm `Msg` constructor)
+- Stores all message data in a structured `payload`
+- Sufficient to reconstruct application behavior deterministically
 
 ---
 
@@ -269,7 +270,7 @@ You can paste JSON back into the app and click "Import Timeline", or press Enter
 The system will:
 
 1. Decode JSON
-2. Reconstruct real `Msg` values from labels
+2. Reconstruct real `Msg` values from `type` + `payload`
 3. Replay them from the initial model
 
 ---
@@ -303,12 +304,12 @@ This ensures:
 
 ### Decoding Strategy
 
-Not all messages need to be fully decoded for replay to work.
+Each event is decoded using its `type` and optional `payload`.
 
-- Some messages (like `NoOp`) may safely decode to `Nothing`
-- Others must be decoded to preserve state transitions
+- Stateless messages (like `NoOp`) can decode without a payload
+- Stateful messages decode their data from structured JSON
 
-Replay remains correct as long as all **state-changing messages** are included.
+Replay remains correct as long as all **state-changing messages** are decoded successfully.
 
 ---
 
