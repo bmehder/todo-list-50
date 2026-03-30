@@ -14,7 +14,7 @@ module TimeTravel exposing
 import Browser
 import Html exposing (Html, button, details, div, input, summary, text, textarea)
 import Html.Attributes exposing (attribute, checked, class, disabled, id, name, placeholder, type_)
-import Html.Events exposing (onCheck, onClick, onInput, custom)
+import Html.Events exposing (custom, onCheck, onClick, onInput)
 import Json.Decode as Decode
 
 
@@ -157,75 +157,97 @@ view config (TimeTravel app) =
     div [ class "flow" ]
         [ config.viewModel app.timeline.present
             |> Html.map AppMsg
-        , div [ class "flex gap-1 align-items-center" ]
-            [ input
-                [ type_ "checkbox"
-                , checked app.visibility
-                , onCheck ToggleVisibility
-                , id "toggle-debugger"
-                ]
-                []
-            , Html.label
-                [ Html.Attributes.for "toggle-debugger" ]
-                [ text
-                    (if app.visibility then
-                        "Hide Time Travel Debugger"
-
-                     else
-                        "Show Time Travel Debugger"
-                    )
-                ]
-            ]
+        , viewToggle app
         , if app.visibility then
-            div [ class "flow" ]
-                [ div [ class "flex gap-1" ]
-                    [ button [ onClick Prev, disabled (List.isEmpty app.timeline.past) ] [ text "Prev" ]
-                    , button [ onClick Next, disabled (List.isEmpty app.timeline.future) ] [ text "Next" ]
-                    ]
-
-                -- Timeline history (messages)
-                , viewHistory config.msgToDebug config.modelToString app.timeline
-
-                -- Tools section (Export / Import)
-                , div [ class "flow" ]
-                    [ Html.hr [ class "opacity-30" ] []
-                    , div [ class "padding-top-2" ]
-                        [ details [ class "flow" ]
-                            [ summary []
-                                [ text "📦 Tools: Export / Import" ]
-                            , div [ class "flow" ]
-                                [ button [ onClick ExportTimeline ] [ text "Export Timeline" ]
-                                , textarea
-                                    [ class "width-100 min-height-10"
-                                    , id "export"
-                                    , placeholder "Click 'Export Timeline' to generate JSON"
-                                    ]
-                                    [ text (Maybe.withDefault "" app.exportText) ]
-                                , textarea
-                                    [ class "width-100 min-height-10"
-                                    , id "import"
-                                    , onInput ImportTextChanged
-                                    , custom "keydown" importKeyDecoder
-                                    , Html.Attributes.value app.importText
-                                    , placeholder "Paste timeline JSON here and press Enter to import"
-                                    ]
-                                    []
-                                , button [ onClick ImportTimeline ] [ text "Import Timeline" ]
-                                , case app.importStatus of
-                                    Just msg ->
-                                        div [ class "font-size-small opacity-70 padding-top-1" ] [ text msg ]
-
-                                    Nothing ->
-                                        text ""
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
+            viewDebugger config app
 
           else
             text ""
         ]
+
+
+viewToggle : { a | visibility : Bool } -> Html (Msg msg)
+viewToggle app =
+    div [ class "flex gap-1 align-items-center" ]
+        [ input
+            [ type_ "checkbox"
+            , checked app.visibility
+            , onCheck ToggleVisibility
+            , id "toggle-debugger"
+            ]
+            []
+        , Html.label
+            [ Html.Attributes.for "toggle-debugger" ]
+            [ text
+                (if app.visibility then
+                    "Hide Time Travel Debugger"
+
+                 else
+                    "Show Time Travel Debugger"
+                )
+            ]
+        ]
+
+
+viewNav : Timeline msg model -> Html (Msg msg)
+viewNav timeline =
+    div [ class "flex gap-1" ]
+        [ button [ onClick Prev, disabled (List.isEmpty timeline.past) ] [ text "Prev" ]
+        , button [ onClick Next, disabled (List.isEmpty timeline.future) ] [ text "Next" ]
+        ]
+
+
+viewTools : { a | exportText : Maybe String, importText : String, importStatus : Maybe String } -> Html (Msg msg)
+viewTools app =
+    div [ class "flow" ]
+        [ Html.hr [ class "opacity-30" ] []
+        , div [ class "padding-top-2" ]
+            [ details [ class "flow" ]
+                [ summary []
+                    [ text "📦 Tools: Export / Import" ]
+                , div [ class "flow" ]
+                    [ button [ onClick ExportTimeline ] [ text "Export Timeline" ]
+                    , textarea
+                        [ class "width-100 min-height-10"
+                        , id "export"
+                        , placeholder "Click 'Export Timeline' to generate JSON"
+                        ]
+                        [ text (Maybe.withDefault "" app.exportText) ]
+                    , textarea
+                        [ class "width-100 min-height-10"
+                        , id "import"
+                        , onInput ImportTextChanged
+                        , custom "keydown" importKeyDecoder
+                        , Html.Attributes.value app.importText
+                        , placeholder "Paste timeline JSON here and press Enter to import"
+                        ]
+                        []
+                    , button [ onClick ImportTimeline ] [ text "Import Timeline" ]
+                    , case app.importStatus of
+                        Just msg ->
+                            div [ class "font-size-small opacity-70 padding-top-1" ] [ text msg ]
+
+                        Nothing ->
+                            text ""
+                    ]
+                ]
+            ]
+        ]
+
+
+viewDebugger : Config msg model -> { a | timeline : Timeline msg model, exportText : Maybe String, importText : String, importStatus : Maybe String } -> Html (Msg msg)
+viewDebugger config app =
+    div [ class "flow" ]
+        [ viewNav app.timeline
+        , viewHistory config.msgToDebug config.modelToString app.timeline
+        , viewTools app
+        ]
+
+
+
+-- =========================================
+-- PROGRAM WIRING
+-- =========================================
 
 
 withTimeTravel :
@@ -257,7 +279,7 @@ withTimeTravel config =
 
 
 -- =========================================
--- UPDATE ENGINE
+-- UPDATE ENGINE (CORE STATE LOGIC)
 -- =========================================
 
 
@@ -345,6 +367,12 @@ applyAppMsg updateModel msg (TimeTravel app) =
             }
     in
     TimeTravel { app | timeline = newTimeline }
+
+
+
+-- =========================================
+-- EXPORT / IMPORT (SERIALIZATION)
+-- =========================================
 
 
 applyExport :
@@ -471,7 +499,7 @@ applyImport initModel updateModel decodeMsg importText (TimeTravel app) =
 
 
 -- =========================================
--- VIEW HELPERS
+-- VIEW (DEBUGGER UI)
 -- =========================================
 
 
@@ -555,7 +583,7 @@ viewFrame msgToDebug modelToString index isOpen frame =
 
 
 -- =========================================
--- UTILITIES
+-- UTILITIES (INTERNAL HELPERS)
 -- =========================================
 
 
@@ -627,6 +655,7 @@ importKeyDecoder =
                         , stopPropagation = False
                         , preventDefault = True
                         }
+
                 else
                     Decode.fail "ignore"
             )

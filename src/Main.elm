@@ -455,7 +455,7 @@ viewDeleteButton todo =
 viewConfirmInline : Todo -> Html Msg
 viewConfirmInline todo =
     div
-        [ class "flex align-items-center gap-1 confirm-inline"
+        [ class "flex align-items-center gap-1 margin-left-auto"
         , Html.Attributes.attribute "role" "group"
         , Html.Attributes.attribute "aria-label" "Confirm delete"
         ]
@@ -507,7 +507,7 @@ main =
         { init = initModel
         , update = update
         , view = view
-        , msgToDebug = TimeTravelConfig.todoMsgToDebug
+        , msgToDebug = TimeTravelConfig.msgToDebugInfo
         , modelToString = TimeTravelConfig.modelToPrettyString
         , decodeMsg = TimeTravelConfig.decodeMsg
         }

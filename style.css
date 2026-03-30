@@ -245,6 +245,10 @@ summary {
 	flex-shrink: 0;
 }
 
+.margin-left-auto {
+	margin-inline-start: auto;
+}
+
 .padding-0 {
 	padding: 0;
 }
