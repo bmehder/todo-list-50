@@ -209,49 +209,38 @@ decodeMsg item =
 -------------------------------------------------------------------------------
 
 
-decodeIdPayload : (NonNegativeInt.NonNegativeInt -> Msg) -> Maybe Decode.Value -> Maybe Msg
+decodeIdPayload : (Id -> Msg) -> Maybe Decode.Value -> Maybe Msg
 decodeIdPayload toMsg maybePayload =
     maybePayload
         |> Maybe.andThen decodeIdValue
         |> Maybe.map toMsg
 
 
-decodeIdValue : Decode.Value -> Maybe NonNegativeInt.NonNegativeInt
-decodeIdValue payload =
-    case Decode.decodeValue (Decode.field "id" Decode.int) payload of
-        Ok intId ->
-            NonNegativeInt.fromInt intId
-
-        Err _ ->
-            Nothing
+decodeIdValue : Decode.Value -> Maybe Id
+decodeIdValue =
+    Decode.decodeValue (Decode.field "id" Decode.int)
+        >> Result.toMaybe
+        >> Maybe.andThen NonNegativeInt.fromInt
 
 
 decodeStringValuePayload : (String -> Msg) -> Maybe Decode.Value -> Maybe Msg
 decodeStringValuePayload toMsg maybePayload =
     maybePayload
         |> Maybe.andThen
-            (\payload ->
-                case Decode.decodeValue (Decode.field "value" Decode.string) payload of
-                    Ok value ->
-                        Just (toMsg value)
-
-                    Err _ ->
-                        Nothing
+            (Decode.decodeValue (Decode.field "value" Decode.string)
+                >> Result.toMaybe
             )
+        |> Maybe.map toMsg
 
 
 decodeFilterPayload : Maybe Decode.Value -> Maybe Msg
 decodeFilterPayload maybePayload =
     maybePayload
         |> Maybe.andThen
-            (\payload ->
-                case Decode.decodeValue (Decode.field "filter" Decode.string) payload of
-                    Ok filterStr ->
-                        filterFromTag filterStr
-                            |> Maybe.map SetFilter
-
-                    Err _ ->
-                        Nothing
+            (Decode.decodeValue (Decode.field "filter" Decode.string)
+                >> Result.toMaybe
+                >> Maybe.andThen filterFromTag
+                >> Maybe.map SetFilter
             )
 
 
@@ -259,26 +248,25 @@ decodeStartedEditingPayload : Maybe Decode.Value -> Maybe Msg
 decodeStartedEditingPayload maybePayload =
     maybePayload
         |> Maybe.andThen
-            (\payload ->
-                case Decode.decodeValue startedEditingDecoder payload of
-                    Ok { id, draft } ->
-                        Just (StartedEditingTodoText id draft)
-
-                    Err _ ->
-                        Nothing
+            (Decode.decodeValue startedEditingDecoder
+                >> Result.toMaybe
+                >> Maybe.map
+                    (\{ id, draft } ->
+                        StartedEditingTodoText id draft
+                    )
             )
 
 
-startedEditingDecoder : Decode.Decoder { id : NonNegativeInt.NonNegativeInt, draft : String }
+startedEditingDecoder : Decode.Decoder { id : Id, draft : String }
 startedEditingDecoder =
     Decode.field "id" Decode.int
         |> Decode.andThen
-            (\intId ->
-                case NonNegativeInt.fromInt intId of
-                    Just id ->
+            (\id ->
+                case NonNegativeInt.fromInt id of
+                    Just id_ ->
                         Decode.map
                             (\draft ->
-                                { id = id
+                                { id = id_
                                 , draft = draft
                                 }
                             )
@@ -292,6 +280,11 @@ startedEditingDecoder =
 
 -- INTERNAL HELPERS
 -------------------------------------------------------------------------------
+
+
+idToString : Id -> String
+idToString =
+    NonNegativeInt.toInt >> String.fromInt
 
 
 filterTag : Filter -> String
@@ -332,7 +325,7 @@ filterFromTag filterStr =
 todoToRecordString : Todo -> String
 todoToRecordString todo =
     "    { id = "
-        ++ (NonNegativeInt.toInt todo.id |> String.fromInt)
+        ++ idToString todo.id
         ++ ", status = "
         ++ statusToString todo.status
         ++ ", important = "
@@ -381,7 +374,7 @@ editingToString editing =
 
         EditingTodoText { id, draft } ->
             "EditingTodoText (id: "
-                ++ (NonNegativeInt.toInt id |> String.fromInt)
+                ++ idToString id
                 ++ ", draft: \""
                 ++ draft
                 ++ "\")"
@@ -394,4 +387,4 @@ pendingDeleteToString maybeId =
             "Nothing"
 
         Just id ->
-            "Just " ++ (NonNegativeInt.toInt id |> String.fromInt)
+            "Just " ++ idToString id
