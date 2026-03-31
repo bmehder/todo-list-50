@@ -4890,6 +4890,11 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
 var $elm$json$Json$Decode$decodeValue = _Json_run;
 var $elm$json$Json$Decode$field = _Json_decodeField;
 var $author$project$Types$ActiveOrImportantOnly = {$: 'ActiveOrImportantOnly'};
@@ -4921,24 +4926,28 @@ var $elm$core$Maybe$map = F2(
 		}
 	});
 var $elm$json$Json$Decode$string = _Json_decodeString;
+var $elm$core$Result$toMaybe = function (result) {
+	if (result.$ === 'Ok') {
+		var v = result.a;
+		return $elm$core$Maybe$Just(v);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
 var $author$project$TimeTravelConfig$decodeFilterPayload = function (maybePayload) {
 	return A2(
 		$elm$core$Maybe$andThen,
-		function (payload) {
-			var _v0 = A2(
-				$elm$json$Json$Decode$decodeValue,
-				A2($elm$json$Json$Decode$field, 'filter', $elm$json$Json$Decode$string),
-				payload);
-			if (_v0.$ === 'Ok') {
-				var filterStr = _v0.a;
-				return A2(
-					$elm$core$Maybe$map,
-					$author$project$Types$SetFilter,
-					$author$project$TimeTravelConfig$filterFromTag(filterStr));
-			} else {
-				return $elm$core$Maybe$Nothing;
-			}
-		},
+		A2(
+			$elm$core$Basics$composeR,
+			$elm$json$Json$Decode$decodeValue(
+				A2($elm$json$Json$Decode$field, 'filter', $elm$json$Json$Decode$string)),
+			A2(
+				$elm$core$Basics$composeR,
+				$elm$core$Result$toMaybe,
+				A2(
+					$elm$core$Basics$composeR,
+					$elm$core$Maybe$andThen($author$project$TimeTravelConfig$filterFromTag),
+					$elm$core$Maybe$map($author$project$Types$SetFilter)))),
 		maybePayload);
 };
 var $elm$core$Basics$identity = function (x) {
@@ -4953,18 +4962,14 @@ var $author$project$NonNegativeInt$fromInt = function (n) {
 		$author$project$NonNegativeInt$NonNegativeInt(n)) : $elm$core$Maybe$Nothing;
 };
 var $elm$json$Json$Decode$int = _Json_decodeInt;
-var $author$project$TimeTravelConfig$decodeIdValue = function (payload) {
-	var _v0 = A2(
-		$elm$json$Json$Decode$decodeValue,
-		A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$int),
-		payload);
-	if (_v0.$ === 'Ok') {
-		var intId = _v0.a;
-		return $author$project$NonNegativeInt$fromInt(intId);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
+var $author$project$TimeTravelConfig$decodeIdValue = A2(
+	$elm$core$Basics$composeR,
+	$elm$json$Json$Decode$decodeValue(
+		A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$int)),
+	A2(
+		$elm$core$Basics$composeR,
+		$elm$core$Result$toMaybe,
+		$elm$core$Maybe$andThen($author$project$NonNegativeInt$fromInt)));
 var $author$project$TimeTravelConfig$decodeIdPayload = F2(
 	function (toMsg, maybePayload) {
 		return A2(
@@ -4980,14 +4985,14 @@ var $elm$json$Json$Decode$fail = _Json_fail;
 var $elm$json$Json$Decode$map = _Json_map1;
 var $author$project$TimeTravelConfig$startedEditingDecoder = A2(
 	$elm$json$Json$Decode$andThen,
-	function (intId) {
-		var _v0 = $author$project$NonNegativeInt$fromInt(intId);
+	function (id) {
+		var _v0 = $author$project$NonNegativeInt$fromInt(id);
 		if (_v0.$ === 'Just') {
-			var id = _v0.a;
+			var id_ = _v0.a;
 			return A2(
 				$elm$json$Json$Decode$map,
 				function (draft) {
-					return {draft: draft, id: id};
+					return {draft: draft, id: id_};
 				},
 				A2($elm$json$Json$Decode$field, 'draft', $elm$json$Json$Decode$string));
 		} else {
@@ -4998,37 +5003,33 @@ var $author$project$TimeTravelConfig$startedEditingDecoder = A2(
 var $author$project$TimeTravelConfig$decodeStartedEditingPayload = function (maybePayload) {
 	return A2(
 		$elm$core$Maybe$andThen,
-		function (payload) {
-			var _v0 = A2($elm$json$Json$Decode$decodeValue, $author$project$TimeTravelConfig$startedEditingDecoder, payload);
-			if (_v0.$ === 'Ok') {
-				var id = _v0.a.id;
-				var draft = _v0.a.draft;
-				return $elm$core$Maybe$Just(
-					A2($author$project$Types$StartedEditingTodoText, id, draft));
-			} else {
-				return $elm$core$Maybe$Nothing;
-			}
-		},
+		A2(
+			$elm$core$Basics$composeR,
+			$elm$json$Json$Decode$decodeValue($author$project$TimeTravelConfig$startedEditingDecoder),
+			A2(
+				$elm$core$Basics$composeR,
+				$elm$core$Result$toMaybe,
+				$elm$core$Maybe$map(
+					function (_v0) {
+						var id = _v0.id;
+						var draft = _v0.draft;
+						return A2($author$project$Types$StartedEditingTodoText, id, draft);
+					}))),
 		maybePayload);
 };
 var $author$project$TimeTravelConfig$decodeStringValuePayload = F2(
 	function (toMsg, maybePayload) {
 		return A2(
-			$elm$core$Maybe$andThen,
-			function (payload) {
-				var _v0 = A2(
-					$elm$json$Json$Decode$decodeValue,
-					A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
-					payload);
-				if (_v0.$ === 'Ok') {
-					var value = _v0.a;
-					return $elm$core$Maybe$Just(
-						toMsg(value));
-				} else {
-					return $elm$core$Maybe$Nothing;
-				}
-			},
-			maybePayload);
+			$elm$core$Maybe$map,
+			toMsg,
+			A2(
+				$elm$core$Maybe$andThen,
+				A2(
+					$elm$core$Basics$composeR,
+					$elm$json$Json$Decode$decodeValue(
+						A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string)),
+					$elm$core$Result$toMaybe),
+				maybePayload));
 	});
 var $author$project$TimeTravelConfig$decodeMsg = function (item) {
 	var _v0 = item.label;
@@ -5076,8 +5077,8 @@ var $author$project$Main$idFromIntUnsafe = function (n) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 130, column: 13},
-				end: {line: 130, column: 23}
+				start: {line: 129, column: 13},
+				end: {line: 129, column: 23}
 			})('Invalid Id literal');
 	}
 };
@@ -5102,8 +5103,8 @@ var $author$project$Main$todoTextFromStringUnsafe = function (str) {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 120, column: 13},
-				end: {line: 120, column: 23}
+				start: {line: 119, column: 13},
+				end: {line: 119, column: 23}
 			})('Invalid TodoText literal');
 	}
 };
@@ -5144,14 +5145,14 @@ var $author$project$NonNegativeInt$toInt = function (_v0) {
 	var n = _v0.a;
 	return n;
 };
+var $author$project$TimeTravelConfig$idToString = A2($elm$core$Basics$composeR, $author$project$NonNegativeInt$toInt, $elm$core$String$fromInt);
 var $author$project$TimeTravelConfig$editingToString = function (editing) {
 	if (editing.$ === 'NotEditing') {
 		return 'NotEditing';
 	} else {
 		var id = editing.a.id;
 		var draft = editing.a.draft;
-		return 'EditingTodoText (id: ' + ($elm$core$String$fromInt(
-			$author$project$NonNegativeInt$toInt(id)) + (', draft: \"' + (draft + '\")')));
+		return 'EditingTodoText (id: ' + ($author$project$TimeTravelConfig$idToString(id) + (', draft: \"' + (draft + '\")')));
 	}
 };
 var $author$project$TimeTravelConfig$filterToString = function (filter) {
@@ -5240,8 +5241,7 @@ var $author$project$TimeTravelConfig$pendingDeleteToString = function (maybeId) 
 		return 'Nothing';
 	} else {
 		var id = maybeId.a;
-		return 'Just ' + $elm$core$String$fromInt(
-			$author$project$NonNegativeInt$toInt(id));
+		return 'Just ' + $author$project$TimeTravelConfig$idToString(id);
 	}
 };
 var $author$project$TimeTravelConfig$statusToString = function (status) {
@@ -5256,8 +5256,7 @@ var $author$project$NonEmptyString$toString = function (_v0) {
 	return str;
 };
 var $author$project$TimeTravelConfig$todoToRecordString = function (todo) {
-	return '    { id = ' + ($elm$core$String$fromInt(
-		$author$project$NonNegativeInt$toInt(todo.id)) + (', status = ' + ($author$project$TimeTravelConfig$statusToString(todo.status) + (', important = ' + ((todo.important ? 'True' : 'False') + (', todoText = \"' + ($author$project$NonEmptyString$toString(todo.todoText) + '\" }')))))));
+	return '    { id = ' + ($author$project$TimeTravelConfig$idToString(todo.id) + (', status = ' + ($author$project$TimeTravelConfig$statusToString(todo.status) + (', important = ' + ((todo.important ? 'True' : 'False') + (', todoText = \"' + ($author$project$NonEmptyString$toString(todo.todoText) + '\" }')))))));
 };
 var $author$project$TimeTravelConfig$modelToPrettyString = function (model) {
 	return '{\n' + ('    draft = \"' + (model.draft + ('\"\n' + ('  , filter = ' + ($author$project$TimeTravelConfig$filterToString(model.filter) + ('\n' + ('  , editing = ' + ($author$project$TimeTravelConfig$editingToString(model.editing) + ('\n' + ('  , pendingDelete = ' + ($author$project$TimeTravelConfig$pendingDeleteToString(model.pendingDelete) + ('\n' + ('  , todos = [\n' + (A2(
@@ -5424,11 +5423,6 @@ var $elm$json$Json$Decode$succeed = _Json_succeed;
 var $author$project$Types$EditingTodoText = function (a) {
 	return {$: 'EditingTodoText', a: a};
 };
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
 var $elm$core$List$maximum = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -5439,46 +5433,60 @@ var $elm$core$List$maximum = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
 var $author$project$Main$nextId = function (todos) {
-	var maybeMaxId = $elm$core$List$maximum(
+	return A2(
+		$elm$core$Maybe$withDefault,
+		$author$project$Main$idFromIntUnsafe(0),
 		A2(
-			$elm$core$List$map,
+			$elm$core$Maybe$map,
 			A2(
 				$elm$core$Basics$composeR,
-				function ($) {
-					return $.id;
-				},
-				$author$project$NonNegativeInt$toInt),
-			todos));
-	if (maybeMaxId.$ === 'Just') {
-		var maxId = maybeMaxId.a;
-		return $author$project$Main$idFromIntUnsafe(maxId + 1);
-	} else {
-		return $author$project$Main$idFromIntUnsafe(0);
-	}
+				$elm$core$Basics$add(1),
+				$author$project$Main$idFromIntUnsafe),
+			$elm$core$List$maximum(
+				A2(
+					$elm$core$List$map,
+					A2(
+						$elm$core$Basics$composeR,
+						function ($) {
+							return $.id;
+						},
+						$author$project$NonNegativeInt$toInt),
+					todos))));
 };
 var $author$project$Main$createTodoFromDraft = function (model) {
-	var _v0 = $author$project$NonEmptyString$fromString(model.draft);
-	if (_v0.$ === 'Just') {
-		var todoText = _v0.a;
-		var newTodo = {
-			id: $author$project$Main$nextId(model.todos),
-			important: false,
-			status: $author$project$Types$Active,
-			todoText: todoText
-		};
-		return _Utils_update(
-			model,
-			{
-				draft: '',
-				todos: _Utils_ap(
-					model.todos,
-					_List_fromArray(
-						[newTodo]))
-			});
-	} else {
-		return model;
-	}
+	return A2(
+		$elm$core$Maybe$withDefault,
+		model,
+		A2(
+			$elm$core$Maybe$map,
+			function (todoText) {
+				var newTodo = {
+					id: $author$project$Main$nextId(model.todos),
+					important: false,
+					status: $author$project$Types$Active,
+					todoText: todoText
+				};
+				return _Utils_update(
+					model,
+					{
+						draft: '',
+						todos: _Utils_ap(
+							model.todos,
+							_List_fromArray(
+								[newTodo]))
+					});
+			},
+			$author$project$NonEmptyString$fromString(model.draft)));
 };
 var $elm$core$Basics$composeL = F3(
 	function (g, f, x) {
@@ -5639,20 +5647,22 @@ var $author$project$Main$update = F2(
 				if (_v2.$ === 'EditingTodoText') {
 					var id = _v2.a.id;
 					var draft = _v2.a.draft;
-					var _v3 = $author$project$NonEmptyString$fromString(draft);
-					if (_v3.$ === 'Just') {
-						var todoText = _v3.a;
-						return _Utils_update(
+					return A2(
+						$elm$core$Maybe$withDefault,
+						_Utils_update(
 							model,
-							{
-								editing: $author$project$Types$NotEditing,
-								todos: A3($author$project$Main$setTodoTextById, id, todoText, model.todos)
-							});
-					} else {
-						return _Utils_update(
-							model,
-							{editing: $author$project$Types$NotEditing});
-					}
+							{editing: $author$project$Types$NotEditing}),
+						A2(
+							$elm$core$Maybe$map,
+							function (todoText) {
+								return _Utils_update(
+									model,
+									{
+										editing: $author$project$Types$NotEditing,
+										todos: A3($author$project$Main$setTodoTextById, id, todoText, model.todos)
+									});
+							},
+							$author$project$NonEmptyString$fromString(draft)));
 				} else {
 					return model;
 				}
@@ -6046,17 +6056,21 @@ var $elm$html$Html$Attributes$tabindex = function (n) {
 		$elm$core$String$fromInt(n));
 };
 var $author$project$Main$viewTodoStatus = function (todo) {
-	var statusClass = function () {
-		var base = function () {
-			var _v0 = todo.status;
-			if (_v0.$ === 'Active') {
-				return 'cursor-pointer';
-			} else {
-				return 'cursor-pointer line-through opacity-60';
-			}
-		}();
-		return todo.important ? (base + ' text-warning') : base;
+	var clickMsg = function (isShift) {
+		return isShift ? $author$project$Types$ToggledImportant(todo.id) : A2(
+			$author$project$Types$StartedEditingTodoText,
+			todo.id,
+			$author$project$NonEmptyString$toString(todo.todoText));
+	};
+	var baseClass = function () {
+		var _v0 = todo.status;
+		if (_v0.$ === 'Active') {
+			return 'cursor-pointer';
+		} else {
+			return 'cursor-pointer line-through opacity-60';
+		}
 	}();
+	var statusClass = todo.important ? (baseClass + ' text-warning') : baseClass;
 	return A2(
 		$elm$html$Html$span,
 		_List_fromArray(
@@ -6077,18 +6091,11 @@ var $author$project$Main$viewTodoStatus = function (todo) {
 				$elm$html$Html$Events$stopPropagationOn,
 				'click',
 				A2(
-					$elm$json$Json$Decode$andThen,
+					$elm$json$Json$Decode$map,
 					function (isShift) {
-						return isShift ? $elm$json$Json$Decode$succeed(
-							_Utils_Tuple2(
-								$author$project$Types$ToggledImportant(todo.id),
-								true)) : $elm$json$Json$Decode$succeed(
-							_Utils_Tuple2(
-								A2(
-									$author$project$Types$StartedEditingTodoText,
-									todo.id,
-									$author$project$NonEmptyString$toString(todo.todoText)),
-								true));
+						return _Utils_Tuple2(
+							clickMsg(isShift),
+							true);
 					},
 					A2($elm$json$Json$Decode$field, 'shiftKey', $elm$json$Json$Decode$bool)))
 			]),
@@ -6120,6 +6127,48 @@ var $author$project$Main$viewTodo = F2(
 				return false;
 			}
 		}();
+		var trailingControls = function () {
+			if (isEditingThis) {
+				return _List_Nil;
+			} else {
+				var _v1 = model.pendingDelete;
+				if (_v1.$ === 'Just') {
+					var id = _v1.a;
+					return A2($author$project$Main$todoHasId, id, todo) ? _List_fromArray(
+						[
+							$author$project$Main$viewConfirmInline(todo)
+						]) : _List_fromArray(
+						[
+							$author$project$Main$viewDeleteButton(todo)
+						]);
+				} else {
+					return _List_fromArray(
+						[
+							$author$project$Main$viewDeleteButton(todo)
+						]);
+				}
+			}
+		}();
+		var checkboxAttrs = _Utils_ap(
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$type_('checkbox'),
+					$elm$html$Html$Attributes$checked(
+					_Utils_eq(todo.status, $author$project$Types$Completed)),
+					$elm$html$Html$Events$onCheck(
+					function (_v0) {
+						return $author$project$Types$ToggledStatus(todo.id);
+					}),
+					$elm$html$Html$Attributes$class('flex-shrink-0 cursor-pointer user-select-none'),
+					A2(
+					$elm$html$Html$Attributes$attribute,
+					'aria-label',
+					'Mark todo as completed: ' + $author$project$NonEmptyString$toString(todo.todoText))
+				]),
+			isEditingThis ? _List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'visibility', 'hidden')
+				]) : _List_Nil);
 		return A2(
 			$elm$html$Html$li,
 			_List_fromArray(
@@ -6129,53 +6178,10 @@ var $author$project$Main$viewTodo = F2(
 			_Utils_ap(
 				_List_fromArray(
 					[
-						A2(
-						$elm$html$Html$input,
-						_Utils_ap(
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('checkbox'),
-									$elm$html$Html$Attributes$checked(
-									_Utils_eq(todo.status, $author$project$Types$Completed)),
-									$elm$html$Html$Events$onCheck(
-									function (_v0) {
-										return $author$project$Types$ToggledStatus(todo.id);
-									}),
-									$elm$html$Html$Attributes$class('flex-shrink-0 cursor-pointer user-select-none'),
-									A2(
-									$elm$html$Html$Attributes$attribute,
-									'aria-label',
-									'Mark todo as completed: ' + $author$project$NonEmptyString$toString(todo.todoText))
-								]),
-							isEditingThis ? _List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'visibility', 'hidden')
-								]) : _List_Nil),
-						_List_Nil),
+						A2($elm$html$Html$input, checkboxAttrs, _List_Nil),
 						A2($author$project$Main$viewTodoText, model, todo)
 					]),
-				function () {
-					if (isEditingThis) {
-						return _List_Nil;
-					} else {
-						var _v1 = model.pendingDelete;
-						if (_v1.$ === 'Just') {
-							var id = _v1.a;
-							return A2($author$project$Main$todoHasId, id, todo) ? _List_fromArray(
-								[
-									$author$project$Main$viewConfirmInline(todo)
-								]) : _List_fromArray(
-								[
-									$author$project$Main$viewDeleteButton(todo)
-								]);
-						} else {
-							return _List_fromArray(
-								[
-									$author$project$Main$viewDeleteButton(todo)
-								]);
-						}
-					}
-				}()));
+				trailingControls));
 	});
 var $author$project$Main$viewTodos = function (model) {
 	return A2(
@@ -7076,15 +7082,6 @@ var $author$project$TimeTravel$importKeyDecoder = A2(
 	},
 	A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string));
 var $elm$html$Html$textarea = _VirtualDom_node('textarea');
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $author$project$TimeTravel$viewTools = function (app) {
 	return A2(
 		$elm$html$Html$div,

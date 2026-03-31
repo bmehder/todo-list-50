@@ -15,8 +15,6 @@ import Utils exposing (when)
 
 
 
-
-
 -- MODEL
 -------------------------------------------------------------------------------
 
@@ -85,14 +83,15 @@ update msg model =
         SavedEditedTodoText ->
             case model.editing of
                 EditingTodoText { id, draft } ->
-                    case NonEmptyString.fromString draft of
-                        Just todoText ->
-                            { model
-                                | todos = setTodoTextById id todoText model.todos
-                                , editing = NotEditing
-                            }
-
-                        Nothing ->
+                    NonEmptyString.fromString draft
+                        |> Maybe.map
+                            (\todoText ->
+                                { model
+                                    | todos = setTodoTextById id todoText model.todos
+                                    , editing = NotEditing
+                                }
+                            )
+                        |> Maybe.withDefault
                             { model | editing = NotEditing }
 
                 NotEditing ->
@@ -132,18 +131,11 @@ idFromIntUnsafe n =
 
 nextId : List Todo -> Id
 nextId todos =
-    let
-        maybeMaxId =
-            todos
-                |> List.map (.id >> NonNegativeInt.toInt)
-                |> List.maximum
-    in
-    case maybeMaxId of
-        Just maxId ->
-            idFromIntUnsafe <| maxId + 1
-
-        Nothing ->
-            idFromIntUnsafe 0
+    todos
+        |> List.map (.id >> NonNegativeInt.toInt)
+        |> List.maximum
+        |> Maybe.map ((+) 1 >> idFromIntUnsafe)
+        |> Maybe.withDefault (idFromIntUnsafe 0)
 
 
 todoHasId : Id -> Todo -> Bool
@@ -196,23 +188,23 @@ deleteTodoById id =
 
 createTodoFromDraft : Model -> Model
 createTodoFromDraft model =
-    case NonEmptyString.fromString model.draft of
-        Just todoText ->
-            let
-                newTodo =
-                    { id = nextId model.todos
-                    , todoText = todoText
-                    , status = Active
-                    , important = False
-                    }
-            in
-            { model
-                | todos = model.todos ++ [ newTodo ]
-                , draft = ""
-            }
-
-        Nothing ->
-            model
+    NonEmptyString.fromString model.draft
+        |> Maybe.map
+            (\todoText ->
+                let
+                    newTodo =
+                        { id = nextId model.todos
+                        , todoText = todoText
+                        , status = Active
+                        , important = False
+                        }
+                in
+                { model
+                    | todos = model.todos ++ [ newTodo ]
+                    , draft = ""
+                }
+            )
+        |> Maybe.withDefault model
 
 
 
@@ -248,7 +240,7 @@ viewNewTodoForm model =
             []
         , button
             [ type_ "submit"
-            , disabled (not <| NonEmptyString.isValid model.draft)
+            , disabled (NonEmptyString.isValid model.draft |> not)
             ]
             [ text "Add" ]
         ]
@@ -304,41 +296,43 @@ viewTodo model todo =
 
                 NotEditing ->
                     False
-    in
-    li [ class "flex align-items-center gap-1" ]
-        ([ input
-            ([ type_ "checkbox"
-             , checked (todo.status == Completed)
-             , onCheck (\_ -> ToggledStatus todo.id)
-             , class "flex-shrink-0 cursor-pointer user-select-none"
-             , Html.Attributes.attribute "aria-label"
+
+        checkboxAttrs =
+            [ type_ "checkbox"
+            , checked (todo.status == Completed)
+            , onCheck (\_ -> ToggledStatus todo.id)
+            , class "flex-shrink-0 cursor-pointer user-select-none"
+            , Html.Attributes.attribute "aria-label"
                 ("Mark todo as completed: " ++ NonEmptyString.toString todo.todoText)
-             ]
+            ]
                 ++ (if isEditingThis then
                         [ Html.Attributes.style "visibility" "hidden" ]
 
                     else
                         []
                    )
-            )
-            []
+
+        trailingControls =
+            if isEditingThis then
+                []
+
+            else
+                case model.pendingDelete of
+                    Just id ->
+                        if todoHasId id todo then
+                            [ viewConfirmInline todo ]
+
+                        else
+                            [ viewDeleteButton todo ]
+
+                    Nothing ->
+                        [ viewDeleteButton todo ]
+    in
+    li [ class "flex align-items-center gap-1" ]
+        ([ input checkboxAttrs []
          , viewTodoText model todo
          ]
-            ++ (if isEditingThis then
-                    []
-
-                else
-                    case model.pendingDelete of
-                        Just id ->
-                            if todoHasId id todo then
-                                [ viewConfirmInline todo ]
-
-                            else
-                                [ viewDeleteButton todo ]
-
-                        Nothing ->
-                            [ viewDeleteButton todo ]
-               )
+            ++ trailingControls
         )
 
 
@@ -398,21 +392,30 @@ viewEditing draft =
 viewTodoStatus : Todo -> Html Msg
 viewTodoStatus todo =
     let
-        statusClass =
-            let
-                base =
-                    case todo.status of
-                        Active ->
-                            "cursor-pointer"
+        baseClass =
+            case todo.status of
+                Active ->
+                    "cursor-pointer"
 
-                        Completed ->
-                            "cursor-pointer line-through opacity-60"
-            in
+                Completed ->
+                    "cursor-pointer line-through opacity-60"
+
+        statusClass =
             if todo.important then
-                base ++ " text-warning"
+                baseClass ++ " text-warning"
 
             else
-                base
+                baseClass
+
+        clickMsg =
+            \isShift ->
+                if isShift then
+                    ToggledImportant todo.id
+
+                else
+                    StartedEditingTodoText
+                        todo.id
+                        (NonEmptyString.toString todo.todoText)
     in
     span
         [ class (statusClass ++ " user-select-none")
@@ -423,19 +426,7 @@ viewTodoStatus todo =
         , preventDefaultOn "mousedown" (Decode.succeed ( NoOp, True ))
         , stopPropagationOn "click"
             (Decode.field "shiftKey" Decode.bool
-                |> Decode.andThen
-                    (\isShift ->
-                        if isShift then
-                            Decode.succeed ( ToggledImportant todo.id, True )
-
-                        else
-                            Decode.succeed
-                                ( StartedEditingTodoText
-                                    todo.id
-                                    (NonEmptyString.toString todo.todoText)
-                                , True
-                                )
-                    )
+                |> Decode.map (\isShift -> ( clickMsg isShift, True ))
             )
         ]
         [ text (NonEmptyString.toString todo.todoText) ]
@@ -498,7 +489,6 @@ viewTodosCount model =
 
 -- PROGRAM
 -------------------------------------------------------------------------------
-
 
 
 main : Program TimeTravel.Flags (TimeTravel.TimeTravel Msg Model) (TimeTravel.Msg Msg)
