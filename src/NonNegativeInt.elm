@@ -1,8 +1,13 @@
-module NonNegativeInt exposing (NonNegativeInt, fromInt, toInt)
+module NonNegativeInt exposing (NonNegativeInt, fromInt, toInt, zero)
 
 
 type NonNegativeInt
     = NonNegativeInt Int
+
+
+zero : NonNegativeInt
+zero =
+    NonNegativeInt 0
 
 
 fromInt : Int -> Maybe NonNegativeInt

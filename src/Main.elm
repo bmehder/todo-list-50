@@ -134,8 +134,8 @@ nextId todos =
     todos
         |> List.map (.id >> NonNegativeInt.toInt)
         |> List.maximum
-        |> Maybe.map ((+) 1 >> idFromIntUnsafe)
-        |> Maybe.withDefault (idFromIntUnsafe 0)
+        |> Maybe.andThen ((+) 1 >> NonNegativeInt.fromInt)
+        |> Maybe.withDefault NonNegativeInt.zero
 
 
 todoHasId : Id -> Todo -> Bool
@@ -183,7 +183,7 @@ setTodoTextById id newTodoText =
 
 deleteTodoById : Id -> List Todo -> List Todo
 deleteTodoById id =
-    List.filter (not << todoHasId id)
+    List.filter (todoHasId id >> not)
 
 
 createTodoFromDraft : Model -> Model
@@ -301,6 +301,7 @@ viewTodo model todo =
             [ type_ "checkbox"
             , checked (todo.status == Completed)
             , onCheck (\_ -> ToggledStatus todo.id)
+            , id ("status-checkbox-" ++ String.fromInt (NonNegativeInt.toInt todo.id))
             , class "flex-shrink-0 cursor-pointer user-select-none"
             , Html.Attributes.attribute "aria-label"
                 ("Mark todo as completed: " ++ NonEmptyString.toString todo.todoText)
@@ -354,7 +355,7 @@ viewEditing : String -> Html Msg
 viewEditing draft =
     div [ class "flex align-items-center gap-1" ]
         [ input
-            [ Html.Attributes.id "editing-input"
+            [ id "editing-input"
             , Html.Attributes.attribute "aria-label" "Edit todo"
             , stopPropagationOn "mousedown" (Decode.succeed ( NoOp, True ))
             , value draft
@@ -377,13 +378,13 @@ viewEditing draft =
             []
         , button
             [ onClick SavedEditedTodoText
-            , class "save-btn"
+            , class "save-btn font-size-small"
             , disabled (not <| NonEmptyString.isValid draft)
             ]
             [ text "Save" ]
         , button
             [ onClick CanceledEdit
-            , class "delete-btn"
+            , class "delete-btn font-size-small"
             ]
             [ text "Cancel" ]
         ]
@@ -436,7 +437,7 @@ viewDeleteButton : Todo -> Html Msg
 viewDeleteButton todo =
     button
         [ stopPropagationOn "click" (Decode.succeed ( AskedToDelete todo.id, True ))
-        , class "delete-btn delete-task cursor-pointer"
+        , class "delete-btn font-size-small cursor-pointer"
         , Html.Attributes.attribute "aria-label"
             ("Delete todo " ++ NonEmptyString.toString todo.todoText)
         ]
@@ -446,7 +447,7 @@ viewDeleteButton todo =
 viewConfirmInline : Todo -> Html Msg
 viewConfirmInline todo =
     div
-        [ class "flex align-items-center gap-1 margin-left-auto"
+        [ class "flex align-items-center gap-1 margin-left-auto font-size-small"
         , Html.Attributes.attribute "role" "group"
         , Html.Attributes.attribute "aria-label" "Confirm delete"
         ]

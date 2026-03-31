@@ -5442,16 +5442,17 @@ var $elm$core$Maybe$withDefault = F2(
 			return _default;
 		}
 	});
+var $author$project$NonNegativeInt$zero = $author$project$NonNegativeInt$NonNegativeInt(0);
 var $author$project$Main$nextId = function (todos) {
 	return A2(
 		$elm$core$Maybe$withDefault,
-		$author$project$Main$idFromIntUnsafe(0),
+		$author$project$NonNegativeInt$zero,
 		A2(
-			$elm$core$Maybe$map,
+			$elm$core$Maybe$andThen,
 			A2(
 				$elm$core$Basics$composeR,
 				$elm$core$Basics$add(1),
-				$author$project$Main$idFromIntUnsafe),
+				$author$project$NonNegativeInt$fromInt),
 			$elm$core$List$maximum(
 				A2(
 					$elm$core$List$map,
@@ -5488,11 +5489,6 @@ var $author$project$Main$createTodoFromDraft = function (model) {
 			},
 			$author$project$NonEmptyString$fromString(model.draft)));
 };
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
-	});
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -5516,9 +5512,9 @@ var $author$project$Main$todoHasId = function (id) {
 var $author$project$Main$deleteTodoById = function (id) {
 	return $elm$core$List$filter(
 		A2(
-			$elm$core$Basics$composeL,
-			$elm$core$Basics$not,
-			$author$project$Main$todoHasId(id)));
+			$elm$core$Basics$composeR,
+			$author$project$Main$todoHasId(id),
+			$elm$core$Basics$not));
 };
 var $author$project$Main$setTodoText = F2(
 	function (newTodoText, todo) {
@@ -5914,6 +5910,7 @@ var $author$project$Filter$applyFilter = function (filterType) {
 };
 var $elm$html$Html$ul = _VirtualDom_node('ul');
 var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
+var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $elm$html$Html$Events$targetChecked = A2(
 	$elm$json$Json$Decode$at,
 	_List_fromArray(
@@ -5932,7 +5929,7 @@ var $author$project$Main$viewConfirmInline = function (todo) {
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('flex align-items-center gap-1 margin-left-auto'),
+				$elm$html$Html$Attributes$class('flex align-items-center gap-1 margin-left-auto font-size-small'),
 				A2($elm$html$Html$Attributes$attribute, 'role', 'group'),
 				A2($elm$html$Html$Attributes$attribute, 'aria-label', 'Confirm delete')
 			]),
@@ -5975,7 +5972,7 @@ var $author$project$Main$viewDeleteButton = function (todo) {
 					_Utils_Tuple2(
 						$author$project$Types$AskedToDelete(todo.id),
 						true))),
-				$elm$html$Html$Attributes$class('delete-btn delete-task cursor-pointer'),
+				$elm$html$Html$Attributes$class('delete-btn font-size-small cursor-pointer'),
 				A2(
 				$elm$html$Html$Attributes$attribute,
 				'aria-label',
@@ -5986,7 +5983,6 @@ var $author$project$Main$viewDeleteButton = function (todo) {
 				$elm$html$Html$text('✕')
 			]));
 };
-var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $author$project$Main$viewEditing = function (draft) {
 	return A2(
 		$elm$html$Html$div,
@@ -6027,7 +6023,7 @@ var $author$project$Main$viewEditing = function (draft) {
 				_List_fromArray(
 					[
 						$elm$html$Html$Events$onClick($author$project$Types$SavedEditedTodoText),
-						$elm$html$Html$Attributes$class('save-btn'),
+						$elm$html$Html$Attributes$class('save-btn font-size-small'),
 						$elm$html$Html$Attributes$disabled(
 						!$author$project$NonEmptyString$isValid(draft))
 					]),
@@ -6040,7 +6036,7 @@ var $author$project$Main$viewEditing = function (draft) {
 				_List_fromArray(
 					[
 						$elm$html$Html$Events$onClick($author$project$Types$CanceledEdit),
-						$elm$html$Html$Attributes$class('delete-btn')
+						$elm$html$Html$Attributes$class('delete-btn font-size-small')
 					]),
 				_List_fromArray(
 					[
@@ -6159,6 +6155,9 @@ var $author$project$Main$viewTodo = F2(
 					function (_v0) {
 						return $author$project$Types$ToggledStatus(todo.id);
 					}),
+					$elm$html$Html$Attributes$id(
+					'status-checkbox-' + $elm$core$String$fromInt(
+						$author$project$NonNegativeInt$toInt(todo.id))),
 					$elm$html$Html$Attributes$class('flex-shrink-0 cursor-pointer user-select-none'),
 					A2(
 					$elm$html$Html$Attributes$attribute,

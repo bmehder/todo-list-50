@@ -145,14 +145,6 @@ button {
 	}
 }
 
-.delete-task {
-	block-size: 1.5rem;
-	inline-size: 1.5rem;
-	font-size: 0.85rem;
-	line-height: 1;
-	border-radius: 50%;
-}
-
 summary {
 	cursor: pointer;
 
